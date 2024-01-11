@@ -24,7 +24,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ${{ env.agent }}
+        working-directory: ${{ env.AGENT }}
 
     steps:
       - name: Checkout repository
