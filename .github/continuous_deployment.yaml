@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: NEXT_PUBLIC_API_URL=${{ secrets.API_URL }} pnpm build
+      - run: NEXT_PUBLIC_API_URL=https://openid4vc.animo.id pnpm build
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
