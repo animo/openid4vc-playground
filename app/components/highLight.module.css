@@ -1,0 +1,15 @@
+.line {
+  text-align: left;
+  padding: 0.5em;
+  line-height: 1.3;
+  font-size: 0.8rem;
+  font-family: "JetBrains Mono", monospace;
+  overflow-x: scroll;
+}
+
+.lineNumber {
+  display: inline-block;
+  width: 2em;
+  user-select: none;
+  opacity: 0.3;
+}

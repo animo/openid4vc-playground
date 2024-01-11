@@ -1,0 +1,132 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        default: true
+        type: boolean
+        required: false
+        description: Build the website before deploying
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  APP: app
+  AGENT: agent
+
+jobs:
+  build-and-push-image-agent:
+    runs-on: ubuntu-latest
+    if: inputs.build == true && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    defaults:
+      run:
+        working-directory: ${{ env.agent }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
+        with:
+          node-version: 18
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.AGENT }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: ./agent
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-and-push-image-app:
+    runs-on: ubuntu-latest
+    if: inputs.build == true && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    defaults:
+      run:
+        working-directory: ${{ env.APP }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - run: NEXT_PUBLIC_API_URL=${{ secrets.API_URL }} pnpm build
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.APP }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: ./app
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    # Only run on main branch
+    runs-on: ubuntu-latest
+    needs: [build-and-push-image-agent, build-and-push-image-app]
+    if: |
+      always() &&
+      (needs.build-and-push-image-agent.result == 'success' || needs.build-and-push-image-agent.result == 'skipped') &&
+      (needs.build-and-push-image-app.result == 'success' || needs.build-and-push-image-app.result == 'skipped') &&
+      github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Copy stack file to remote
+        uses: garygrossgarten/github-action-scp@v0.7.3
+        with:
+          local: docker-compose.yml
+          remote: openid4vc-playground/docker-compose.yml
+          host: dashboard.dev.animo.id
+          username: root
+          privateKey: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Docker Swarm via SSH action
+        uses: appleboy/ssh-action@v0.1.4
+        env:
+          AGENT_WALLET_KEY: ${{ secrets.AGENT_WALLET_KEY }}
+        with:
+          host: dashboard.dev.animo.id
+          username: root
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          envs: AGENT_WALLET_KEY
+          script: |
+            AGENT_WALLET_KEY=${AGENT_WALLET_KEY} docker stack deploy --compose-file openid4vc-playground/docker-compose.yml openid4vc-playground --with-registry-auth

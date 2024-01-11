@@ -1,0 +1,56 @@
+version: "3.5"
+
+services:
+  server:
+    image: ghcr.io/animo/openid4vc-playground/agent:main
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.type == community
+      labels:
+        traefik.enable: "true"
+
+        traefik.http.routers.openid4vc-server.rule: Host(`openid4vc.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/.well-known`))
+        traefik.http.routers.openid4vc-server.entrypoints: web-secure
+        traefik.http.routers.openid4vc-server.tls.certresolver: zerossl
+        traefik.http.routers.openid4vc-server.service: openid4vc-server-service
+        traefik.http.services.openid4vc-server-service.loadbalancer.server.port: 5001
+
+    environment:
+      AGENT_WALLET_KEY: ${AGENT_WALLET_KEY}
+      AGENT_ENDPOINT: https://openid4vc.animo.id
+
+    networks:
+      - traefik
+
+    ports:
+      - 5001
+
+  client:
+    image: ghcr.io/animo/openid4vc-playground/app:main
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.type == community
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.openid4vc-app.rule: Host(`openid4vc.animo.id`) && !PathPrefix(`/api`) && !PathPrefix(`/oid4vci`)
+        traefik.http.routers.openid4vc-app.entrypoints: web-secure
+        traefik.http.routers.openid4vc-app.tls.certresolver: zerossl
+        traefik.http.routers.openid4vc-app.service: openid4vc-app-service
+        traefik.http.services.openid4vc-app-service.loadbalancer.server.port: 80
+      update_config:
+        monitor: 30s
+        delay: 10s
+        order: start-first
+    ports:
+      - 80
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+    name: traefik
