@@ -71,7 +71,7 @@ jobs:
           version: 8
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - run: NEXT_PUBLIC_API_URL=https://openid4vc.animo.id pnpm build
 
