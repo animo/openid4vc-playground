@@ -12,8 +12,6 @@
       alt="License"
       src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
   /></a>
-  [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)
- 
 </div>
 
 > [!TIP]
