@@ -19,7 +19,7 @@ services:
 
     environment:
       AGENT_WALLET_KEY: ${AGENT_WALLET_KEY}
-      AGENT_ENDPOINT: https://openid4vc.animo.id
+      AGENT_HOST: "https://openid4vc.animo.id"
 
     networks:
       - traefik
