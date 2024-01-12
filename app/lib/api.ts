@@ -5,7 +5,13 @@ export const getQrUrl = (uri: string) =>
     uri
   )}&choe=UTF-8`;
 
-export async function createOffer(credentialSupportedId: string) {
+export async function createOffer({
+  credentialSupportedId,
+  issuerDid,
+}: {
+  credentialSupportedId: string;
+  issuerDid: string;
+}) {
   const response = await fetch(NEXT_PUBLIC_API_URL + "/api/offers/create", {
     method: "POST",
     headers: {
@@ -13,11 +19,22 @@ export async function createOffer(credentialSupportedId: string) {
     },
     body: JSON.stringify({
       credentialSupportedIds: [credentialSupportedId],
+      issuerDid,
     }),
   });
 
   if (!response.ok) {
     throw new Error("Failed to create offer");
+  }
+
+  return response.json();
+}
+
+export async function getIssuer() {
+  const response = await fetch(NEXT_PUBLIC_API_URL + "/api/issuer");
+
+  if (!response.ok) {
+    throw new Error("Failed to get issuer");
   }
 
   return response.json();

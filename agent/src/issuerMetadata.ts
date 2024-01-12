@@ -25,6 +25,11 @@ export const animoOpenId4VcPlaygroundCredential = {
   vct: "AnimoOpenId4VcPlayground",
   cryptographic_binding_methods_supported: ["jwk", "did:key"],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
+  display: [
+    {
+      name: "Animo OpenID4VC Playground - SD-JWT-VC",
+    },
+  ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;
 
 export const credentialsSupported = [

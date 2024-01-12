@@ -15,23 +15,41 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { createOffer, receiveOffer, getQrUrl } from "@/lib/api";
-import { FormEvent, useState } from "react";
+import { createOffer, receiveOffer, getQrUrl, getIssuer } from "@/lib/api";
+import { FormEvent, useEffect, useState } from "react";
 import { HighLight } from "./highLight";
 
 export function Main() {
-  const [credentialType, setCredentialType] = useState<string>(
-    "AnimoOpenId4VcPlayground"
-  );
+  const [credentialType, setCredentialType] = useState<string>();
+  const [issuerDid, setIssuerDid] = useState<string>();
   const [qrUri, setQrUri] = useState<string>();
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>();
   const [receiveCredentialOfferUri, setReceiveCredentialOfferUri] =
     useState<string>();
   const [receivedCredentials, setReceivedCredentials] = useState();
+  const [issuer, setIssuer] = useState<{
+    credentialsSupported: Array<{ id: string; display: [{ name: string }] }>;
+    availableDids: string[];
+    display: {};
+  }>();
+
+  useEffect(() => {
+    getIssuer().then(setIssuer);
+  }, []);
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault();
-    const offer = await createOffer(credentialType);
+    const _issuerDid = issuerDid ?? issuer?.availableDids[0];
+    const _credentialType =
+      credentialType ?? issuer?.credentialsSupported[0].id;
+    if (!_issuerDid || !_credentialType) {
+      throw new Error("No issuer or credential type");
+    }
+
+    const offer = await createOffer({
+      credentialSupportedId: _credentialType,
+      issuerDid: _issuerDid,
+    });
     setQrUri(getQrUrl(offer.credentialOfferUri));
     setCredentialOfferUri(offer.credentialOfferUri);
   }
@@ -82,16 +100,58 @@ export function Main() {
                       name="credential-type"
                       required
                       onValueChange={setCredentialType}
-                      defaultValue="AnimoOpenId4VcPlayground"
                     >
                       <SelectTrigger className="w-[320px]">
-                        <SelectValue placeholder="Select a credential type" />
+                        <SelectValue
+                          placeholder={
+                            !issuer ? "Loading" : "Select a credential type"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="AnimoOpenId4VcPlayground">
-                            Playground Example - SD-JWT-VC
-                          </SelectItem>
+                          {(issuer?.credentialsSupported ?? []).map(
+                            (credential) => {
+                              return (
+                                <SelectItem
+                                  key={credential.id}
+                                  value={credential.id}
+                                >
+                                  {credential.display[0].name}
+                                </SelectItem>
+                              );
+                            }
+                          ) ?? null}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="issuer-did">Issuer Did</Label>
+                    <Select
+                      name="issuer-did"
+                      required
+                      onValueChange={setIssuerDid}
+                    >
+                      <SelectTrigger className="w-[320px]">
+                        <SelectValue
+                          placeholder={
+                            !issuer ? "Loading" : "Select an issuer did"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {(issuer?.availableDids ?? []).map((availableDid) => {
+                            return (
+                              <SelectItem
+                                key={availableDid}
+                                value={availableDid}
+                              >
+                                {availableDid}
+                              </SelectItem>
+                            );
+                          }) ?? null}
                         </SelectGroup>
                       </SelectContent>
                     </Select>

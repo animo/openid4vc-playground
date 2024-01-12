@@ -1,5 +1,5 @@
 import { agent } from "./agent";
-import express, { Request, Response, request } from "express";
+import express, { Request, Response } from "express";
 import z from "zod";
 import { credentialSupportedIds } from "./issuerMetadata";
 import { getIssuer } from "./issuer";
@@ -10,10 +10,13 @@ import {
   W3cJwtVerifiableCredential,
   getJwkFromKey,
 } from "@aries-framework/core";
+import { getAvailableDids } from "./did";
+import { setOfferSessionMetadata } from "./session";
 
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
   credentialSupportedIds: z.array(z.enum(credentialSupportedIds)),
+  issuerDid: z.string(),
 });
 
 export const apiRouter = express.Router();
@@ -39,9 +42,24 @@ apiRouter.post(
       scheme: "openid-credential-offer",
     });
 
+    await setOfferSessionMetadata(offer.credentialOfferPayload, {
+      issuerDid: createOfferRequest.issuerDid,
+    });
+
     return response.json(offer);
   }
 );
+
+apiRouter.get("/issuer", async (_, response: Response) => {
+  const issuer = await getIssuer();
+  const availableDids = getAvailableDids();
+
+  return response.json({
+    credentialsSupported: issuer.credentialsSupported,
+    display: issuer.display,
+    availableDids,
+  });
+});
 
 const zReceiveOfferRequest = z.object({
   credentialOfferUri: z.string().url(),

@@ -2,7 +2,7 @@ import { agent, openId4VciRouter } from "./agent";
 import { apiRouter } from "./endpoints";
 import { createIssuer, doesIssuerExist } from "./issuer";
 import express, { Response } from "express";
-import { createDidWeb, getDidWeb, hasDidWeb } from "./did";
+import { getWebDidDocument, setupAllDids } from "./did";
 import cors from "cors";
 
 async function run() {
@@ -12,9 +12,7 @@ async function run() {
     await createIssuer();
   }
 
-  if (!(await hasDidWeb())) {
-    await createDidWeb();
-  }
+  await setupAllDids();
 
   const app = express();
   app.use(cors({ origin: "*" }));
@@ -22,7 +20,7 @@ async function run() {
   app.use("/oid4vci", openId4VciRouter);
   app.use("/api", apiRouter);
   app.use("/.well-known/did.json", async (_, response: Response) => {
-    const didWeb = await getDidWeb();
+    const didWeb = await getWebDidDocument();
     return response.json(didWeb.toJSON());
   });
 
