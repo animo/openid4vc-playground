@@ -16,6 +16,9 @@
  
 </div>
 
+> [!TIP]
+> Check out the demo at https://openid4vc.animo.id
+
 ## ✨ Hi there!
 
 Welcome to the repository of Animo's OpenID4VC Playground. This interactive playground demonstrates the use of OpenID4VC with different credential formats (such as SD-JWT VCs). This demo is built using [Aries Framework Javascript (AFJ)](https://github.com/hyperledger/aries-framework-javascript). AFJ is a framework written in TypeScript for building decentralized identity services.
@@ -55,7 +58,7 @@ cp .env.example .env
 | `AGENT_HOST`       | Used in the backend application for the agent. The url at which the server will be available. |
 | `AGENT_WALLET_KEY` | Used in the backend application for the agent. Should be secure and kept private.             |
 
-> NOTE
+> [!IMPORTANT]
 > The issuer will use `did:web` for issuing credentials, but this requires `https` to be used. When developing locally it is recommend
 > to use `ngrok` (`npx ngrok http 3001`) and use that url as the `AGENT_HOST` variable. Make sure to also set the `NEXT_PUBLIC_API_URL` variable in the app to the ngrok.
 >
