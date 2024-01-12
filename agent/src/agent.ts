@@ -72,7 +72,8 @@ export const agent = new Agent({
 {"reqSignature":{},"txn":{"data":{"data":{"alias":"cysecure-itn","blskey":"GdCvMLkkBYevRFi93b6qaj9G2u1W6Vnbg8QhRD1chhrWR8vRE8x9x7KXVeUBPFf6yW5qq2JCfA2frc8SGni2RwjtTagezfwAwnorLhVJqS5ZxTi4pgcw6smebnt4zWVhTkh6ugDHEypHwNQBcw5WhBZcEJKgNbyVLnHok9ob6cfr3u","blskey_pop":"RbH9mY7M5p3UB3oj4sT1skYwMkxjoUnja8eTYfcm83VcNbxC9zR9pCiRhk4q1dJT3wkDBPGNKnk2p83vaJYLcgMuJtzoWoJAWAxjb3Mcq8Agf6cgQpBuzBq2uCzFPuQCAhDS4Kv9iwA6FsRnfvoeFTs1hhgSJVxQzDWMVTVAD9uCqu","client_ip":"35.169.19.171","client_port":"9702","node_ip":"54.225.56.21","node_port":"9701","services":["VALIDATOR"]},"dest":"4ETBDmHzx8iDQB6Xygmo9nNXtMgq9f6hxGArNhQ6Hh3u"},"metadata":{"from":"uSXXXEdBicPHMMhr3ddNF"},"type":"0"},"txnMetadata":{"seqNo":7,"txnId":"3c21718b07806b2f193b35953dda5b68b288efd551dce4467ce890703d5ba549"},"ver":"1"}`,
           indyNamespace: "indicio:testnet",
           isProduction: false,
-          connectOnStartup: true,
+          // FIXME: indy not fully working yet
+          connectOnStartup: false,
           transactionAuthorAgreement: {
             acceptanceMechanism: "for_session",
             version: "1.0",

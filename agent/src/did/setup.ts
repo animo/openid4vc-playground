@@ -34,15 +34,16 @@ export async function setupAllDids() {
     availableDids.push(await getDidForMethod("cheqd"));
   }
 
-  if (DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED) {
-    if (!(await hasDidForMethod("indy"))) {
-      await importIndyDid(
-        "indicio:testnet",
-        DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED
-      );
-    }
-    availableDids.push(await getDidForMethod("indy"));
-  }
+  // FIXME: indy not fully working yet
+  // if (DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED) {
+  //   if (!(await hasDidForMethod("indy"))) {
+  //     await importIndyDid(
+  //       "indicio:testnet",
+  //       DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED
+  //     );
+  //   }
+  //   availableDids.push(await getDidForMethod("indy"));
+  // }
 }
 
 export function getAvailableDids() {
