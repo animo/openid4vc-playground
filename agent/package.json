@@ -30,6 +30,7 @@
     "@aries-framework/askar": "file:./dependencies/aries-framework-askar-v0.4.2.tgz",
     "@aries-framework/sd-jwt-vc": "file:./dependencies/aries-framework-sd-jwt-vc-v0.4.2.tgz",
     "@aries-framework/indy-vdr": "file:./dependencies/aries-framework-indy-vdr-v0.4.2.tgz",
-    "@aries-framework/cheqd": "file:./dependencies/aries-framework-cheqd-v0.4.2.tgz"
+    "@aries-framework/cheqd": "file:./dependencies/aries-framework-cheqd-v0.4.2.tgz",
+    "@sd-jwt/core": "0.1.2-alpha.0"
   }
 }

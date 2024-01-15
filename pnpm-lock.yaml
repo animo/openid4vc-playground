@@ -12,6 +12,7 @@ overrides:
   '@aries-framework/sd-jwt-vc': file:./agent/dependencies/aries-framework-sd-jwt-vc-v0.4.2.tgz
   '@aries-framework/indy-vdr': file:./agent/dependencies/aries-framework-indy-vdr-v0.4.2.tgz
   '@aries-framework/cheqd': file:./agent/dependencies/aries-framework-cheqd-v0.4.2.tgz
+  '@sd-jwt/core': 0.1.2-alpha.0
 
 importers:
 
@@ -83,6 +84,9 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-tooltip':
+        specifier: ^1.0.7
+        version: 1.0.7(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -2171,7 +2175,7 @@ packages:
       '@expo/prebuild-config': 6.2.6(expo-modules-autolinking@1.5.1)
       '@expo/rudder-sdk-node': 1.1.1
       '@expo/spawn-async': 1.5.0
-      '@expo/xcpretty': 4.3.0
+      '@expo/xcpretty': 4.3.1
       '@urql/core': 2.3.6(graphql@15.8.0)
       '@urql/exchange-retry': 0.3.0(graphql@15.8.0)
       accepts: 1.3.8
@@ -2480,8 +2484,8 @@ packages:
     dev: false
     optional: true
 
-  /@expo/xcpretty@4.3.0:
-    resolution: {integrity: sha512-whBbvHZ2Q10T5TNmN0z5NbO6C9ZDw+XUTu8h6vVMnMzQrbGexc9oaCCZfz+L3Q7TEL5vfr+9L86nY62c3Bsm+g==}
+  /@expo/xcpretty@4.3.1:
+    resolution: {integrity: sha512-sqXgo1SCv+j4VtYEwl/bukuOIBrVgx6euIoCat3Iyx5oeoXwEA2USCoeL0IPubflMxncA2INkqJ/Wr3NGrSgzw==}
     hasBin: true
     dependencies:
       '@babel/code-frame': 7.10.4
@@ -3367,6 +3371,38 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@radix-ui/react-tooltip@1.0.7(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-lPh5iKNFVQ/jav/j6ZrWq3blfDJ0OH9R6FlNUHPMqdLuQ9vwDgFsRxvl8b7Asuy5c8xmoojHUxKHQSOAvMHxyw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.8
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.47)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.2.47)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-id': 1.0.1(@types/react@18.2.47)(react@18.2.0)
+      '@radix-ui/react-popper': 1.1.3(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-portal': 1.0.4(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-presence': 1.0.1(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot': 1.0.2(@types/react@18.2.47)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.2.47)(react@18.2.0)
+      '@radix-ui/react-visually-hidden': 1.0.3(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@types/react': 18.2.47
+      '@types/react-dom': 18.2.18
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /@radix-ui/react-use-callback-ref@1.0.1(@types/react@18.2.47)(react@18.2.0):
     resolution: {integrity: sha512-D94LjX4Sp0xJFVaoQOd3OO9k7tpBYNOXdVhkltUbGv2Qb9OXdrg/CpsjlZv7ia14Sylv398LswWBVVu5nqKzAQ==}
     peerDependencies:
@@ -3927,17 +3963,17 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /@sphereon/did-auth-siop@0.5.0-unstable.9:
-    resolution: {integrity: sha512-7fgc/RDtGm/RrIwIkYcHM2xqBk9+ogZ2hHQZlZMWOX1CnjXmqqnjfJdisTr1ZyvjF1R3pr330Z3LBJ/y5NU7uQ==}
+  /@sphereon/did-auth-siop@0.6.0-unstable.0:
+    resolution: {integrity: sha512-k5z1sGOv+B8oz0H5zWHZE+1myDpM4RAB7UcS7Z3kNMgP27mK4VpvUFIYKJ3CW/3+QzxgDA5V7d/S6dqsjgmoKQ==}
     engines: {node: '>=18'}
     dependencies:
       '@astronautlabs/jsonpath': 1.1.2
-      '@sphereon/did-uni-client': 0.6.0
-      '@sphereon/pex': 2.2.2
-      '@sphereon/pex-models': 2.1.2
-      '@sphereon/ssi-types': 0.17.5
+      '@sphereon/did-uni-client': 0.6.1
+      '@sphereon/pex': 3.0.0
+      '@sphereon/pex-models': 2.1.5
+      '@sphereon/ssi-types': 0.18.0
       '@sphereon/wellknown-dids-client': 0.1.3
-      cross-fetch: 3.1.8
+      cross-fetch: 4.0.0
       did-jwt: 6.11.6
       did-resolver: 4.1.0
       events: 3.3.0
@@ -3951,10 +3987,10 @@ packages:
       - encoding
     dev: false
 
-  /@sphereon/did-uni-client@0.6.0:
-    resolution: {integrity: sha512-JDZYHR5wj49PHfI51g0+sfXzaLxIvWwad6Va42LIKcW/e9fOgjQJxpUySazWQkYYlewHhLg3GDbqMKIyIMQs6A==}
+  /@sphereon/did-uni-client@0.6.1:
+    resolution: {integrity: sha512-ryIPq9fAp8UuaN0ZQ16Gong5n5SX8G+SjNQ3x3Uy/pmd6syxh97kkmrfbna7a8dTmbP8YdNtgPLpcNbhLPMClQ==}
     dependencies:
-      cross-fetch: 3.1.8
+      cross-fetch: 4.0.0
       did-resolver: 4.1.0
     transitivePeerDependencies:
       - encoding
@@ -4000,28 +4036,23 @@ packages:
       - encoding
     dev: false
 
-  /@sphereon/pex-models@2.1.2:
-    resolution: {integrity: sha512-Ec1qZl8tuPd+s6E+ZM7v+HkGkSOjGDMLNN1kqaxAfWpITBYtTLb+d5YvwjvBZ1P2upZ7zwNER97FfW5n/30y2w==}
+  /@sphereon/pex-models@2.1.5:
+    resolution: {integrity: sha512-7THexvdYUK/Dh8olBB46ErT9q/RnecnMdb5r2iwZ6be0Dt4vQLAUN7QU80H0HZBok4jRTb8ydt12x0raBSTHOg==}
     dev: false
 
-  /@sphereon/pex@2.2.2:
-    resolution: {integrity: sha512-NkR8iDTC2PSnYsOHlG2M2iOpFTTbzszs2/pL3iK3Dlv9QYLqX7NtPAlmeSwaoVP1NB1ewcs6U1DtemQAD+90yQ==}
-    engines: {node: '>=16'}
+  /@sphereon/pex@3.0.0:
+    resolution: {integrity: sha512-viD3Enwt/Wf/RoTBbZXttNAcE0Scyb+UufwkNaLU4sD2nNkvi3VuJ4dSMMFGm3QlIgBWxSm1N4DnSm+LRMZidQ==}
+    engines: {node: '>=18'}
     dependencies:
       '@astronautlabs/jsonpath': 1.1.2
-      '@sphereon/pex-models': 2.1.2
-      '@sphereon/ssi-types': 0.17.5
+      '@sd-jwt/core': 0.1.2-alpha.0
+      '@sphereon/pex-models': 2.1.5
+      '@sphereon/ssi-types': 0.18.0
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
       jwt-decode: 3.1.2
       nanoid: 3.3.7
       string.prototype.matchall: 4.0.10
-    dev: false
-
-  /@sphereon/ssi-types@0.17.5:
-    resolution: {integrity: sha512-hoQOkeOtshvIzNAG+HTqcKxeGssLVfwX7oILHJgs6VMb1GhR6QlqjMAxflDxZ/8Aq2R0I6fEPWmf73zAXY2X2Q==}
-    dependencies:
-      jwt-decode: 3.1.2
     dev: false
 
   /@sphereon/ssi-types@0.17.6-unstable.69:
@@ -4033,6 +4064,13 @@ packages:
 
   /@sphereon/ssi-types@0.17.6-unstable.74:
     resolution: {integrity: sha512-8B1XzLYc9QWv7AXeOiE1d5y30XkFV9/wr78t3B9CEtNoB0QANP9fPQ+WWcMdAezSgEWXD6nq+11XF8ZtTYB4Ww==}
+    dependencies:
+      '@sd-jwt/core': 0.1.2-alpha.0
+      jwt-decode: 3.1.2
+    dev: false
+
+  /@sphereon/ssi-types@0.18.0:
+    resolution: {integrity: sha512-D2n42NAhHCwpL4K7BqQXO9dYQ8n3st/1eJQrLqokJ18B9r2gury3km4cp+ZdiIxfefUaP9RBCeuWaiRUvjZ94w==}
     dependencies:
       '@sd-jwt/core': 0.1.2-alpha.0
       jwt-decode: 3.1.2
@@ -10138,7 +10176,7 @@ packages:
     dependencies:
       object-assign: 4.1.1
       react: 18.2.0
-      react-is: 18.2.0
+      react-is: 16.13.1
     dev: false
     optional: true
 
@@ -12131,12 +12169,12 @@ packages:
     dependencies:
       '@aries-framework/askar': file:agent/dependencies/aries-framework-askar-v0.4.2.tgz(@hyperledger/aries-askar-shared@0.2.0-dev.5)(expo@49.0.21)(react-native@0.73.2)
       '@aries-framework/core': file:agent/dependencies/aries-framework-core-v0.4.2.tgz(expo@49.0.21)(react-native@0.73.2)
-      '@sphereon/did-auth-siop': 0.5.0-unstable.9
+      '@sphereon/did-auth-siop': 0.6.0-unstable.0
       '@sphereon/oid4vci-client': 0.8.2-next.26
       '@sphereon/oid4vci-common': 0.8.2-next.26
       '@sphereon/oid4vci-issuer': 0.8.2-next.26
-      '@sphereon/pex': 2.2.2
-      '@sphereon/pex-models': 2.1.2
+      '@sphereon/pex': 3.0.0
+      '@sphereon/pex-models': 2.1.5
       '@sphereon/ssi-types': 0.17.6-unstable.74
       body-parser: 1.20.2
       jsonpath: 1.1.1
