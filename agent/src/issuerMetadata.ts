@@ -98,7 +98,8 @@ export const credentialsSupported = [
   animoOpenId4VcPlaygroundCredentialSdJwtVcDid,
   animoOpenId4VcPlaygroundCredentialSdJwtVcJwk,
   animoOpenId4VcPlaygroundCredentialJwtVc,
-  animoOpenId4VcPlaygroundCredentialLdpVc,
+  // Not really working yet
+  // animoOpenId4VcPlaygroundCredentialLdpVc,
 ] as const satisfies OpenId4VciCredentialSupportedWithId[];
 type CredentialSupportedId = (typeof credentialsSupported)[number]["id"];
 export const credentialSupportedIds = credentialsSupported.map((s) => s.id) as [
