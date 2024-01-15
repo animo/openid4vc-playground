@@ -1,10 +1,5 @@
 import { NEXT_PUBLIC_API_URL } from "./constants";
 
-export const getQrUrl = (uri: string) =>
-  `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(
-    uri
-  )}&choe=UTF-8`;
-
 export async function createOffer({
   credentialSupportedId,
   issuerDid,

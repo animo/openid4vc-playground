@@ -5,6 +5,7 @@
  */
 import { TabsTrigger, TabsList, TabsContent, Tabs } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import QRCode from "react-qr-code";
 import {
   SelectValue,
   SelectTrigger,
@@ -15,14 +16,19 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { createOffer, receiveOffer, getQrUrl, getIssuer } from "@/lib/api";
+import { createOffer, receiveOffer, getIssuer } from "@/lib/api";
 import { FormEvent, useEffect, useState } from "react";
 import { HighLight } from "./highLight";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function Main() {
   const [credentialType, setCredentialType] = useState<string>();
   const [issuerDid, setIssuerDid] = useState<string>();
-  const [qrUri, setQrUri] = useState<string>();
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>();
   const [receiveCredentialOfferUri, setReceiveCredentialOfferUri] =
     useState<string>();
@@ -50,7 +56,6 @@ export function Main() {
       credentialSupportedId: _credentialType,
       issuerDid: _issuerDid,
     });
-    setQrUri(getQrUrl(offer.credentialOfferUri));
     setCredentialOfferUri(offer.credentialOfferUri);
   }
 
@@ -157,17 +162,32 @@ export function Main() {
                     </Select>
                   </div>
                   <div className="flex justify-center items-center bg-gray-200 dark:bg-gray-800 min-h-64 w-full rounded-md">
-                    {qrUri && credentialOfferUri ? (
-                      <p
-                        onClick={(e) =>
-                          navigator.clipboard.writeText(
-                            e.currentTarget.innerText
-                          )
-                        }
-                        className="m-5 text-gray-500 dark:text-gray-400 break-all"
-                      >
-                        {credentialOfferUri}
-                      </p>
+                    {credentialOfferUri ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
+                            <div className="bg-white p-5 rounded-md w-[296px]">
+                              <QRCode size={256} value={credentialOfferUri} />
+                            </div>
+                            <TooltipTrigger asChild>
+                              <p
+                                onClick={(e) =>
+                                  navigator.clipboard.writeText(
+                                    e.currentTarget.innerText
+                                  )
+                                }
+                                className="text-gray-500 dark:text-gray-400 break-all cursor-pointer"
+                              >
+                                {credentialOfferUri}
+                              </p>
+                            </TooltipTrigger>
+                          </div>
+
+                          <TooltipContent>
+                            <p>Click to copy</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ) : (
                       <p className="text-gray-500 dark:text-gray-400 break-all">
                         Credential offer will be displayed here
