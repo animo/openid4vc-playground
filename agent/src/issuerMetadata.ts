@@ -1,10 +1,10 @@
 import { JwaSignatureAlgorithm } from "@aries-framework/core";
 import {
   OpenId4VciCredentialSupportedWithId,
-  OpenIdCredentialFormatProfile,
+  OpenId4VciCredentialFormatProfile,
+  OpenId4VciIssuerMetadataDisplay,
 } from "@aries-framework/openid4vc";
 
-// FIXME: type needs to be exported from AFJ
 export const issuerDisplay = [
   {
     background_color: "#FFFFFF",
@@ -17,11 +17,11 @@ export const issuerDisplay = [
     },
     text_color: "#E17471", // animo red
   },
-];
+] satisfies OpenId4VciIssuerMetadataDisplay[];
 
 export const animoOpenId4VcPlaygroundCredentialSdJwtVcDid = {
   id: "AnimoOpenId4VcPlaygroundSdJwtVcDid",
-  format: OpenIdCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   vct: "AnimoOpenId4VcPlayground",
   cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
@@ -38,7 +38,7 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcDid = {
 
 export const animoOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
   id: "AnimoOpenId4VcPlaygroundSdJwtVcJwk",
-  format: OpenIdCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   vct: "AnimoOpenId4VcPlayground",
   cryptographic_binding_methods_supported: ["jwk"],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
@@ -55,7 +55,7 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
 
 export const animoOpenId4VcPlaygroundCredentialJwtVc = {
   id: "AnimoOpenId4VcPlayground",
-  format: OpenIdCredentialFormatProfile.JwtVcJson,
+  format: OpenId4VciCredentialFormatProfile.JwtVcJson,
   types: ["AnimoOpenId4VcPlayground"],
   cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],

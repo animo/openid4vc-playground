@@ -12200,7 +12200,7 @@ packages:
     dev: false
 
   file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz(@hyperledger/aries-askar-shared@0.2.0-dev.5)(expo@49.0.21)(react-native@0.73.2):
-    resolution: {integrity: sha512-GxCmTbvaN8x3yGqieXSLwhDkc3YcbNTUfk8c0NReM5R4aqEg50Au1Q5h3pquUoxAgYSDqZnPilU3tYEzl7J9xg==, tarball: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz}
+    resolution: {integrity: sha512-nxa3/duuTYNw1Ua/Ge89AQZ87/0lX63uFKkZ7Wrcev/UszU4Lv2C6PchwRIDPTxbGRUoUfpm9wtgAK3+SyEeGw==, tarball: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz}
     id: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz
     name: '@aries-framework/openid4vc'
     version: 0.4.2

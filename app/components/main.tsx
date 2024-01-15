@@ -209,7 +209,8 @@ export function Main() {
                   <AlertTitle>Warning</AlertTitle>
                   <AlertDescription>
                     Currently, only issuance of JWT credentials (not SD-JWT
-                    credentials) is supported when issuing to the{" "}
+                    credentials) using a did method other than{" "}
+                    <code>did:cheqd</code> is supported when issuing to the{" "}
                     <a
                       className="underline"
                       href="https://linktr.ee/paradym_id"
