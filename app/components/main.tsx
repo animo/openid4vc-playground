@@ -25,6 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 export function Main() {
   const [credentialType, setCredentialType] = useState<string>();
@@ -90,7 +92,7 @@ export function Main() {
             Playground
           </span>
         </div>
-        <div className="flex w-full items-center justify-center ">
+        <div className="flex w-full items-center justify-center">
           <Tabs className="w-full max-w-5xl px-6" defaultValue="issue">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="issue">Issue</TabsTrigger>
@@ -202,6 +204,21 @@ export function Main() {
                     Issue Credential
                   </Button>
                 </form>
+                <Alert variant="warning" className="mt-5">
+                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  <AlertTitle>Warning</AlertTitle>
+                  <AlertDescription>
+                    Currently, only issuance of JWT credentials (not SD-JWT
+                    credentials) is supported when issuing to the{" "}
+                    <a
+                      className="underline"
+                      href="https://linktr.ee/paradym_id"
+                    >
+                      Paradym Wallet
+                    </a>
+                    .
+                  </AlertDescription>
+                </Alert>
               </Card>
             </TabsContent>
             <TabsContent value="receive">
