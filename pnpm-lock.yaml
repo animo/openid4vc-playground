@@ -3567,7 +3567,7 @@ packages:
       cosmiconfig: 5.2.1
       deepmerge: 4.3.1
       glob: 7.2.3
-      joi: 17.11.0
+      joi: 17.11.1
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -3694,7 +3694,7 @@ packages:
   /@react-native-community/cli-types@12.3.0:
     resolution: {integrity: sha512-MgOkmrXH4zsGxhte4YqKL7d+N8ZNEd3w1wo56MZlhu5WabwCJh87wYpU5T8vyfujFLYOFuFK5jjlcbs8F4/WDw==}
     dependencies:
-      joi: 17.11.0
+      joi: 17.11.1
     dev: false
     optional: true
 
@@ -4068,6 +4068,20 @@ packages:
     resolution: {integrity: sha512-7THexvdYUK/Dh8olBB46ErT9q/RnecnMdb5r2iwZ6be0Dt4vQLAUN7QU80H0HZBok4jRTb8ydt12x0raBSTHOg==}
     dev: false
 
+  /@sphereon/pex@2.2.2:
+    resolution: {integrity: sha512-NkR8iDTC2PSnYsOHlG2M2iOpFTTbzszs2/pL3iK3Dlv9QYLqX7NtPAlmeSwaoVP1NB1ewcs6U1DtemQAD+90yQ==}
+    engines: {node: '>=16'}
+    dependencies:
+      '@astronautlabs/jsonpath': 1.1.2
+      '@sphereon/pex-models': 2.1.5
+      '@sphereon/ssi-types': 0.17.5
+      ajv: 8.12.0
+      ajv-formats: 2.1.1(ajv@8.12.0)
+      jwt-decode: 3.1.2
+      nanoid: 3.3.7
+      string.prototype.matchall: 4.0.10
+    dev: false
+
   /@sphereon/pex@3.0.0:
     resolution: {integrity: sha512-viD3Enwt/Wf/RoTBbZXttNAcE0Scyb+UufwkNaLU4sD2nNkvi3VuJ4dSMMFGm3QlIgBWxSm1N4DnSm+LRMZidQ==}
     engines: {node: '>=18'}
@@ -4081,6 +4095,12 @@ packages:
       jwt-decode: 3.1.2
       nanoid: 3.3.7
       string.prototype.matchall: 4.0.10
+    dev: false
+
+  /@sphereon/ssi-types@0.17.5:
+    resolution: {integrity: sha512-hoQOkeOtshvIzNAG+HTqcKxeGssLVfwX7oILHJgs6VMb1GhR6QlqjMAxflDxZ/8Aq2R0I6fEPWmf73zAXY2X2Q==}
+    dependencies:
+      jwt-decode: 3.1.2
     dev: false
 
   /@sphereon/ssi-types@0.17.6-unstable.69:
@@ -5257,7 +5277,7 @@ packages:
       glob: 7.2.3
       infer-owner: 1.0.4
       lru-cache: 6.0.0
-      minipass: 3.3.6
+      minipass: 3.1.6
       minipass-collect: 1.0.2
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
@@ -8032,8 +8052,8 @@ packages:
     resolution: {integrity: sha512-gFqAIbuKyyso/3G2qhiO2OM6shY6EPP/R0+mkDbyspxKazh8BXDC5FiFsUjlczgdNz/vfra0da2y+aHrusLG/Q==}
     hasBin: true
 
-  /joi@17.11.0:
-    resolution: {integrity: sha512-NgB+lZLNoqISVy1rZocE9PZI36bL/77ie924Ri43yEvi9GUUMPeyVIr8KdFTMUlby1p0PBYMk9spIxEUQYqrJQ==}
+  /joi@17.11.1:
+    resolution: {integrity: sha512-671acnrx+w96PCcQOzvm0VYQVwNL2PVgZmDRaFuSsx8sIUmGzYElPw5lU8F3Cr0jOuPs1oM56p7W2a1cdDOwcw==}
     dependencies:
       '@hapi/hoek': 9.3.0
       '@hapi/topo': 5.1.0
@@ -8992,7 +9012,7 @@ packages:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.3.6
+      minipass: 3.1.6
     dev: false
     optional: true
 
@@ -9000,7 +9020,7 @@ packages:
     resolution: {integrity: sha512-JmQSYYpPUqX5Jyn1mXaRwOda1uQ8HP5KAT/oDSLCzt1BYRhQU0/hDtsB1ufZfEEzMZ9aAVmsBw8+FWsIXlClWw==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.3.6
+      minipass: 3.1.6
     dev: false
     optional: true
 
@@ -9008,7 +9028,7 @@ packages:
     resolution: {integrity: sha512-xuIq7cIOt09RPRJ19gdi4b+RiNvDFYe5JH+ggNvBqGqpQXcru3PcRmOZuHBKWK1Txf9+cQ+HMVN4d6z46LZP7A==}
     engines: {node: '>=8'}
     dependencies:
-      minipass: 3.3.6
+      minipass: 3.1.6
     dev: false
     optional: true
 
@@ -10869,7 +10889,7 @@ packages:
     resolution: {integrity: sha512-97qShzy1AiyxvPNIkLWoGua7xoQzzPjQ0HAH4B0rWKo7SZ6USuPcrUiAFrws0UH8RrbWmgq3LMTObhPIHbbBeQ==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.3.6
+      minipass: 3.1.6
     dev: false
     optional: true
 
@@ -12128,7 +12148,7 @@ packages:
     dev: false
 
   file:agent/dependencies/aries-framework-core-v0.4.2.tgz(expo@49.0.21)(react-native@0.73.2):
-    resolution: {integrity: sha512-v/bfO2j4CDVspwz3INNOU/4H4B8T2keqO7g2bOX81gZl9Z2dtO95mmfFY9IKgzI/f5Njj5jdwfz2Q+XUG4YdGQ==, tarball: file:agent/dependencies/aries-framework-core-v0.4.2.tgz}
+    resolution: {integrity: sha512-Ls0RomkHIOw0Gm3xw5KTnCp/DlHykI0vCb1WwCkU0taim66ZrykNZ41tbjT1rJt6i2N5Y2oCJNXeWX0FRb6tLw==, tarball: file:agent/dependencies/aries-framework-core-v0.4.2.tgz}
     id: file:agent/dependencies/aries-framework-core-v0.4.2.tgz
     name: '@aries-framework/core'
     version: 0.4.2
@@ -12137,6 +12157,9 @@ packages:
       '@digitalcredentials/jsonld-signatures': 9.3.2(expo@49.0.21)(react-native@0.73.2)
       '@digitalcredentials/vc': 1.1.2(expo@49.0.21)(react-native@0.73.2)
       '@multiformats/base-x': 4.0.1
+      '@sphereon/pex': 2.2.2
+      '@sphereon/pex-models': 2.1.5
+      '@sphereon/ssi-types': 0.17.5
       '@stablelib/ed25519': 1.0.3
       '@stablelib/sha256': 1.0.1
       '@types/ws': 8.5.10
@@ -12147,6 +12170,7 @@ packages:
       class-transformer: 0.5.1
       class-validator: 0.14.0
       did-resolver: 4.1.0
+      jsonpath: 1.1.1
       lru_map: 0.4.1
       luxon: 3.4.4
       make-error: 1.3.6
@@ -12209,7 +12233,7 @@ packages:
     dev: false
 
   file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz(@hyperledger/aries-askar-shared@0.2.0-dev.5)(expo@49.0.21)(react-native@0.73.2):
-    resolution: {integrity: sha512-E3Fe9r1EJpAp/nDCX2yOmtwqzsMHvJ2ybC5ty5dKUAhPE8NAmTVop+N0yqoRRqHaj3G44i208QWAZ3nWyd9o4g==, tarball: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz}
+    resolution: {integrity: sha512-sadk9qovHuDxQOXHFSfEyld8SbMJT5wb+y6nHSNu4Zp7GqcMyU+8dvL8zh6OyQMHBY8YO5NpVGTFvvliq+VBuQ==, tarball: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz}
     id: file:agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz
     name: '@aries-framework/openid4vc'
     version: 0.4.2

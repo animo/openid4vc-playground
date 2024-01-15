@@ -99,6 +99,9 @@ export const credentialsSupported = [
   animoOpenId4VcPlaygroundCredentialSdJwtVcJwk,
   animoOpenId4VcPlaygroundCredentialJwtVc,
   // Not really working yet
+  // FIXME: Ed25519Signature2018 required ed25519 context url
+  // but that is bullshit, as you can just use another verification
+  // method to issue/verify such as JsonWebKey or MultiKey
   // animoOpenId4VcPlaygroundCredentialLdpVc,
 ] as const satisfies OpenId4VciCredentialSupportedWithId[];
 type CredentialSupportedId = (typeof credentialsSupported)[number]["id"];
