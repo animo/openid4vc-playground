@@ -12,7 +12,8 @@
     "@hyperledger/indy-vdr-nodejs": "0.2.0-dev.5",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@sd-jwt/utils": "0.1.2-alpha.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -31,6 +32,8 @@
     "@aries-framework/sd-jwt-vc": "file:./dependencies/aries-framework-sd-jwt-vc-v0.4.2.tgz",
     "@aries-framework/indy-vdr": "file:./dependencies/aries-framework-indy-vdr-v0.4.2.tgz",
     "@aries-framework/cheqd": "file:./dependencies/aries-framework-cheqd-v0.4.2.tgz",
-    "@sd-jwt/core": "0.1.2-alpha.0"
+    "@sd-jwt/core": "0.1.2-alpha.0",
+    "@sd-jwt/utils": "0.1.2-alpha.0",
+    "@sd-jwt/types": "0.1.2-alpha.1"
   }
 }

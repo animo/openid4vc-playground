@@ -13,6 +13,8 @@ overrides:
   '@aries-framework/indy-vdr': file:./agent/dependencies/aries-framework-indy-vdr-v0.4.2.tgz
   '@aries-framework/cheqd': file:./agent/dependencies/aries-framework-cheqd-v0.4.2.tgz
   '@sd-jwt/core': 0.1.2-alpha.0
+  '@sd-jwt/utils': 0.1.2-alpha.0
+  '@sd-jwt/types': 0.1.2-alpha.1
 
 importers:
 
@@ -47,6 +49,9 @@ importers:
       '@hyperledger/indy-vdr-nodejs':
         specifier: 0.2.0-dev.5
         version: 0.2.0-dev.5
+      '@sd-jwt/utils':
+        specifier: 0.1.2-alpha.0
+        version: 0.1.2-alpha.0
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -3914,6 +3919,17 @@ packages:
       buffer: 6.0.3
     dev: false
 
+  /@sd-jwt/types@0.1.2-alpha.1:
+    resolution: {integrity: sha512-SuHOOAsYO3EPUHjeM0ws4/S4DttLwyw9//dS/08ILGLuh0dNgXQUpuC9QZkjIgZ8deZEkTFS1Jre9O9FNK8B5Q==}
+    dev: false
+
+  /@sd-jwt/utils@0.1.2-alpha.0:
+    resolution: {integrity: sha512-0NG94NDkWIgETRDE2y6lD167JgaFBYENsqh3CajaHFdMvpmt0/e6jobyoe9jjMeMZ0BA+LLj57/9iUKUy153wQ==}
+    dependencies:
+      '@sd-jwt/types': 0.1.2-alpha.1
+      buffer: 6.0.3
+    dev: false
+
   /@segment/loosely-validate-event@2.0.0:
     resolution: {integrity: sha512-ZMCSfztDBqwotkl848ODgVcAmN4OItEWDCkshcKz0/W6gGSQayuuCtWV/MlodFivAZD793d6UgANd6wCXUfrIw==}
     dependencies:
@@ -5229,7 +5245,7 @@ packages:
       glob: 7.2.3
       infer-owner: 1.0.4
       lru-cache: 6.0.0
-      minipass: 3.1.6
+      minipass: 3.3.6
       minipass-collect: 1.0.2
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
@@ -8964,7 +8980,7 @@ packages:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.1.6
+      minipass: 3.3.6
     dev: false
     optional: true
 
@@ -8972,7 +8988,7 @@ packages:
     resolution: {integrity: sha512-JmQSYYpPUqX5Jyn1mXaRwOda1uQ8HP5KAT/oDSLCzt1BYRhQU0/hDtsB1ufZfEEzMZ9aAVmsBw8+FWsIXlClWw==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.1.6
+      minipass: 3.3.6
     dev: false
     optional: true
 
@@ -8980,7 +8996,7 @@ packages:
     resolution: {integrity: sha512-xuIq7cIOt09RPRJ19gdi4b+RiNvDFYe5JH+ggNvBqGqpQXcru3PcRmOZuHBKWK1Txf9+cQ+HMVN4d6z46LZP7A==}
     engines: {node: '>=8'}
     dependencies:
-      minipass: 3.1.6
+      minipass: 3.3.6
     dev: false
     optional: true
 
@@ -10176,7 +10192,7 @@ packages:
     dependencies:
       object-assign: 4.1.1
       react: 18.2.0
-      react-is: 16.13.1
+      react-is: 18.2.0
     dev: false
     optional: true
 
@@ -10822,7 +10838,7 @@ packages:
     resolution: {integrity: sha512-97qShzy1AiyxvPNIkLWoGua7xoQzzPjQ0HAH4B0rWKo7SZ6USuPcrUiAFrws0UH8RrbWmgq3LMTObhPIHbbBeQ==}
     engines: {node: '>= 8'}
     dependencies:
-      minipass: 3.1.6
+      minipass: 3.3.6
     dev: false
     optional: true
 

@@ -1,7 +1,10 @@
 import { CredentialRequestToCredentialMapper } from "@aries-framework/openid4vc";
+import { W3cCredential, parseDid } from "@aries-framework/core";
 import { agent } from "./agent";
 import {
-  animoOpenId4VcPlaygroundCredential,
+  animoOpenId4VcPlaygroundCredentialJwtVc,
+  animoOpenId4VcPlaygroundCredentialSdJwtVcDid,
+  animoOpenId4VcPlaygroundCredentialSdJwtVcJwk,
   credentialsSupported,
   issuerDisplay,
 } from "./issuerMetadata";
@@ -25,6 +28,16 @@ export async function getIssuer() {
   return issuers[0];
 }
 
+export async function updateIssuer() {
+  const issuer = await getIssuer();
+
+  await agent.modules.openId4VcIssuer.updateIssuerMetadata({
+    issuerId: issuer.issuerId,
+    credentialsSupported,
+    display: issuerDisplay,
+  });
+}
+
 export const credentialRequestToCredentialMapper: CredentialRequestToCredentialMapper =
   async ({
     credentialsSupported,
@@ -42,12 +55,17 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
     const issuerDidUrl = didDocument.verificationMethod?.[0].id;
     if (!issuerDidUrl) throw new Error("Issuer DID URL not found");
 
-    if (credentialSupported.id === animoOpenId4VcPlaygroundCredential.id) {
+    if (
+      credentialSupported.format === "vc+sd-jwt" &&
+      (credentialSupported.id ===
+        animoOpenId4VcPlaygroundCredentialSdJwtVcDid.id ||
+        credentialSupported.id ===
+          animoOpenId4VcPlaygroundCredentialSdJwtVcJwk.id)
+    ) {
       return {
         holder: holderBinding,
-        // TODO: add some extra fields
         payload: {
-          vct: animoOpenId4VcPlaygroundCredential.vct,
+          vct: credentialSupported.vct,
 
           playground: {
             framework: "Aries Framework JavaScript",
@@ -66,6 +84,34 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
             version: true,
           },
         } as any,
+      };
+    }
+
+    if (
+      credentialSupported.format === "jwt_vc_json" &&
+      credentialSupported.id === animoOpenId4VcPlaygroundCredentialJwtVc.id
+    ) {
+      if (holderBinding.method !== "did") {
+        throw new Error("Only did holder binding supported for JWT VC");
+      }
+      return {
+        verificationMethod: issuerDidUrl,
+        credential: W3cCredential.fromJson({
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          // TODO: should 'VerifiableCredential' be in the issuer metadata type?
+          type: ["VerifiableCredential", credentialSupported.types],
+          issuanceDate: new Date().toISOString(),
+          issuer: issuerDid,
+          credentialSubject: {
+            id: parseDid(holderBinding.didUrl).did,
+            playground: {
+              framework: "Aries Framework JavaScript",
+              language: "TypeScript",
+              version: "1.0",
+              createdBy: "Animo Solutions",
+            },
+          },
+        }),
       };
     }
 

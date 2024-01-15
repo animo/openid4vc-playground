@@ -8,6 +8,8 @@
     "@aries-framework/sd-jwt-vc": "file:./agent/dependencies/aries-framework-sd-jwt-vc-v0.4.2.tgz",
     "@aries-framework/indy-vdr": "file:./agent/dependencies/aries-framework-indy-vdr-v0.4.2.tgz",
     "@aries-framework/cheqd": "file:./agent/dependencies/aries-framework-cheqd-v0.4.2.tgz",
-    "@sd-jwt/core": "0.1.2-alpha.0"
+    "@sd-jwt/core": "0.1.2-alpha.0",
+    "@sd-jwt/utils": "0.1.2-alpha.0",
+    "@sd-jwt/types": "0.1.2-alpha.1"
   }
 }
