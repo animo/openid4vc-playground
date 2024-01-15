@@ -11,5 +11,10 @@
     "@sd-jwt/core": "0.1.2-alpha.0",
     "@sd-jwt/utils": "0.1.2-alpha.0",
     "@sd-jwt/types": "0.1.2-alpha.1"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@sphereon/oid4vci-issuer@0.8.2-next.26": "patches/@sphereon__oid4vci-issuer@0.8.2-next.26.patch"
+    }
   }
 }

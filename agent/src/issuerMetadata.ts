@@ -54,7 +54,7 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
 } as const satisfies OpenId4VciCredentialSupportedWithId;
 
 export const animoOpenId4VcPlaygroundCredentialJwtVc = {
-  id: "AnimoOpenId4VcPlayground",
+  id: "AnimoOpenId4VcPlaygroundJwtVc",
   format: OpenId4VciCredentialFormatProfile.JwtVcJson,
   types: ["AnimoOpenId4VcPlayground"],
   cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
@@ -70,10 +70,35 @@ export const animoOpenId4VcPlaygroundCredentialJwtVc = {
   ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;
 
+export const animoOpenId4VcPlaygroundCredentialLdpVc = {
+  id: "AnimoOpenId4VcPlaygroundLdpVc",
+  format: OpenId4VciCredentialFormatProfile.LdpVc,
+  types: ["AnimoOpenId4VcPlayground"],
+  "@context": ["https://www.w3.org/2018/credentials/v1"],
+  cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
+  cryptographic_suites_supported: [
+    JwaSignatureAlgorithm.EdDSA,
+    // TODO: is it needed that proof type is added here?
+    // According to spec yes, but it's only used for the request proof,
+    // which is a jwt/cwt (so alg)
+    "Ed25519Signature2018",
+  ],
+  display: [
+    {
+      name: "Animo OpenID4VC Playground - LDP VC",
+      description: "Issued using Animo's OpenID4VC Playground",
+      background_color: "#FFFFFF",
+      locale: "en",
+      text_color: "#E17471", // animo red (make animo blue?)
+    },
+  ],
+} as const satisfies OpenId4VciCredentialSupportedWithId;
+
 export const credentialsSupported = [
   animoOpenId4VcPlaygroundCredentialSdJwtVcDid,
   animoOpenId4VcPlaygroundCredentialSdJwtVcJwk,
   animoOpenId4VcPlaygroundCredentialJwtVc,
+  animoOpenId4VcPlaygroundCredentialLdpVc,
 ] as const satisfies OpenId4VciCredentialSupportedWithId[];
 type CredentialSupportedId = (typeof credentialsSupported)[number]["id"];
 export const credentialSupportedIds = credentialsSupported.map((s) => s.id) as [

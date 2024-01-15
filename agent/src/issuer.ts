@@ -3,6 +3,7 @@ import { W3cCredential, parseDid } from "@aries-framework/core";
 import { agent } from "./agent";
 import {
   animoOpenId4VcPlaygroundCredentialJwtVc,
+  animoOpenId4VcPlaygroundCredentialLdpVc,
   animoOpenId4VcPlaygroundCredentialSdJwtVcDid,
   animoOpenId4VcPlaygroundCredentialSdJwtVcJwk,
   credentialsSupported,
@@ -88,8 +89,11 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
     }
 
     if (
-      credentialSupported.format === "jwt_vc_json" &&
-      credentialSupported.id === animoOpenId4VcPlaygroundCredentialJwtVc.id
+      (credentialSupported.format === "jwt_vc_json" &&
+        credentialSupported.id ===
+          animoOpenId4VcPlaygroundCredentialJwtVc.id) ||
+      (credentialSupported.format === "ldp_vc" &&
+        credentialSupported.id === animoOpenId4VcPlaygroundCredentialLdpVc.id)
     ) {
       if (holderBinding.method !== "did") {
         throw new Error("Only did holder binding supported for JWT VC");
@@ -97,9 +101,22 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
       return {
         verificationMethod: issuerDidUrl,
         credential: W3cCredential.fromJson({
-          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          // FIXME: we need to include/cache default contexts in AFJ
+          // It quite slow the first time now
+          // And not secure
+          "@context":
+            credentialSupported.format === "ldp_vc"
+              ? [
+                  "https://www.w3.org/2018/credentials/v1",
+                  // Fields must be defined for JSON-LD
+                  {
+                    "@vocab":
+                      "https://www.w3.org/ns/credentials/issuer-dependent#",
+                  },
+                ]
+              : ["https://www.w3.org/2018/credentials/v1"],
           // TODO: should 'VerifiableCredential' be in the issuer metadata type?
-          type: ["VerifiableCredential", credentialSupported.types],
+          type: ["VerifiableCredential", ...credentialSupported.types],
           issuanceDate: new Date().toISOString(),
           issuer: issuerDid,
           credentialSubject: {
