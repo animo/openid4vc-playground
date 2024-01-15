@@ -11,11 +11,15 @@ WORKDIR /app
 FROM base AS prod-deps
 COPY dependencies /app/dependencies
 COPY tsconfig.json /app/tsconfig.json
+COPY patches patches
+
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
 
 FROM base AS build
 COPY dependencies /app/dependencies
 COPY tsconfig.json /app/tsconfig.json
+COPY patches patches
+
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 COPY src src
 RUN pnpm run build

@@ -116,6 +116,8 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
                 ]
               : ["https://www.w3.org/2018/credentials/v1"],
           // TODO: should 'VerifiableCredential' be in the issuer metadata type?
+          // FIXME: jwt verification did not fail when this was array within array
+          // W3cCredential is not validated in AFJ???
           type: ["VerifiableCredential", ...credentialSupported.types],
           issuanceDate: new Date().toISOString(),
           issuer: issuerDid,
