@@ -1,5 +1,4 @@
-// FIXME: we should not export the type like this
-import { CredentialOfferPayloadV1_0_11 } from "@aries-framework/openid4vc";
+import { OpenId4VciCredentialOfferPayload } from "@aries-framework/openid4vc";
 import { agent } from "./agent";
 
 interface OfferSessionMetadata {
@@ -7,7 +6,7 @@ interface OfferSessionMetadata {
 }
 
 export async function setOfferSessionMetadata(
-  offer: CredentialOfferPayloadV1_0_11,
+  offer: OpenId4VciCredentialOfferPayload,
   metadata: OfferSessionMetadata
 ) {
   const preAuthorizedCode = offer.grants?.[
@@ -23,7 +22,7 @@ export async function setOfferSessionMetadata(
 }
 
 export async function getOfferSessionMetadata(
-  offer: CredentialOfferPayloadV1_0_11
+  offer: OpenId4VciCredentialOfferPayload
 ) {
   const preAuthorizedCode = offer.grants?.[
     "urn:ietf:params:oauth:grant-type:pre-authorized_code"

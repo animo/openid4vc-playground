@@ -12,7 +12,10 @@ export const HighLight = ({
 }) => (
   <Highlight theme={themes.vsLight} code={code.trim()} language={language}>
     {({ className, style, tokens, getLineProps, getTokenProps }) => (
-      <pre className={cn(className, styles.line, "break-all")} style={style}>
+      <pre
+        className={cn(className, styles.line, "break-all w-full")}
+        style={style}
+      >
         {tokens.map((line, i) => (
           <div key={i} {...getLineProps({ line })}>
             <span className={cn(styles.lineNumber, "break-all")}>{i + 1}</span>

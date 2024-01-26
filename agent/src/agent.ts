@@ -11,7 +11,6 @@ import {
   joinUriParts,
 } from "@aries-framework/core";
 import { agentDependencies } from "@aries-framework/node";
-import { SdJwtVcModule } from "@aries-framework/sd-jwt-vc";
 import { AskarModule } from "@aries-framework/askar";
 import {
   CheqdModule,
@@ -28,6 +27,7 @@ import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
 import {
   OpenId4VcHolderModule,
   OpenId4VcIssuerModule,
+  OpenId4VcVerifierModule,
 } from "@aries-framework/openid4vc";
 import {
   AGENT_HOST,
@@ -37,7 +37,12 @@ import {
 import { Router } from "express";
 import { credentialRequestToCredentialMapper } from "./issuer";
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.log("Unhandled rejection", reason);
+});
+
 export const openId4VciRouter = Router();
+export const openId4VpRouter = Router();
 
 export const agent = new Agent({
   dependencies: agentDependencies,
@@ -96,7 +101,6 @@ export const agent = new Agent({
         new CheqdDidRegistrar(),
       ],
     }),
-    sdJwtVc: new SdJwtVcModule(),
     askar: new AskarModule({
       ariesAskar,
     }),
@@ -110,5 +114,9 @@ export const agent = new Agent({
       },
     }),
     openId4VcHolder: new OpenId4VcHolderModule(),
+    openId4VcVerifier: new OpenId4VcVerifierModule({
+      baseUrl: joinUriParts(AGENT_HOST, ["oid4vp"]),
+      router: openId4VpRouter,
+    }),
   },
 });

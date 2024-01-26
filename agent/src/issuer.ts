@@ -1,4 +1,4 @@
-import { CredentialRequestToCredentialMapper } from "@aries-framework/openid4vc";
+import { OpenId4VciCredentialRequestToCredentialMapper } from "@aries-framework/openid4vc";
 import { W3cCredential, parseDid } from "@aries-framework/core";
 import { agent } from "./agent";
 import {
@@ -39,7 +39,7 @@ export async function updateIssuer() {
   });
 }
 
-export const credentialRequestToCredentialMapper: CredentialRequestToCredentialMapper =
+export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper =
   async ({
     credentialsSupported,
     credentialOffer,
@@ -64,6 +64,7 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
           animoOpenId4VcPlaygroundCredentialSdJwtVcJwk.id)
     ) {
       return {
+        format: "vc+sd-jwt",
         holder: holderBinding,
         payload: {
           vct: credentialSupported.vct,
@@ -99,6 +100,8 @@ export const credentialRequestToCredentialMapper: CredentialRequestToCredentialM
         throw new Error("Only did holder binding supported for JWT VC");
       }
       return {
+        format:
+          credentialSupported.format === "jwt_vc_json" ? "jwt_vc" : "ldp_vc",
         verificationMethod: issuerDidUrl,
         credential: W3cCredential.fromJson({
           // FIXME: we need to include/cache default contexts in AFJ

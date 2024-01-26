@@ -4,76 +4,14 @@
  * @see https://v0.dev/t/yoUa0S8t4oT
  */
 import { TabsTrigger, TabsList, TabsContent, Tabs } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import QRCode from "react-qr-code";
-import {
-  SelectValue,
-  SelectTrigger,
-  SelectItem,
-  SelectGroup,
-  SelectContent,
-  Select,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { createOffer, receiveOffer, getIssuer } from "@/lib/api";
-import { FormEvent, useEffect, useState } from "react";
-import { HighLight } from "./highLight";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { IssueTab } from "./IssueTab";
+import { ReceiveTab } from "./ReceiveTab";
+import { VerifyTab } from "./VerifyTab";
 
 export function Main() {
-  const [credentialType, setCredentialType] = useState<string>();
-  const [issuerDid, setIssuerDid] = useState<string>();
-  const [credentialOfferUri, setCredentialOfferUri] = useState<string>();
-  const [receiveCredentialOfferUri, setReceiveCredentialOfferUri] =
-    useState<string>();
-  const [receivedCredentials, setReceivedCredentials] = useState();
-  const [issuer, setIssuer] = useState<{
-    credentialsSupported: Array<{ id: string; display: [{ name: string }] }>;
-    availableDids: string[];
-    display: {};
-  }>();
-
-  useEffect(() => {
-    getIssuer().then(setIssuer);
-  }, []);
-
-  async function onSubmitIssueCredential(e: FormEvent) {
-    e.preventDefault();
-    const _issuerDid = issuerDid ?? issuer?.availableDids[0];
-    const _credentialType =
-      credentialType ?? issuer?.credentialsSupported[0].id;
-    if (!_issuerDid || !_credentialType) {
-      throw new Error("No issuer or credential type");
-    }
-
-    const offer = await createOffer({
-      credentialSupportedId: _credentialType,
-      issuerDid: _issuerDid,
-    });
-    setCredentialOfferUri(offer.credentialOfferUri);
-  }
-
-  async function onSubmitReceiveOffer(e: FormEvent) {
-    e.preventDefault();
-    if (!receiveCredentialOfferUri) return;
-
-    setReceivedCredentials(await receiveOffer(receiveCredentialOfferUri));
-  }
-
   return (
     <>
-      <main
-        key="1"
-        className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900"
-      >
+      <main key="1" className="flex flex-col min-h-screen bg-gray-100">
         <div className="flex items-center justify-between bg-gray-100 w-full p-4">
           <div className="flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -94,171 +32,19 @@ export function Main() {
         </div>
         <div className="flex w-full items-center justify-center">
           <Tabs className="w-full max-w-5xl px-6" defaultValue="issue">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="issue">Issue</TabsTrigger>
               <TabsTrigger value="receive">Receive</TabsTrigger>
+              <TabsTrigger value="verify">Verify</TabsTrigger>
             </TabsList>
             <TabsContent value="issue">
-              <Card className="p-6">
-                <form className="space-y-4" onSubmit={onSubmitIssueCredential}>
-                  <div className="space-y-2">
-                    <Label htmlFor="credential-type">Credential Type</Label>
-                    <Select
-                      name="credential-type"
-                      required
-                      onValueChange={setCredentialType}
-                    >
-                      <SelectTrigger className="w-[320px]">
-                        <SelectValue
-                          placeholder={
-                            !issuer ? "Loading" : "Select a credential type"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {(issuer?.credentialsSupported ?? []).map(
-                            (credential) => {
-                              return (
-                                <SelectItem
-                                  key={credential.id}
-                                  value={credential.id}
-                                >
-                                  {credential.display[0].name}
-                                </SelectItem>
-                              );
-                            }
-                          ) ?? null}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="issuer-did">Issuer Did</Label>
-                    <Select
-                      name="issuer-did"
-                      required
-                      onValueChange={setIssuerDid}
-                    >
-                      <SelectTrigger className="w-[320px]">
-                        <SelectValue
-                          placeholder={
-                            !issuer ? "Loading" : "Select an issuer did"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {(issuer?.availableDids ?? []).map((availableDid) => {
-                            return (
-                              <SelectItem
-                                key={availableDid}
-                                value={availableDid}
-                              >
-                                {availableDid}
-                              </SelectItem>
-                            );
-                          }) ?? null}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-center items-center bg-gray-200 dark:bg-gray-800 min-h-64 w-full rounded-md">
-                    {credentialOfferUri ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
-                            <div className="bg-white p-5 rounded-md w-[296px]">
-                              <QRCode size={256} value={credentialOfferUri} />
-                            </div>
-                            <TooltipTrigger asChild>
-                              <p
-                                onClick={(e) =>
-                                  navigator.clipboard.writeText(
-                                    e.currentTarget.innerText
-                                  )
-                                }
-                                className="text-gray-500 dark:text-gray-400 break-all cursor-pointer"
-                              >
-                                {credentialOfferUri}
-                              </p>
-                            </TooltipTrigger>
-                          </div>
-
-                          <TooltipContent>
-                            <p>Click to copy</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <p className="text-gray-500 dark:text-gray-400 break-all">
-                        Credential offer will be displayed here
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    onClick={onSubmitIssueCredential}
-                    className="w-full"
-                    onSubmit={onSubmitIssueCredential}
-                  >
-                    Issue Credential
-                  </Button>
-                </form>
-                <Alert variant="warning" className="mt-5">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertTitle>Warning</AlertTitle>
-                  <AlertDescription>
-                    Currently, only issuance of JWT credentials (not SD-JWT
-                    credentials) using a did method other than{" "}
-                    <code>did:cheqd</code> is supported when issuing to the{" "}
-                    <a
-                      className="underline"
-                      href="https://linktr.ee/paradym_id"
-                    >
-                      Paradym Wallet
-                    </a>
-                    .
-                  </AlertDescription>
-                </Alert>
-              </Card>
+              <IssueTab />
             </TabsContent>
             <TabsContent value="receive">
-              <Card className="p-6">
-                <form className="space-y-4" onSubmit={onSubmitReceiveOffer}>
-                  <div className="space-y-2">
-                    <Label htmlFor="credential-offer-uri">
-                      Credential Offer URI
-                    </Label>
-                    <textarea
-                      className="w-full h-20 p-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
-                      id="credential-offer-uri"
-                      required
-                      onChange={(e) =>
-                        setReceiveCredentialOfferUri(e.currentTarget.value)
-                      }
-                    />
-                  </div>
-                  <div className="flex justify-center items-center bg-gray-200 dark:bg-gray-800 min-h-64 w-full rounded-md">
-                    {receivedCredentials ? (
-                      <HighLight
-                        code={JSON.stringify(receivedCredentials, null, 2)}
-                        language="json"
-                      />
-                    ) : (
-                      <p className="text-gray-500 dark:text-gray-400">
-                        JSON content of the credential will be displayed here
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={onSubmitReceiveOffer}
-                    onSubmit={onSubmitReceiveOffer}
-                  >
-                    Receive Credential
-                  </Button>
-                </form>
-              </Card>
+              <ReceiveTab />
+            </TabsContent>
+            <TabsContent value="verify">
+              <VerifyTab />
             </TabsContent>
           </Tabs>
         </div>

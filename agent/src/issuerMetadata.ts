@@ -5,17 +5,21 @@ import {
   OpenId4VciIssuerMetadataDisplay,
 } from "@aries-framework/openid4vc";
 
+const ANIMO_BLUE = "#5e7db6";
+const ANIMO_RED = "#E17471";
+const ANIMO_DARK_BACKGROUND = "#202223";
+const WHITE = "#FFFFFF";
+
 export const issuerDisplay = [
   {
-    background_color: "#FFFFFF",
-    description: "Animo OpenID4VC Playground",
+    background_color: ANIMO_DARK_BACKGROUND,
     name: "Animo OpenID4VC Playground",
     locale: "en",
     logo: {
       alt_text: "Animo logo",
-      url: "https://i.imgur.com/8B37E4a.png",
+      url: "https://i.imgur.com/PUAIUed.jpeg",
     },
-    text_color: "#E17471", // animo red
+    text_color: WHITE,
   },
 ] satisfies OpenId4VciIssuerMetadataDisplay[];
 
@@ -27,11 +31,11 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcDid = {
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
   display: [
     {
-      name: "Animo OpenID4VC Playground - SD-JWT-VC (did holder binding)",
-      description: "Issued using Animo's OpenID4VC Playground",
-      background_color: "#FFFFFF",
+      name: "SD-JWT-VC",
+      description: "DID holder binding",
+      background_color: ANIMO_DARK_BACKGROUND,
       locale: "en",
-      text_color: "#E17471", // animo red (make animo blue?)
+      text_color: WHITE,
     },
   ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;
@@ -44,11 +48,11 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
   display: [
     {
-      name: "Animo OpenID4VC Playground - SD-JWT-VC (jwk holder binding)",
-      description: "Issued using Animo's OpenID4VC Playground",
-      background_color: "#FFFFFF",
+      name: "SD-JWT-VC",
+      description: "JWK holder binding",
+      background_color: ANIMO_DARK_BACKGROUND,
       locale: "en",
-      text_color: "#E17471", // animo red (make animo blue?)
+      text_color: WHITE,
     },
   ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;
@@ -61,11 +65,10 @@ export const animoOpenId4VcPlaygroundCredentialJwtVc = {
   cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
   display: [
     {
-      name: "Animo OpenID4VC Playground - JWT VC",
-      description: "Issued using Animo's OpenID4VC Playground",
-      background_color: "#FFFFFF",
+      name: "JWT VC",
+      background_color: ANIMO_DARK_BACKGROUND,
       locale: "en",
-      text_color: "#E17471", // animo red (make animo blue?)
+      text_color: WHITE,
     },
   ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;
@@ -85,11 +88,10 @@ export const animoOpenId4VcPlaygroundCredentialLdpVc = {
   ],
   display: [
     {
-      name: "Animo OpenID4VC Playground - LDP VC",
-      description: "Issued using Animo's OpenID4VC Playground",
-      background_color: "#FFFFFF",
+      name: "LDP VC",
+      background_color: ANIMO_DARK_BACKGROUND,
       locale: "en",
-      text_color: "#E17471", // animo red (make animo blue?)
+      text_color: WHITE,
     },
   ],
 } as const satisfies OpenId4VciCredentialSupportedWithId;

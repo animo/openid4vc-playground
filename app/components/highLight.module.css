@@ -4,7 +4,7 @@
   line-height: 1.3;
   font-size: 0.8rem;
   font-family: "JetBrains Mono", monospace;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 .lineNumber {
@@ -12,4 +12,11 @@
   width: 2em;
   user-select: none;
   opacity: 0.3;
+}
+
+pre.language-json,
+code.language-json {
+  white-space: normal;
+  overflow: auto;
+  word-break: break-word;
 }

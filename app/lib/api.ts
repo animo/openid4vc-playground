@@ -7,7 +7,7 @@ export async function createOffer({
   credentialSupportedId: string;
   issuerDid: string;
 }) {
-  const response = await fetch(NEXT_PUBLIC_API_URL + "/api/offers/create", {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,7 +26,7 @@ export async function createOffer({
 }
 
 export async function getIssuer() {
-  const response = await fetch(NEXT_PUBLIC_API_URL + "/api/issuer");
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/issuer`);
 
   if (!response.ok) {
     throw new Error("Failed to get issuer");
@@ -36,7 +36,7 @@ export async function getIssuer() {
 }
 
 export async function receiveOffer(offerUri: string) {
-  const response = await fetch(NEXT_PUBLIC_API_URL + "/api/offers/receive", {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/receive`, {
     headers: {
       "Content-Type": "application/json",
     },
@@ -48,6 +48,64 @@ export async function receiveOffer(offerUri: string) {
 
   if (!response.ok) {
     throw new Error("Failed to receive offer");
+  }
+
+  return response.json();
+}
+
+export async function createRequest({
+  presentationDefinition,
+}: {
+  presentationDefinition: any;
+}) {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      presentationDefinition,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create request");
+  }
+
+  return response.json();
+}
+
+export async function getRequestStatus({ requestId }: { requestId: string }) {
+  const response = await fetch(
+    `${NEXT_PUBLIC_API_URL}/api/requests/${requestId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get request status");
+  }
+
+  return response.json();
+}
+
+export async function receiveRequest(requestUri: string) {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/receive`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+    body: JSON.stringify({
+      authorizationRequestUri: requestUri,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to receive request");
   }
 
   return response.json();

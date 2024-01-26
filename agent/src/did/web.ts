@@ -41,6 +41,8 @@ export async function createDidWeb() {
     )
     .addAssertionMethod(ed25519KeyId)
     .addAssertionMethod(p256KeyId)
+    .addAuthentication(ed25519KeyId)
+    .addAuthentication(p256KeyId)
     .build();
 
   await agent.dids.import({

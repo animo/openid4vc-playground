@@ -5,10 +5,6 @@
       .cls-1{fill:#202223;}
       .cls-2{fill:#f16c6d;}
     }
-      @media (prefers-color-scheme: dark) {
-      .cls-1{fill:#F5F5F4;}
-      .cls-2{fill:#557EBA;}
-    }
       </style>
    </defs>
    <g id="Layer_2" data-name="Layer 2">
