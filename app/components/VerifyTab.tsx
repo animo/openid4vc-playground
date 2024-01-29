@@ -52,6 +52,11 @@ export function VerifyTab() {
   async function onSubmitCreateRequest(e: FormEvent) {
     e.preventDefault();
 
+    // Clear state
+    setAuthorizationRequestUri(undefined);
+    setRequestId(undefined);
+    setRequestStatus(undefined);
+
     const request = await createRequest({
       presentationDefinition: {
         id: crypto.randomUUID(),
