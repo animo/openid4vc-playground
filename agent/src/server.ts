@@ -26,7 +26,7 @@ async function run() {
   app.use(cors({ origin: "*" }));
 
   app.use("/oid4vci", openId4VciRouter);
-  app.use("/oid4vp", openId4VpRouter);
+  app.use("/siop", openId4VpRouter);
   app.use("/api", apiRouter);
   app.use("/.well-known/did.json", async (_, response: Response) => {
     const didWeb = await getWebDidDocument();

@@ -37,7 +37,7 @@ import {
 import { Router } from "express";
 import { credentialRequestToCredentialMapper } from "./issuer";
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   console.log("Unhandled rejection", reason);
 });
 
@@ -115,7 +115,7 @@ export const agent = new Agent({
     }),
     openId4VcHolder: new OpenId4VcHolderModule(),
     openId4VcVerifier: new OpenId4VcVerifierModule({
-      baseUrl: joinUriParts(AGENT_HOST, ["oid4vp"]),
+      baseUrl: joinUriParts(AGENT_HOST, ["siop"]),
       router: openId4VpRouter,
     }),
   },
