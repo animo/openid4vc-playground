@@ -1,12 +1,3 @@
 {
-  "name": "openid4vc-playground",
-  "resolutions": {
-    "@aries-framework/core": "file:./agent/dependencies/aries-framework-core-v0.4.2.tgz",
-    "@aries-framework/node": "file:./agent/dependencies/aries-framework-node-v0.4.2.tgz",
-    "@aries-framework/openid4vc": "file:./agent/dependencies/aries-framework-openid4vc-v0.4.2.tgz",
-    "@aries-framework/askar": "file:./agent/dependencies/aries-framework-askar-v0.4.2.tgz",
-    "@aries-framework/sd-jwt-vc": "file:./agent/dependencies/aries-framework-sd-jwt-vc-v0.4.2.tgz",
-    "@aries-framework/indy-vdr": "file:./agent/dependencies/aries-framework-indy-vdr-v0.4.2.tgz",
-    "@aries-framework/cheqd": "file:./agent/dependencies/aries-framework-cheqd-v0.4.2.tgz"
-  }
+  "name": "openid4vc-playground"
 }

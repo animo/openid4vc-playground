@@ -9,26 +9,26 @@ import {
   LogLevel,
   WebDidResolver,
   joinUriParts,
-} from "@aries-framework/core";
-import { agentDependencies } from "@aries-framework/node";
-import { AskarModule } from "@aries-framework/askar";
+} from "@credo-ts/core";
+import { agentDependencies } from "@credo-ts/node";
+import { AskarModule } from "@credo-ts/askar";
 import {
   CheqdModule,
   CheqdDidRegistrar,
   CheqdDidResolver,
-} from "@aries-framework/cheqd";
+} from "@credo-ts/cheqd";
 import {
   IndyVdrIndyDidRegistrar,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
-} from "@aries-framework/indy-vdr";
+} from "@credo-ts/indy-vdr";
 import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
 import {
   OpenId4VcHolderModule,
   OpenId4VcIssuerModule,
   OpenId4VcVerifierModule,
-} from "@aries-framework/openid4vc";
+} from "@credo-ts/openid4vc";
 import {
   AGENT_HOST,
   AGENT_WALLET_KEY,

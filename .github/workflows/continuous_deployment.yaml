@@ -124,10 +124,12 @@ jobs:
           AGENT_WALLET_KEY: ${{ secrets.AGENT_WALLET_KEY }}
           CHEQD_TESTNET_COSMOS_PAYER_SEED: ${{ secrets.CHEQD_TESTNET_COSMOS_PAYER_SEED }}
           DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED: ${{ secrets.DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED }}
+          P256_SEED: ${{ secrets.P256_SEED }}
+          ED25519_SEED: ${{ secrets.ED25519_SEED }}
         with:
           host: dashboard.dev.animo.id
           username: root
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          envs: AGENT_WALLET_KEY,DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED,CHEQD_TESTNET_COSMOS_PAYER_SEED
+          envs: P256_SEED,ED25519_SEED,AGENT_WALLET_KEY,DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED,CHEQD_TESTNET_COSMOS_PAYER_SEED
           script: |
-            AGENT_WALLET_KEY=${AGENT_WALLET_KEY} CHEQD_TESTNET_COSMOS_PAYER_SEED=${CHEQD_TESTNET_COSMOS_PAYER_SEED} DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED=${DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED} docker stack deploy --compose-file openid4vc-playground/docker-compose.yml openid4vc-playground --with-registry-auth
+            ED25519_SEED=${ED25519_SEED} P256_SEED=${P256_SEED} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} CHEQD_TESTNET_COSMOS_PAYER_SEED=${CHEQD_TESTNET_COSMOS_PAYER_SEED} DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED=${DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED} docker stack deploy --compose-file openid4vc-playground/docker-compose.yml openid4vc-playground --with-registry-auth

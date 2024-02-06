@@ -30,7 +30,7 @@ export function IssueTab() {
       id: string;
       display: [{ name: string; description?: string }];
     }>;
-    availableDids: string[];
+    availableDidMethods: string[];
     display: {};
   }>();
 
@@ -39,16 +39,16 @@ export function IssueTab() {
   }, []);
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault();
-    const _issuerDid = issuerDid ?? issuer?.availableDids[0];
+    const _issuerDidMethod = issuerDid ?? issuer?.availableDidMethods[0];
     const _credentialType =
       credentialType ?? issuer?.credentialsSupported[0].id;
-    if (!_issuerDid || !_credentialType) {
+    if (!_issuerDidMethod || !_credentialType) {
       throw new Error("No issuer or credential type");
     }
 
     const offer = await createOffer({
       credentialSupportedId: _credentialType,
-      issuerDid: _issuerDid,
+      issuerDidMethod: _issuerDidMethod,
     });
     setCredentialOfferUri(offer.credentialOffer);
   }
@@ -94,13 +94,18 @@ export function IssueTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {(issuer?.availableDids ?? []).map((availableDid) => {
-                  return (
-                    <SelectItem key={availableDid} value={availableDid}>
-                      {availableDid}
-                    </SelectItem>
-                  );
-                }) ?? null}
+                {(issuer?.availableDidMethods ?? []).map(
+                  (availableDidMethod) => {
+                    return (
+                      <SelectItem
+                        key={availableDidMethod}
+                        value={availableDidMethod}
+                      >
+                        {availableDidMethod}
+                      </SelectItem>
+                    );
+                  }
+                ) ?? null}
               </SelectGroup>
             </SelectContent>
           </Select>

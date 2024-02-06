@@ -1,5 +1,10 @@
-import { OpenId4VciCredentialRequestToCredentialMapper } from "@aries-framework/openid4vc";
-import { W3cCredential, parseDid } from "@aries-framework/core";
+import { OpenId4VciCredentialRequestToCredentialMapper } from "@credo-ts/openid4vc";
+import {
+  W3cCredential,
+  parseDid,
+  KeyType,
+  getKeyFromVerificationMethod,
+} from "@credo-ts/core";
 import { agent } from "./agent";
 import {
   animoOpenId4VcPlaygroundCredentialJwtVc,
@@ -10,30 +15,34 @@ import {
   issuerDisplay,
 } from "./issuerMetadata";
 import { getOfferSessionMetadata } from "./session";
+import { getAvailableDids } from "./did";
+
+const issuerId = "e451c49f-1186-4fe4-816d-a942151dfd59";
 
 export async function createIssuer() {
   return agent.modules.openId4VcIssuer.createIssuer({
+    issuerId,
     credentialsSupported,
     display: issuerDisplay,
   });
 }
 
 export async function doesIssuerExist() {
-  const allIssuers = await agent.modules.openId4VcIssuer.getAllIssuers();
-
-  return allIssuers.length > 0;
+  try {
+    await agent.modules.openId4VcIssuer.getByIssuerId(issuerId);
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 export async function getIssuer() {
-  const issuers = await agent.modules.openId4VcIssuer.getAllIssuers();
-  return issuers[0];
+  return agent.modules.openId4VcIssuer.getByIssuerId(issuerId);
 }
 
 export async function updateIssuer() {
-  const issuer = await getIssuer();
-
   await agent.modules.openId4VcIssuer.updateIssuerMetadata({
-    issuerId: issuer.issuerId,
+    issuerId,
     credentialsSupported,
     display: issuerDisplay,
   });
@@ -49,12 +58,63 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }) => {
     const credentialSupported = credentialsSupported[0];
 
-    const { issuerDid } = await getOfferSessionMetadata(
+    const { issuerDidMethod } = await getOfferSessionMetadata(
       credentialOffer.credential_offer
     );
-    const didDocument = await agent.dids.resolveDidDocument(issuerDid);
-    const issuerDidUrl = didDocument.verificationMethod?.[0].id;
-    if (!issuerDidUrl) throw new Error("Issuer DID URL not found");
+    const possibleDids = getAvailableDids().filter((d) =>
+      d.startsWith(issuerDidMethod)
+    );
+
+    let holderKeyType: KeyType;
+    if (holderBinding.method === "jwk") {
+      holderKeyType = holderBinding.jwk.keyType;
+    } else {
+      const holderDidDocument = await agent.dids.resolveDidDocument(
+        holderBinding.didUrl
+      );
+      const verificationMethod = holderDidDocument.dereferenceKey(
+        holderBinding.didUrl
+      );
+      holderKeyType = getKeyFromVerificationMethod(verificationMethod).keyType;
+    }
+
+    if (possibleDids.length === 0) {
+      throw new Error("No available DIDs for the issuer method");
+    }
+
+    let issuerDidUrl: string | undefined = undefined;
+
+    for (const possibleDid of possibleDids) {
+      const didDocument = await agent.dids.resolveDidDocument(possibleDid);
+      // Set the first verificationMethod as backup, in case we won't find a match
+      if (!issuerDidUrl && didDocument.verificationMethod?.[0].id) {
+        issuerDidUrl = didDocument.verificationMethod?.[0].id;
+      }
+
+      const matchingVerificationMethod = didDocument.assertionMethod?.find(
+        (assertionMethod) => {
+          const verificationMethod =
+            typeof assertionMethod === "string"
+              ? didDocument.dereferenceVerificationMethod(assertionMethod)
+              : assertionMethod;
+          const keyType =
+            getKeyFromVerificationMethod(verificationMethod).keyType;
+          return keyType === holderKeyType;
+        }
+      );
+
+      if (matchingVerificationMethod) {
+        issuerDidUrl =
+          typeof matchingVerificationMethod === "string"
+            ? matchingVerificationMethod
+            : matchingVerificationMethod.id;
+        break;
+      }
+    }
+
+    if (!issuerDidUrl) {
+      throw new Error("No matching verification method found");
+    }
 
     if (
       credentialSupported.format === "vc+sd-jwt" &&
@@ -123,7 +183,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           // W3cCredential is not validated in AFJ???
           type: ["VerifiableCredential", ...credentialSupported.types],
           issuanceDate: new Date().toISOString(),
-          issuer: issuerDid,
+          issuer: parseDid(issuerDidUrl).did,
           credentialSubject: {
             id: parseDid(holderBinding.didUrl).did,
             playground: {

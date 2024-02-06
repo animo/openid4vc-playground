@@ -70,12 +70,17 @@ pnpm install
 
 ### Development
 
-Open two terminal windows, and then run the following:
+Open three terminal windows, and then run the following:
+
+```bash
+npx ngrok http 3001
+```
+
+Copy the https url from the ngrok command and set that as the `AGENT_HOST`
 
 ```bash
 cd agent
-pnpm build
-pnpm start
+AGENT_HOST=https://30f9-58-136-114-148.ngrok-free.app pnpm dev
 ```
 
 ```bash

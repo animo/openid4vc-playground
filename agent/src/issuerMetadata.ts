@@ -1,9 +1,9 @@
-import { JwaSignatureAlgorithm } from "@aries-framework/core";
+import { JwaSignatureAlgorithm } from "@credo-ts/core";
 import {
   OpenId4VciCredentialSupportedWithId,
   OpenId4VciCredentialFormatProfile,
   OpenId4VciIssuerMetadataDisplay,
-} from "@aries-framework/openid4vc";
+} from "@credo-ts/openid4vc";
 
 const ANIMO_BLUE = "#5e7db6";
 const ANIMO_RED = "#E17471";
@@ -28,7 +28,10 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcDid = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   vct: "AnimoOpenId4VcPlayground",
   cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
+  cryptographic_suites_supported: [
+    JwaSignatureAlgorithm.EdDSA,
+    JwaSignatureAlgorithm.ES256,
+  ],
   display: [
     {
       name: "SD-JWT-VC",
@@ -45,7 +48,10 @@ export const animoOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   vct: "AnimoOpenId4VcPlayground",
   cryptographic_binding_methods_supported: ["jwk"],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
+  cryptographic_suites_supported: [
+    JwaSignatureAlgorithm.EdDSA,
+    JwaSignatureAlgorithm.ES256,
+  ],
   display: [
     {
       name: "SD-JWT-VC",
@@ -62,7 +68,10 @@ export const animoOpenId4VcPlaygroundCredentialJwtVc = {
   format: OpenId4VciCredentialFormatProfile.JwtVcJson,
   types: ["AnimoOpenId4VcPlayground"],
   cryptographic_binding_methods_supported: ["did:key", "did:jwk"],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
+  cryptographic_suites_supported: [
+    JwaSignatureAlgorithm.EdDSA,
+    JwaSignatureAlgorithm.ES256,
+  ],
   display: [
     {
       name: "JWT VC",

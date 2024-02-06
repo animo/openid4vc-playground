@@ -13,16 +13,17 @@ import {
   W3cJwtVerifiableCredential,
   W3cJwtVerifiablePresentation,
   getJwkFromKey,
-} from "@aries-framework/core";
+  parseDid,
+} from "@credo-ts/core";
 import { getAvailableDids, getWebDidDocument } from "./did";
 import { setOfferSessionMetadata } from "./session";
 import { getVerifier } from "./verifier";
-import { getVerifiablePresentationFromEncoded } from "@aries-framework/core/build/modules/dif-presentation-exchange/utils/transform";
+import { getVerifiablePresentationFromEncoded } from "@credo-ts/core/build/modules/dif-presentation-exchange/utils/transform";
 
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
   credentialSupportedIds: z.array(z.enum(credentialSupportedIds)),
-  issuerDid: z.string(),
+  issuerDidMethod: z.string(),
 });
 
 export const apiRouter = express.Router();
@@ -46,7 +47,7 @@ apiRouter.post(
     });
 
     await setOfferSessionMetadata(offer.credentialOfferPayload, {
-      issuerDid: createOfferRequest.issuerDid,
+      issuerDidMethod: createOfferRequest.issuerDidMethod,
     });
 
     return response.json(offer);
@@ -60,7 +61,9 @@ apiRouter.get("/issuer", async (_, response: Response) => {
   return response.json({
     credentialsSupported: issuer.credentialsSupported,
     display: issuer.display,
-    availableDids,
+    availableDidMethods: Array.from(
+      new Set(availableDids.map((did) => `did:${parseDid(did).method}`))
+    ),
   });
 });
 
@@ -182,8 +185,10 @@ apiRouter.post(
           didUrl: webDid.verificationMethod?.[0].id as string,
           method: "did",
         },
-        presentationDefinition:
-          createPresentationRequestBody.presentationDefinition as any,
+        presentationExchange: {
+          definition:
+            createPresentationRequestBody.presentationDefinition as any,
+        },
       });
 
     // FIXME: return correlationId in AFJ
@@ -311,7 +316,7 @@ apiRouter.post(
         resolved.presentationExchange?.credentialsForRequest
       );
 
-    const { submittedResponse, status } =
+    const { submittedResponse, serverResponse } =
       await agent.modules.openId4VcHolder.acceptSiopAuthorizationRequest({
         authorizationRequest: resolved.authorizationRequest,
         presentationExchange: {
@@ -319,7 +324,7 @@ apiRouter.post(
         },
       });
 
-    return response.status(status).json(submittedResponse);
+    return response.status(serverResponse.status).json(submittedResponse);
   }
 );
 

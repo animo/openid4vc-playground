@@ -1,9 +1,8 @@
 import {
-  KeyType,
   DidDocumentBuilder,
-  getEd25519VerificationKey2018,
-  getJsonWebKey2020,
-} from "@aries-framework/core";
+  Key,
+  getKeyDidMappingByKeyType,
+} from "@credo-ts/core";
 import { agent } from "../agent";
 import { AGENT_HOST } from "../constants";
 
@@ -13,42 +12,28 @@ const cleanHost = encodeURIComponent(
 
 const didWeb = `did:web:${cleanHost}`;
 
-export async function createDidWeb() {
-  const ed25519KeyId = `${didWeb}#ed25519`;
-  const ed25519Key = await agent.wallet.createKey({
-    keyType: KeyType.Ed25519,
-  });
+export async function createDidWeb(keys: Key[]) {
+  const verificationMethods = keys.flatMap((key) =>
+    getKeyDidMappingByKeyType(key.keyType).getVerificationMethods(didWeb, key)
+  );
 
-  const p256KeyId = `${didWeb}#p256`;
-  const p256Key = await agent.wallet.createKey({
-    keyType: KeyType.P256,
-  });
+  const didDocumentBuilder = new DidDocumentBuilder(didWeb);
 
-  const didDocument = new DidDocumentBuilder(didWeb)
-    .addVerificationMethod(
-      getEd25519VerificationKey2018({
-        key: ed25519Key,
-        controller: didWeb,
-        id: ed25519KeyId,
-      })
-    )
-    .addVerificationMethod(
-      getJsonWebKey2020({
-        key: p256Key,
-        did: didWeb,
-        verificationMethodId: p256KeyId,
-      })
-    )
-    .addAssertionMethod(ed25519KeyId)
-    .addAssertionMethod(p256KeyId)
-    .addAuthentication(ed25519KeyId)
-    .addAuthentication(p256KeyId)
-    .build();
+  for (const verificationMethod of verificationMethods) {
+    didDocumentBuilder
+      .addVerificationMethod(verificationMethod)
+      .addAssertionMethod(verificationMethod.id)
+      .addAuthentication(verificationMethod.id);
+  }
+
+  const didDocument = didDocumentBuilder.build();
 
   await agent.dids.import({
     did: didWeb,
     didDocument,
   });
+
+  return [didWeb];
 }
 
 export async function getWebDidDocument() {

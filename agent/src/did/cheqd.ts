@@ -1,11 +1,11 @@
 import { agent } from "../agent";
-import { CheqdDidCreateOptions } from "@aries-framework/cheqd";
+import { CheqdDidCreateOptions } from "@credo-ts/cheqd";
 import {
   DidDocumentBuilder,
   utils,
   KeyType,
   getEd25519VerificationKey2018,
-} from "@aries-framework/core";
+} from "@credo-ts/core";
 
 export async function createDidCheqd() {
   // NOTE: we need to pass custom document for cheqd if we want to add it to `assertionMethod`
@@ -40,4 +40,6 @@ export async function createDidCheqd() {
   if (didResult.didState.state === "failed") {
     throw new Error("cheqd DID creation failed. " + didResult.didState.reason);
   }
+
+  return [did];
 }

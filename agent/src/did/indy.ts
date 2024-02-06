@@ -1,5 +1,5 @@
-import { KeyType, TypedArrayEncoder } from "@aries-framework/core";
-import { indyDidFromPublicKeyBase58 } from "@aries-framework/core/build/utils";
+import { KeyType, TypedArrayEncoder } from "@credo-ts/core";
+import { indyDidFromPublicKeyBase58 } from "@credo-ts/core/build/utils";
 import { agent } from "../agent";
 
 export async function importIndyDid(

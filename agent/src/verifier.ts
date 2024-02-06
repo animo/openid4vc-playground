@@ -1,16 +1,22 @@
 import { agent } from "./agent";
 
+const verifierId = "c01ea0f3-34df-41d5-89d1-50ef3d181855";
+
 export async function createVerifier() {
-  return agent.modules.openId4VcVerifier.createVerifier();
+  return agent.modules.openId4VcVerifier.createVerifier({
+    verifierId,
+  });
 }
 
 export async function doesVerifierExist() {
-  const allVerifiers = await agent.modules.openId4VcVerifier.getAllVerifiers();
-
-  return allVerifiers.length > 0;
+  try {
+    await agent.modules.openId4VcVerifier.getByVerifierId(verifierId);
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 export async function getVerifier() {
-  const verifiers = await agent.modules.openId4VcVerifier.getAllVerifiers();
-  return verifiers[0];
+  return agent.modules.openId4VcVerifier.getByVerifierId(verifierId);
 }

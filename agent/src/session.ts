@@ -1,8 +1,8 @@
-import { OpenId4VciCredentialOfferPayload } from "@aries-framework/openid4vc";
+import { OpenId4VciCredentialOfferPayload } from "@credo-ts/openid4vc";
 import { agent } from "./agent";
 
 interface OfferSessionMetadata {
-  issuerDid: string;
+  issuerDidMethod: string;
 }
 
 export async function setOfferSessionMetadata(
