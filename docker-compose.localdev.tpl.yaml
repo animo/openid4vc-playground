@@ -1,0 +1,59 @@
+version: "3.8"
+# 
+# 1. Acquire the external https url such as rnldm-192-168-11-22.a.free.pinggy.link using ssh command in Pinggy
+#    ssh -p 443 -R0:localhost:3001 a.pinggy.io
+#
+# 2. Substitute the old external https url in the docker-compose.localdev.tpl.yaml file with the new one
+#    Update the external https url in the environmental settings(#env) of the frontend app, and rebuild the app
+#    Construct the docker image using the updated YAML file
+#  
+#    EXT_HTTPS_URL=rnldm-192-168-11-22.a.free.pinggy.link
+#    sed "s/1-2-3-4.free.url/${EXT_HTTPS_URL}/" docker-compose.localdev.tpl.yaml > docker-compose.localdev.yaml
+#    sed "s|http://localhost:3001|https://${EXT_HTTPS_URL}|" app/.env.example > app/.env
+#    cd app; pnpm build; cd ..
+#    docker compose -f docker-compose.localdev.yaml build
+#
+# 3. Initiate the agent and app service on localhost:3001 via reverse-proxy traefik.
+#    docker compose -f docker-compose.localdev.yaml up
+#
+# 4. Navigate to EXT_HTTPS_URL via a web browser
+# 
+services:
+  agent:
+    build:
+      context: agent
+      dockerfile: Dockerfile
+    ports:
+      - "5001:3001"
+    environment:
+      AGENT_HOST: https://1-2-3-4.free.url
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.openid4vc-server.rule: Host(`1-2-3-4.free.url`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/.well-known`))
+      traefik.http.routers.openid4vc-server.entrypoints: web-secure
+      traefik.http.routers.openid4vc-server.service: openid4vc-server-service
+      traefik.http.services.openid4vc-server-service.loadbalancer.server.port: 3001
+  app:
+    build:
+      context: app
+      dockerfile: Dockerfile
+    ports:
+      - 5080:80
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.openid4vc-app.rule: Host(`1-2-3-4.free.url`) && !PathPrefix(`/oid4vci`) && !PathPrefix(`/siop`) && !PathPrefix(`/api`) && !PathPrefix(`/.well-known`)
+      traefik.http.routers.openid4vc-app.entrypoints: web-secure
+      traefik.http.routers.openid4vc-app.service: openid4vc-app-service
+      traefik.http.services.openid4vc-app-service.loadbalancer.server.port: 80
+  traefik:
+    image: "traefik:v2.10"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # - "--entrypoints.web-secure.http.tls=true"
+      - "--entrypoints.web-secure.address=:3001"
+    ports:
+      - "3001:3001"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
