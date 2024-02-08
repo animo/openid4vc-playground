@@ -8,11 +8,13 @@ import {
   JsonEncoder,
   JsonTransformer,
   KeyDidCreateOptions,
+  KeyType,
   W3cJsonLdVerifiableCredential,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiableCredential,
   W3cJwtVerifiablePresentation,
   getJwkFromKey,
+  getKeyFromVerificationMethod,
   parseDid,
 } from "@credo-ts/core";
 import { getAvailableDids, getWebDidDocument } from "./did";
@@ -176,13 +178,28 @@ apiRouter.post(
     const createPresentationRequestBody = zCreatePresentationRequestBody.parse(
       typeof request.body === "string" ? JSON.parse(request.body) : request.body
     );
+
+    // DIIPv1 uses ES256/P256 keys so we use that to create the request
     const webDid = await getWebDidDocument();
+    const verificationMethods = webDid.verificationMethod ?? [];
+    const keys = verificationMethods.map((v) =>
+      getKeyFromVerificationMethod(v)
+    );
+    const verificationMethodIndex = keys.findIndex(
+      (k) => k.keyType === KeyType.P256
+    );
+
+    if (verificationMethodIndex === -1) {
+      return response.status(500).json({
+        error: "No P-256 verification method found",
+      });
+    }
 
     const { authorizationRequestUri, authorizationRequestPayload } =
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         verifierId: verifier.verifierId,
         requestSigner: {
-          didUrl: webDid.verificationMethod?.[0].id as string,
+          didUrl: verificationMethods[verificationMethodIndex].id,
           method: "did",
         },
         presentationExchange: {
