@@ -18,10 +18,14 @@ import { TypographyH4 } from "./ui/typography";
 export function VerifyTab() {
   const [authorizationRequestUri, setAuthorizationRequestUri] =
     useState<string>();
-  const [requestId, setRequestId] = useState<string>();
+  const [verificationSessionId, setVerificationSessionId] = useState<string>();
   const [requestStatus, setRequestStatus] = useState<{
-    requestId: string;
-    responseStatus: "verified" | "error" | "received" | "pending";
+    verificationSessionId: string;
+    responseStatus:
+      | "RequestCreated"
+      | "RequestUriRetrieved"
+      | "ResponseVerified"
+      | "Error";
     error?: string;
     submission?: Record<string, unknown>;
     definition?: Record<string, unknown>;
@@ -29,20 +33,20 @@ export function VerifyTab() {
   }>();
 
   const enabled =
-    requestId !== undefined &&
-    requestStatus?.responseStatus !== "verified" &&
-    requestStatus?.responseStatus !== "error";
+    verificationSessionId !== undefined &&
+    requestStatus?.responseStatus !== "ResponseVerified" &&
+    requestStatus?.responseStatus !== "Error";
 
-  const hasResponse =
-    requestStatus?.responseStatus === "verified" ||
-    requestStatus?.responseStatus === "error";
-  const isSuccess = requestStatus?.responseStatus === "verified";
+  const authorizationRequestUriHasBeenFetched =
+    requestStatus?.responseStatus === "RequestUriRetrieved";
+  const hasResponse = requestStatus?.responseStatus === "ResponseVerified";
+  const isSuccess = requestStatus?.responseStatus === "ResponseVerified";
 
   useInterval({
     callback: async () => {
-      if (!requestId) return;
+      if (!verificationSessionId) return;
 
-      const requestStatus = await getRequestStatus({ requestId });
+      const requestStatus = await getRequestStatus({ verificationSessionId });
       setRequestStatus(requestStatus);
     },
     interval: 500,
@@ -54,7 +58,7 @@ export function VerifyTab() {
 
     // Clear state
     setAuthorizationRequestUri(undefined);
-    setRequestId(undefined);
+    setVerificationSessionId(undefined);
     setRequestStatus(undefined);
 
     const request = await createRequest({
@@ -89,7 +93,8 @@ export function VerifyTab() {
         ],
       },
     });
-    setRequestId(request.requestId);
+
+    setVerificationSessionId(request.verificationSessionId);
     setAuthorizationRequestUri(request.authorizationRequestUri);
   }
 
@@ -124,6 +129,11 @@ export function VerifyTab() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            ) : authorizationRequestUriHasBeenFetched ? (
+              <p className="text-gray-500 break-all">
+                Authorization request has been retrieved. Waiting for
+                response...
+              </p>
             ) : (
               <p className="text-gray-500 break-all">
                 Authorization request will be displayed here

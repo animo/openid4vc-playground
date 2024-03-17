@@ -75,9 +75,13 @@ export async function createRequest({
   return response.json();
 }
 
-export async function getRequestStatus({ requestId }: { requestId: string }) {
+export async function getRequestStatus({
+  verificationSessionId,
+}: {
+  verificationSessionId: string;
+}) {
   const response = await fetch(
-    `${NEXT_PUBLIC_API_URL}/api/requests/${requestId}`,
+    `${NEXT_PUBLIC_API_URL}/api/requests/${verificationSessionId}`,
     {
       method: "GET",
       headers: {

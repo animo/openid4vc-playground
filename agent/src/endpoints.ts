@@ -5,10 +5,10 @@ import { credentialSupportedIds } from "./issuerMetadata";
 import { getIssuer } from "./issuer";
 import {
   DifPresentationExchangeService,
-  JsonEncoder,
   JsonTransformer,
   KeyDidCreateOptions,
   KeyType,
+  RecordNotFoundError,
   W3cJsonLdVerifiableCredential,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiableCredential,
@@ -18,9 +18,10 @@ import {
   parseDid,
 } from "@credo-ts/core";
 import { getAvailableDids, getWebDidDocument } from "./did";
-import { setOfferSessionMetadata } from "./session";
 import { getVerifier } from "./verifier";
-import { getVerifiablePresentationFromEncoded } from "@credo-ts/core/build/modules/dif-presentation-exchange/utils/transform";
+import { OpenId4VcIssuanceSessionRepository } from "@credo-ts/openid4vc/build/openid4vc-issuer/repository";
+import { OfferSessionMetadata } from "./session";
+import { OpenId4VcVerificationSessionState } from "@credo-ts/openid4vc";
 
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
@@ -48,9 +49,18 @@ apiRouter.post(
       },
     });
 
-    await setOfferSessionMetadata(offer.credentialOfferPayload, {
+    // FIXME: in 0.5.1 we can pass the issuanceMetadata to the createCredentialOffer method
+    // directly
+    const issuanceSessionRepository = agent.dependencyManager.resolve(
+      OpenId4VcIssuanceSessionRepository
+    );
+    offer.issuanceSession.issuanceMetadata = {
       issuerDidMethod: createOfferRequest.issuerDidMethod,
-    });
+    } satisfies OfferSessionMetadata;
+    await issuanceSessionRepository.update(
+      agent.context,
+      offer.issuanceSession
+    );
 
     return response.json(offer);
   }
@@ -195,7 +205,7 @@ apiRouter.post(
       });
     }
 
-    const { authorizationRequestUri, authorizationRequestPayload } =
+    const { authorizationRequest, verificationSession } =
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         verifierId: verifier.verifierId,
         requestSigner: {
@@ -208,23 +218,9 @@ apiRouter.post(
         },
       });
 
-    // FIXME: return correlationId in AFJ
-    const nonce = JsonEncoder.fromBase64(
-      authorizationRequestPayload.request?.split(".")[1] as string
-    ).nonce;
-    const requestState = await agent.modules.openId4VcVerifier.config
-      .getSessionManager(agent.context)
-      .getRequestStateByNonce(nonce);
-
-    if (!requestState) {
-      return response.status(500).json({
-        error: "Request state not found",
-      });
-    }
-
     return response.json({
-      authorizationRequestUri,
-      requestId: requestState.correlationId,
+      authorizationRequestUri: authorizationRequest,
+      verificationSessionId: verificationSession.id,
     });
   }
 );
@@ -233,72 +229,69 @@ const zReceivePresentationRequestBody = z.object({
   authorizationRequestUri: z.string().url(),
 });
 
-apiRouter.get("/requests/:requestId", async (request, response) => {
-  const requestId = request.params.requestId;
-  const responseState = await agent.modules.openId4VcVerifier.config
-    .getSessionManager(agent.context)
-    .getResponseStateByCorrelationId(requestId);
-  const requestState = await agent.modules.openId4VcVerifier.config
-    .getSessionManager(agent.context)
-    .getRequestStateByCorrelationId(requestId);
+apiRouter.get("/requests/:verificationSessionId", async (request, response) => {
+  const verificationSessionId = request.params.verificationSessionId;
 
-  if (!requestState) {
-    return response
-      .status(404)
-      .json({ error: `Request with id ${requestId} not found` });
-  }
-
-  // FIXME: if we use request_uri we can know when it's scanned and then update the state to
-  // 'fetched' or something so we can show a loading indicator
-  if (!responseState) {
-    return response.json({
-      requestId,
-      responseStatus: "pending",
-    });
-  }
-
-  // FIXME: when we get the state in AFJ we should be able to get the presentations and submission back
-  const presentations: any[] = Array.isArray(
-    responseState.response.payload.vp_token
-  )
-    ? responseState.response.payload.vp_token
-    : [responseState.response.payload.vp_token];
-
-  return response.json({
-    requestId,
-    responseStatus: responseState.status,
-    error: responseState.error?.message,
-    presentations: presentations.map((presentation) => {
-      const presentationInstance = getVerifiablePresentationFromEncoded(
-        agent.context,
-        presentation
+  try {
+    const verificationSession =
+      await agent.modules.openId4VcVerifier.getVerificationSessionById(
+        verificationSessionId
       );
-      if (presentationInstance instanceof W3cJsonLdVerifiablePresentation) {
-        return {
-          pretty: presentationInstance.toJson(),
-          encoded: presentationInstance.toJson(),
-        };
-      }
 
-      if (presentationInstance instanceof W3cJwtVerifiablePresentation) {
-        return {
-          pretty: JsonTransformer.toJSON(presentationInstance.presentation),
-          encoded: presentationInstance.serializedJwt,
-        };
-      }
+    if (
+      verificationSession.state ===
+      OpenId4VcVerificationSessionState.ResponseVerified
+    ) {
+      const verified =
+        await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(
+          verificationSessionId
+        );
 
-      return {
-        pretty: {
-          ...presentationInstance,
-          compact: undefined,
-        },
-        encoded: presentationInstance.compact,
-      };
-    }),
-    submission: responseState.response.payload.presentation_submission,
-    definition: (await requestState.request.getPresentationDefinitions())?.[0]
-      .definition,
-  });
+      return response.json({
+        verificationSessionId: verificationSession.id,
+        responseStatus: verificationSession.state,
+        error: verificationSession.errorMessage,
+
+        presentations: verified.presentationExchange?.presentations.map(
+          (presentation) => {
+            if (presentation instanceof W3cJsonLdVerifiablePresentation) {
+              return {
+                pretty: presentation.toJson(),
+                encoded: presentation.toJson(),
+              };
+            }
+
+            if (presentation instanceof W3cJwtVerifiablePresentation) {
+              return {
+                pretty: JsonTransformer.toJSON(presentation.presentation),
+                encoded: presentation.serializedJwt,
+              };
+            }
+
+            return {
+              pretty: {
+                ...presentation,
+                compact: undefined,
+              },
+              encoded: presentation.compact,
+            };
+          }
+        ),
+        submission: verified.presentationExchange?.submission,
+        definition: verified.presentationExchange?.definition,
+      });
+    }
+
+    return response.json({
+      verificationSessionId: verificationSession.id,
+      responseStatus: verificationSession.state,
+      error: verificationSession.errorMessage,
+    });
+  } catch (error) {
+    if (error instanceof RecordNotFoundError) {
+      return response.status(404).send("Verification session not found");
+    }
+  }
 });
 
 apiRouter.post(

@@ -14,7 +14,7 @@ import {
   credentialsSupported,
   issuerDisplay,
 } from "./issuerMetadata";
-import { getOfferSessionMetadata } from "./session";
+import { OfferSessionMetadata } from "./session";
 import { getAvailableDids } from "./did";
 
 const issuerId = "e451c49f-1186-4fe4-816d-a942151dfd59";
@@ -51,16 +51,26 @@ export async function updateIssuer() {
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper =
   async ({
     credentialsSupported,
-    credentialOffer,
+    credentialRequest,
     // FIXME: it would be useful if holderBinding would include some metadata on the key type / alg used
     // for the key binding
     holderBinding,
   }) => {
     const credentialSupported = credentialsSupported[0];
 
-    const { issuerDidMethod } = await getOfferSessionMetadata(
-      credentialOffer.credential_offer
-    );
+    // FIXME: issuanceSession will be passed to this method from 0.5.1 onward
+    //  https://github.com/openwallet-foundation/credo-ts/pull/1795
+    const issuanceSession =
+      await agent.modules.openId4VcIssuer.findIssuanceSessionForCredentialRequest(
+        { credentialRequest }
+      );
+    if (!issuanceSession) throw new Error("Issuance session not found");
+    if (!issuanceSession.issuanceMetadata)
+      throw new Error("No issuance metadata");
+
+    const { issuerDidMethod } =
+      issuanceSession.issuanceMetadata as unknown as OfferSessionMetadata;
+
     const possibleDids = getAvailableDids().filter((d) =>
       d.startsWith(issuerDidMethod)
     );

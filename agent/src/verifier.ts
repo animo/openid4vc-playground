@@ -10,7 +10,7 @@ export async function createVerifier() {
 
 export async function doesVerifierExist() {
   try {
-    await agent.modules.openId4VcVerifier.getByVerifierId(verifierId);
+    await agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId);
     return true;
   } catch (error) {
     return false;
@@ -18,5 +18,5 @@ export async function doesVerifierExist() {
 }
 
 export async function getVerifier() {
-  return agent.modules.openId4VcVerifier.getByVerifierId(verifierId);
+  return agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId);
 }
