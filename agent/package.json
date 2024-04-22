@@ -1,12 +1,12 @@
 {
   "name": "agent",
   "dependencies": {
-    "@credo-ts/askar": "^0.5.0",
-    "@credo-ts/cheqd": "^0.5.0",
-    "@credo-ts/core": "^0.5.0",
-    "@credo-ts/indy-vdr": "^0.5.0",
-    "@credo-ts/node": "^0.5.0",
-    "@credo-ts/openid4vc": "^0.5.0",
+    "@credo-ts/askar": "^0.5.1",
+    "@credo-ts/cheqd": "^0.5.1",
+    "@credo-ts/core": "^0.5.1",
+    "@credo-ts/indy-vdr": "^0.5.1",
+    "@credo-ts/node": "^0.5.1",
+    "@credo-ts/openid4vc": "^0.5.1",
     "@hyperledger/aries-askar-nodejs": "^0.2.0",
     "@hyperledger/indy-vdr-nodejs": "^0.2.0",
     "cors": "^2.8.5",
