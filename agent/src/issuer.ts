@@ -59,9 +59,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     holderBinding,
   }) => {
     const credentialSupported = credentialsSupported[0];
-    const issuanceSessionRepository = agent.dependencyManager.resolve(
-      OpenId4VcIssuanceSessionRepository
-    );
 
     // not sure if this check is needed anymore
     if (!issuanceSession) throw new Error("Issuance session not found");
