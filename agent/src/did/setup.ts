@@ -1,5 +1,4 @@
 import { WalletKeyExistsError } from "@credo-ts/core";
-import { createDidCheqd } from "./cheqd";
 import { createKeys } from "./createKeys";
 import { createDidJwk } from "./jwk";
 import { createDidKey } from "./key";
@@ -15,7 +14,6 @@ export async function setupAllDids() {
     availableDids.push(...(await createDidKey(keys)));
     availableDids.push(...(await createDidJwk(keys)));
     availableDids.push(...(await createDidWeb(keys)));
-    availableDids.push(...(await createDidCheqd()));
 
     await agent.genericRecords.save({
       id: "AVAILABLE_DIDS",

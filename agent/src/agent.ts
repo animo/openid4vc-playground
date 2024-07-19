@@ -13,11 +13,6 @@ import {
 import { agentDependencies } from "@credo-ts/node";
 import { AskarModule } from "@credo-ts/askar";
 import {
-  CheqdModule,
-  CheqdDidRegistrar,
-  CheqdDidResolver,
-} from "@credo-ts/cheqd";
-import {
   IndyVdrIndyDidRegistrar,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
@@ -32,7 +27,6 @@ import {
 import {
   AGENT_HOST,
   AGENT_WALLET_KEY,
-  CHEQD_TESTNET_COSMOS_PAYER_SEED,
 } from "./constants";
 import { Router } from "express";
 import { credentialRequestToCredentialMapper } from "./issuer";
@@ -56,14 +50,6 @@ export const agent = new Agent({
     },
   },
   modules: {
-    cheqd: new CheqdModule({
-      networks: [
-        {
-          network: "testnet",
-          cosmosPayerSeed: CHEQD_TESTNET_COSMOS_PAYER_SEED,
-        },
-      ],
-    }),
     indyVdr: new IndyVdrModule({
       indyVdr,
       networks: [
