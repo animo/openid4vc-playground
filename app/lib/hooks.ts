@@ -1,25 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react'
 
-type Callback = () => void | Promise<void>;
+type Callback = () => void | Promise<void>
 
 export const useInterval = ({
   callback,
   interval,
   enabled = true,
 }: {
-  callback: Callback;
-  interval: number;
-  enabled?: boolean;
+  callback: Callback
+  interval: number
+  enabled?: boolean
 }) => {
-  const savedCallback = useRef<Callback>();
+  const savedCallback = useRef<Callback>()
 
   useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
+    savedCallback.current = callback
+  }, [callback])
 
   useEffect(() => {
-    if (!enabled) return;
-    let id = setInterval(() => savedCallback.current?.(), interval);
-    return () => clearInterval(id);
-  }, [interval, enabled]);
-};
+    if (!enabled) return
+    const id = setInterval(() => savedCallback.current?.(), interval)
+    return () => clearInterval(id)
+  }, [interval, enabled])
+}

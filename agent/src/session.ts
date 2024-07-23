@@ -1,3 +1,3 @@
 export interface OfferSessionMetadata {
-  issuerDidMethod: string;
+  issuerDidMethod: string
 }
