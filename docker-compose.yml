@@ -2,7 +2,7 @@ version: "3.5"
 
 services:
   server:
-    image: ghcr.io/animo/openid4vc-playground/agent:main
+    image: ghcr.io/animo/openid4vc-playground-funke/agent:main
     deploy:
       placement:
         constraints:
@@ -11,7 +11,7 @@ services:
       labels:
         traefik.enable: "true"
 
-        traefik.http.routers.openid4vc-server.rule: Host(`openid4vc.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/.well-known`))
+        traefik.http.routers.openid4vc-server.rule: Host(`funke.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/.well-known`))
         traefik.http.routers.openid4vc-server.entrypoints: web-secure
         traefik.http.routers.openid4vc-server.tls.certresolver: zerossl
         traefik.http.routers.openid4vc-server.service: openid4vc-server-service
@@ -19,11 +19,8 @@ services:
 
     environment:
       AGENT_WALLET_KEY: ${AGENT_WALLET_KEY}
-      DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED: ${DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED}
-      CHEQD_TESTNET_COSMOS_PAYER_SEED: ${CHEQD_TESTNET_COSMOS_PAYER_SEED}
-      ED25519_SEED: ${ED25519_SEED}
       P256_SEED: ${P256_SEED}
-      AGENT_HOST: "https://openid4vc.animo.id"
+      AGENT_HOST: "https://funke.animo.id"
 
     networks:
       - traefik
@@ -32,7 +29,7 @@ services:
       - 5001
 
   client:
-    image: ghcr.io/animo/openid4vc-playground/app:main
+    image: ghcr.io/animo/openid4vc-playground-funke/app:main
     deploy:
       placement:
         constraints:
@@ -40,7 +37,7 @@ services:
           - node.labels.type == community
       labels:
         traefik.enable: "true"
-        traefik.http.routers.openid4vc-app.rule: Host(`openid4vc.animo.id`) && !PathPrefix(`/oid4vci`) && !PathPrefix(`/siop`) && !PathPrefix(`/api`) && !PathPrefix(`/.well-known`)
+        traefik.http.routers.openid4vc-app.rule: Host(`funke.animo.id`) && !PathPrefix(`/oid4vci`) && !PathPrefix(`/siop`) && !PathPrefix(`/api`) && !PathPrefix(`/.well-known`)
         traefik.http.routers.openid4vc-app.entrypoints: web-secure
         traefik.http.routers.openid4vc-app.tls.certresolver: zerossl
         traefik.http.routers.openid4vc-app.service: openid4vc-app-service

@@ -1,31 +1,10 @@
-if (
-  !process.env.ED25519_SEED ||
-  !process.env.P256_SEED ||
-  !process.env.AGENT_HOST ||
-  !process.env.AGENT_WALLET_KEY
-) {
-  throw new Error(
-    "ED25519_SEED, P256_SEED, AGENT_HOST or AGENT_WALLET_KEY env variable not set"
-  );
+if (!process.env.P256_SEED || !process.env.AGENT_HOST || !process.env.AGENT_WALLET_KEY) {
+  throw new Error('P256_SEED, AGENT_HOST or AGENT_WALLET_KEY env variable not set')
 }
 
-const AGENT_HOST = process.env.AGENT_HOST;
-const AGENT_WALLET_KEY = process.env.AGENT_WALLET_KEY;
+const AGENT_HOST = process.env.AGENT_HOST
+const AGENT_WALLET_KEY = process.env.AGENT_WALLET_KEY
 
-const DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED =
-  process.env.DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED;
+const P256_SEED = process.env.P256_SEED
 
-const CHEQD_TESTNET_COSMOS_PAYER_SEED =
-  process.env.CHEQD_TESTNET_COSMOS_PAYER_SEED;
-
-const ED25519_SEED = process.env.ED25519_SEED;
-const P256_SEED = process.env.P256_SEED;
-
-export {
-  AGENT_HOST,
-  AGENT_WALLET_KEY,
-  DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED,
-  CHEQD_TESTNET_COSMOS_PAYER_SEED,
-  ED25519_SEED,
-  P256_SEED,
-};
+export { AGENT_HOST, AGENT_WALLET_KEY, P256_SEED }

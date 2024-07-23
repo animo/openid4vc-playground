@@ -1,56 +1,44 @@
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { Label } from "@/components/ui/label";
-import {
-  SelectValue,
-  SelectTrigger,
-  SelectItem,
-  SelectGroup,
-  SelectContent,
-  Select,
-} from "@/components/ui/select";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import QRCode from "react-qr-code";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { FormEvent, useEffect, useState } from "react";
-import { getIssuer, createOffer } from "../lib/api";
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { type FormEvent, useEffect, useState } from 'react'
+import QRCode from 'react-qr-code'
+import { createOffer, getIssuer } from '../lib/api'
 
 export function IssueTab() {
-  const [credentialType, setCredentialType] = useState<string>();
-  const [issuerDid, setIssuerDid] = useState<string>();
-  const [credentialOfferUri, setCredentialOfferUri] = useState<string>();
+  const [credentialType, setCredentialType] = useState<string>()
+  const [issuerId, setIssuerid] = useState<string>()
+  const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
   const [issuer, setIssuer] = useState<{
     credentialsSupported: Array<{
-      id: string;
-      display: [{ name: string; description?: string }];
-    }>;
-    availableDidMethods: string[];
-    display: {};
-  }>();
+      id: string
+      display: string
+    }>
+    availableX509Certificates: string[]
+    display: {}
+  }>()
 
   useEffect(() => {
-    getIssuer().then(setIssuer);
-  }, []);
+    getIssuer().then((i) => {
+      setIssuer(i)
+      console.log(i)
+    })
+  }, [])
   async function onSubmitIssueCredential(e: FormEvent) {
-    e.preventDefault();
-    const _issuerDidMethod = issuerDid ?? issuer?.availableDidMethods[0];
-    const _credentialType =
-      credentialType ?? issuer?.credentialsSupported[0].id;
-    if (!_issuerDidMethod || !_credentialType) {
-      throw new Error("No issuer or credential type");
+    e.preventDefault()
+    const _issuerId = issuerId ?? issuer?.availableX509Certificates[0]
+    const _credentialType = credentialType ?? issuer?.credentialsSupported[0].id
+    if (!_issuerId || !_credentialType) {
+      throw new Error('No issuer or credential type')
     }
 
     const offer = await createOffer({
       credentialSupportedId: _credentialType,
-      issuerDidMethod: _issuerDidMethod,
-    });
-    setCredentialOfferUri(offer.credentialOffer);
+      issuerId: _issuerId,
+    })
+    setCredentialOfferUri(offer.credentialOffer)
   }
 
   return (
@@ -58,54 +46,36 @@ export function IssueTab() {
       <form className="space-y-4" onSubmit={onSubmitIssueCredential}>
         <div className="space-y-2">
           <Label htmlFor="credential-type">Credential Type</Label>
-          <Select
-            name="credential-type"
-            required
-            onValueChange={setCredentialType}
-          >
+          <Select name="credential-type" required onValueChange={setCredentialType}>
             <SelectTrigger className="w-[320px]">
-              <SelectValue
-                placeholder={!issuer ? "Loading" : "Select a credential type"}
-              />
+              <SelectValue placeholder={!issuer ? 'Loading' : 'Select a credential type'} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {(issuer?.credentialsSupported ?? []).map((credential) => {
-                  return (
-                    <SelectItem key={credential.id} value={credential.id}>
-                      {credential.display[0].name}
-                      {credential.display[0].description
-                        ? ` - ${credential.display[0].description}`
-                        : ""}
-                    </SelectItem>
-                  );
-                }) ?? null}
+                {(issuer?.credentialsSupported ?? []).map((credential) => (
+                  <SelectItem key={credential.id} value={credential.id}>
+                    {credential.display}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="issuer-did">Issuer Did</Label>
-          <Select name="issuer-did" required onValueChange={setIssuerDid}>
+          <Label htmlFor="issuer-did">Issuer Id</Label>
+          <Select name="issuer-did" required onValueChange={setIssuerid}>
             <SelectTrigger className="w-[320px]">
-              <SelectValue
-                placeholder={!issuer ? "Loading" : "Select an issuer did"}
-              />
+              <SelectValue placeholder={!issuer ? 'Loading' : 'Select an issuer id'} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {(issuer?.availableDidMethods ?? []).map(
-                  (availableDidMethod) => {
-                    return (
-                      <SelectItem
-                        key={availableDidMethod}
-                        value={availableDidMethod}
-                      >
-                        {availableDidMethod}
-                      </SelectItem>
-                    );
-                  }
-                ) ?? null}
+                {(issuer?.availableX509Certificates ?? []).map((availableX509Certificate) => {
+                  return (
+                    <SelectItem key={availableX509Certificate} value={availableX509Certificate}>
+                      {availableX509Certificate}
+                    </SelectItem>
+                  )
+                }) ?? null}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -120,9 +90,7 @@ export function IssueTab() {
                   </div>
                   <TooltipTrigger asChild>
                     <p
-                      onClick={(e) =>
-                        navigator.clipboard.writeText(e.currentTarget.innerText)
-                      }
+                      onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                       className="text-gray-500 break-all cursor-pointer"
                     >
                       {credentialOfferUri}
@@ -136,31 +104,13 @@ export function IssueTab() {
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <p className="text-gray-500 break-all">
-              Credential offer will be displayed here
-            </p>
+            <p className="text-gray-500 break-all">Credential offer will be displayed here</p>
           )}
         </div>
-        <Button
-          onClick={onSubmitIssueCredential}
-          className="w-full"
-          onSubmit={onSubmitIssueCredential}
-        >
+        <Button onClick={onSubmitIssueCredential} className="w-full" onSubmit={onSubmitIssueCredential}>
           Issue Credential
         </Button>
       </form>
-      <Alert variant="warning" className="mt-5">
-        <ExclamationTriangleIcon className="h-4 w-4" />
-        <AlertTitle>Warning</AlertTitle>
-        <AlertDescription>
-          When using the{" "}
-          <a className="underline" href="https://linktr.ee/paradym_id">
-            Paradym Wallet
-          </a>
-          , only issuance of JWT credentials (not SD-JWT credentials) using a
-          did method other than <code>did:cheqd</code> is supported.
-        </AlertDescription>
-      </Alert>
     </Card>
-  );
+  )
 }

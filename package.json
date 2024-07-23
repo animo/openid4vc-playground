@@ -1,3 +1,10 @@
 {
-  "name": "openid4vc-playground"
+  "name": "openid4vc-playground",
+  "scripts": {
+    "lint:check": "biome check .",
+    "lint:fix": "biome check --write --unsafe ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3"
+  }
 }
