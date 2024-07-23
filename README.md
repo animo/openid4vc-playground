@@ -57,7 +57,7 @@ cp .env.example .env
 | `AGENT_WALLET_KEY` | Used in the backend application for the agent. Should be secure and kept private.             |
 
 > [!IMPORTANT]
-> to use `ngrok` (`npx ngrok http 3001`) and use that url as the `AGENT_HOST` variable. Make sure to also set the `NEXT_PUBLIC_API_URL` variable in the app to the ngrok.
+> You can use `ngrok` (`npx ngrok http 3001`) and use that url as the `AGENT_HOST` variable. Make sure to also set the `NEXT_PUBLIC_API_URL` variable in the app to the ngrok.
 >
 > We may add issuance using did:key in development if the host url does not start with `https`.
 

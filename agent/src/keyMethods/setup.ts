@@ -1,4 +1,4 @@
-import { WalletKeyExistsError } from '@credo-ts/core'
+import { WalletKeyExistsError, X509Api, X509Module, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
 import { createKeys } from './createKeys'
 import { createSelfSignedCertificate } from './createSelfSignedCertificate'
@@ -33,6 +33,9 @@ export async function setupX509Certificate() {
   console.log('==== X.509 Certificate ====')
   console.log(x509Certificate)
   console.log('===========================')
+
+  const x509 = agent.dependencyManager.resolve(X509Api)
+  await x509.addTrustedCertificate(x509Certificate)
 }
 
 export function getX509Certificate() {

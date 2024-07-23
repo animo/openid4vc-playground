@@ -53,31 +53,20 @@ export function VerifyTab() {
     const request = await createRequest({
       presentationDefinition: {
         id: crypto.randomUUID(),
-        // TODO: show this in the paradym wallet
-        name: 'Animo Playground Credential',
+        name: 'PID Credential request',
         input_descriptors: [
           {
             id: crypto.randomUUID(),
             constraints: {
-              // FIXME: pex we should always do limit disclosure if it's possible
-              // FIXME: limit_disclosure is not working
               limit_disclosure: 'preferred',
               fields: [
                 {
-                  path: [
-                    '$.playground.framework',
-                    '$.credentialSubject.playground.framework',
-                    '$.vc.credentialSubject.playground.framework',
-                  ],
-                  filter: {
-                    type: 'string',
-                    const: 'Aries Framework JavaScript',
-                  },
+                  path: ['$.given_name', '$.family_name', '$.address'],
                 },
               ],
             },
-            name: 'Animo Playground Credential',
-            purpose: 'Just for fun',
+            name: 'PID Name',
+            purpose: 'Verify your name',
           },
         ],
       },

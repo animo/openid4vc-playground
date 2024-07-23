@@ -105,29 +105,7 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
   })
 
   return response.json({
-    credentials: credentials.map((credential) => {
-      if (credential instanceof W3cJsonLdVerifiableCredential) {
-        return {
-          pretty: credential.toJson(),
-          encoded: credential.toJson(),
-        }
-      }
-
-      if (credential instanceof W3cJwtVerifiableCredential) {
-        return {
-          pretty: JsonTransformer.toJSON(credential.credential),
-          encoded: credential.serializedJwt,
-        }
-      }
-
-      return {
-        pretty: {
-          ...credential,
-          compact: undefined,
-        },
-        encoded: credential.credential,
-      }
-    }),
+    credentials: credentials.map((credential) => JSON.stringify(credential.credential.payload)),
   })
 })
 

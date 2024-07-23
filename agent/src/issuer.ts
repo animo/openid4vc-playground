@@ -37,16 +37,11 @@ export async function updateIssuer() {
 }
 
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper = async ({
-  issuanceSession,
   // FIXME: it would be useful if holderBinding would include some metadata on the key type / alg used
   // for the key binding
   holderBinding,
 }) => {
   const credentialSupported = credentialsSupported[0]
-
-  // not sure if this check is needed anymore
-  if (!issuanceSession) throw new Error('Issuance session not found')
-  if (!issuanceSession.issuanceMetadata) throw new Error('No issuance metadata')
 
   const x509Certificate = getX509Certificate()
 
