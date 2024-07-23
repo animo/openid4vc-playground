@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - run: NEXT_PUBLIC_API_URL=https://openid4vc.animo.id pnpm build
+      - run: NEXT_PUBLIC_API_URL=https://funke.animo.id pnpm build
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -113,7 +113,7 @@ jobs:
         uses: garygrossgarten/github-action-scp@v0.7.3
         with:
           local: docker-compose.yml
-          remote: openid4vc-playground/docker-compose.yml
+          remote: openid4vc-playground-funke/docker-compose.yml
           host: dashboard.dev.animo.id
           username: root
           privateKey: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
@@ -130,6 +130,6 @@ jobs:
           host: dashboard.dev.animo.id
           username: root
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          envs: P256_SEED,ED25519_SEED,AGENT_WALLET_KEY,DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED,CHEQD_TESTNET_COSMOS_PAYER_SEED
+          envs: P256_SEED,AGENT_WALLET_KEY
           script: |
-            ED25519_SEED=${ED25519_SEED} P256_SEED=${P256_SEED} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} CHEQD_TESTNET_COSMOS_PAYER_SEED=${CHEQD_TESTNET_COSMOS_PAYER_SEED} DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED=${DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED} docker stack deploy --compose-file openid4vc-playground/docker-compose.yml openid4vc-playground --with-registry-auth
+            P256_SEED=${P256_SEED} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} docker stack deploy --compose-file openid4vc-playground-funke/docker-compose.yml openid4vc-playground-funke --with-registry-auth
