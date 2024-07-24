@@ -2,14 +2,11 @@ import {
   DifPresentationExchangeService,
   JsonTransformer,
   RecordNotFoundError,
-  W3cJsonLdVerifiableCredential,
   W3cJsonLdVerifiablePresentation,
-  W3cJwtVerifiableCredential,
   W3cJwtVerifiablePresentation,
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { OpenId4VcIssuanceSessionRepository } from '@credo-ts/openid4vc/build/openid4vc-issuer/repository'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
@@ -44,6 +41,14 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   })
 
   return response.json(offer)
+})
+
+apiRouter.get('/x509', async (_, response: Response) => {
+  const certificate = getX509Certificate()
+
+  return response.json({
+    certificate,
+  })
 })
 
 apiRouter.get('/issuer', async (_, response: Response) => {

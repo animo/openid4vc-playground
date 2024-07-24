@@ -5,9 +5,10 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { createOffer, getIssuer } from '../lib/api'
+import { createOffer, getIssuer, getX509Certificate } from '../lib/api'
 
 export function IssueTab() {
+  const [x509Certificate, setX509Certificate] = useState<string>()
   const [credentialType, setCredentialType] = useState<string>()
   const [issuerId, setIssuerid] = useState<string>()
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
@@ -21,10 +22,8 @@ export function IssueTab() {
   }>()
 
   useEffect(() => {
-    getIssuer().then((i) => {
-      setIssuer(i)
-      console.log(i)
-    })
+    getIssuer().then(setIssuer)
+    getX509Certificate().then(({ certificate }) => setX509Certificate(certificate))
   }, [])
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
@@ -110,6 +109,27 @@ export function IssueTab() {
         <Button onClick={onSubmitIssueCredential} className="w-full" onSubmit={onSubmitIssueCredential}>
           Issue Credential
         </Button>
+        <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md p-7">
+          <h3>X.509 Certificate in base64 format</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
+                <TooltipTrigger asChild>
+                  <p
+                    onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
+                    className="text-gray-500 break-all cursor-pointer"
+                  >
+                    {x509Certificate ?? 'No X.509 Certificate found'}
+                  </p>
+                </TooltipTrigger>
+              </div>
+
+              <TooltipContent>
+                <p>Click to copy</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </form>
     </Card>
   )

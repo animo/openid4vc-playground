@@ -35,6 +35,16 @@ export async function getIssuer() {
   return response.json()
 }
 
+export async function getX509Certificate() {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/x509`)
+
+  if (!response.ok) {
+    throw new Error('Failed to get x509 certificate')
+  }
+
+  return response.json()
+}
+
 export async function receiveOffer(offerUri: string) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/receive`, {
     headers: {
