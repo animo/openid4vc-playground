@@ -1,0 +1,275 @@
+diff --git a/build/shared/utils.js b/build/shared/utils.js
+index 36037ab98cf59f64b56d107aef9b2eb02b491c60..46832c031a18ce369050b7890dd8891129c84e6d 100644
+--- a/build/shared/utils.js
++++ b/build/shared/utils.js
+@@ -16,117 +16,174 @@ const core_1 = require("@credo-ts/core");
+  * that is planned for the 0.5.0 release.
+  */
+ function getSupportedJwaSignatureAlgorithms(agentContext) {
+-    const supportedKeyTypes = agentContext.wallet.supportedKeyTypes;
+-    // Extract the supported JWS algs based on the key types the wallet support.
+-    const supportedJwaSignatureAlgorithms = supportedKeyTypes
+-        // Map the supported key types to the supported JWK class
+-        .map(core_1.getJwkClassFromKeyType)
+-        // Filter out the undefined values
+-        .filter((jwkClass) => jwkClass !== undefined)
+-        // Extract the supported JWA signature algorithms from the JWK class
+-        .flatMap((jwkClass) => jwkClass.supportedSignatureAlgorithms);
+-    return supportedJwaSignatureAlgorithms;
++  const supportedKeyTypes = agentContext.wallet.supportedKeyTypes;
++  // Extract the supported JWS algs based on the key types the wallet support.
++  const supportedJwaSignatureAlgorithms = supportedKeyTypes
++    // Map the supported key types to the supported JWK class
++    .map(core_1.getJwkClassFromKeyType)
++    // Filter out the undefined values
++    .filter((jwkClass) => jwkClass !== undefined)
++    // Extract the supported JWA signature algorithms from the JWK class
++    .flatMap((jwkClass) => jwkClass.supportedSignatureAlgorithms);
++  return supportedJwaSignatureAlgorithms;
+ }
+ async function getKeyFromDid(agentContext, didUrl) {
+-    const didsApi = agentContext.dependencyManager.resolve(core_1.DidsApi);
+-    const didDocument = await didsApi.resolveDidDocument(didUrl);
+-    const verificationMethod = didDocument.dereferenceKey(didUrl, ['authentication']);
+-    return (0, core_1.getKeyFromVerificationMethod)(verificationMethod);
++  const didsApi = agentContext.dependencyManager.resolve(core_1.DidsApi);
++  const didDocument = await didsApi.resolveDidDocument(didUrl);
++  const verificationMethod = didDocument.dereferenceKey(didUrl, [
++    "authentication",
++  ]);
++  return (0, core_1.getKeyFromVerificationMethod)(verificationMethod);
+ }
+ function getVerifyJwtCallback(agentContext) {
+-    return async (jwtVerifier, jwt) => {
+-        const jwsService = agentContext.dependencyManager.resolve(core_1.JwsService);
+-        if (jwtVerifier.method === 'did') {
+-            const key = await getKeyFromDid(agentContext, jwtVerifier.didUrl);
+-            const jwk = (0, core_1.getJwkFromKey)(key);
+-            const res = await jwsService.verifyJws(agentContext, { jws: jwt.raw, jwkResolver: () => jwk });
+-            return res.isValid;
+-        }
+-        else if (jwtVerifier.method === 'x5c' || jwtVerifier.method === 'jwk') {
+-            const res = await jwsService.verifyJws(agentContext, { jws: jwt.raw });
+-            return res.isValid;
+-        }
+-        else {
+-            throw new Error(`Unsupported jwt verifier method: '${jwtVerifier.method}'`);
+-        }
+-    };
++  return async (jwtVerifier, jwt) => {
++    const jwsService = agentContext.dependencyManager.resolve(
++      core_1.JwsService
++    );
++    if (jwtVerifier.method === "did") {
++      const key = await getKeyFromDid(agentContext, jwtVerifier.didUrl);
++      const jwk = (0, core_1.getJwkFromKey)(key);
++      const res = await jwsService.verifyJws(agentContext, {
++        jws: jwt.raw,
++        jwkResolver: () => jwk,
++      });
++      return res.isValid;
++    } else if (jwtVerifier.method === "x5c" || jwtVerifier.method === "jwk") {
++      const res = await jwsService.verifyJws(agentContext, { jws: jwt.raw });
++      return res.isValid;
++    } else {
++      throw new Error(
++        `Unsupported jwt verifier method: '${jwtVerifier.method}'`
++      );
++    }
++  };
+ }
+ function getCreateJwtCallback(agentContext) {
+-    return async (jwtIssuer, jwt) => {
+-        const jwsService = agentContext.dependencyManager.resolve(core_1.JwsService);
+-        if (jwtIssuer.method === 'did') {
+-            const key = await getKeyFromDid(agentContext, jwtIssuer.didUrl);
+-            const jws = await jwsService.createJwsCompact(agentContext, {
+-                protectedHeaderOptions: Object.assign({ alg: jwtIssuer.alg }, jwt.header),
+-                payload: core_1.JwtPayload.fromJson(jwt.payload),
+-                key,
+-            });
+-            return jws;
+-        }
+-        else if (jwtIssuer.method === 'jwk') {
+-            const key = (0, core_1.getJwkFromJson)(jwtIssuer.jwk).key;
+-            const jws = await jwsService.createJwsCompact(agentContext, {
+-                protectedHeaderOptions: jwt.header,
+-                payload: core_1.JwtPayload.fromJson(jwt.payload),
+-                key,
+-            });
+-            return jws;
+-        }
+-        else if (jwtIssuer.method === 'x5c') {
+-            const key = core_1.X509Service.getLeafCertificate(agentContext, { certificateChain: jwtIssuer.x5c }).publicKey;
+-            const jws = await jwsService.createJwsCompact(agentContext, {
+-                protectedHeaderOptions: jwt.header,
+-                payload: core_1.JwtPayload.fromJson(jwt.payload),
+-                key,
+-            });
+-            return jws;
+-        }
+-        throw new Error(`Unsupported jwt issuer method '${jwtIssuer.method}'`);
+-    };
++  return async (jwtIssuer, jwt) => {
++    const jwsService = agentContext.dependencyManager.resolve(
++      core_1.JwsService
++    );
++    if (jwtIssuer.method === "did") {
++      const key = await getKeyFromDid(agentContext, jwtIssuer.didUrl);
++      const jws = await jwsService.createJwsCompact(agentContext, {
++        protectedHeaderOptions: Object.assign(jwt.header, {
++          alg: jwtIssuer.alg,
++        }),
++        payload: core_1.JwtPayload.fromJson(jwt.payload),
++        key,
++      });
++      return jws;
++    } else if (jwtIssuer.method === "jwk") {
++      const jwk = core_1.getJwkFromJson(jwtIssuer.jwk);
++      const key = jwk.key;
++      const jws = await jwsService.createJwsCompact(agentContext, {
++        protectedHeaderOptions: Object.assign(jwt.header, {
++          jwk,
++          alg: jwtIssuer.alg,
++        }),
++        payload: core_1.JwtPayload.fromJson(jwt.payload),
++        key,
++      });
++      return jws;
++    } else if (jwtIssuer.method === "x5c") {
++      const key = core_1.X509Service.getLeafCertificate(agentContext, {
++        certificateChain: jwtIssuer.x5c,
++      }).publicKey;
++      const jws = await jwsService.createJwsCompact(agentContext, {
++        protectedHeaderOptions: Object.assign(jwt.header, {
++          jwk: undefined,
++          alg: jwtIssuer.alg,
++        }),
++        payload: core_1.JwtPayload.fromJson(jwt.payload),
++        key,
++      });
++      return jws;
++    }
++    throw new Error(`Unsupported jwt issuer method '${jwtIssuer.method}'`);
++  };
+ }
+-async function openIdTokenIssuerToJwtIssuer(agentContext, openId4VcTokenIssuer) {
+-    var _a, _b, _c;
+-    if (openId4VcTokenIssuer.method === 'did') {
+-        const key = await getKeyFromDid(agentContext, openId4VcTokenIssuer.didUrl);
+-        const _alg = (_a = (0, core_1.getJwkClassFromKeyType)(key.keyType)) === null || _a === void 0 ? void 0 : _a.supportedSignatureAlgorithms[0];
+-        if (!_alg)
+-            throw new core_1.CredoError(`No supported signature algorithms for key type: ${key.keyType}`);
+-        return {
+-            method: openId4VcTokenIssuer.method,
+-            didUrl: openId4VcTokenIssuer.didUrl,
+-            alg: _alg,
+-        };
++async function openIdTokenIssuerToJwtIssuer(
++  agentContext,
++  openId4VcTokenIssuer
++) {
++  var _a, _b, _c;
++  if (openId4VcTokenIssuer.method === "did") {
++    const key = await getKeyFromDid(agentContext, openId4VcTokenIssuer.didUrl);
++    const _alg =
++      (_a = (0, core_1.getJwkClassFromKeyType)(key.keyType)) === null ||
++      _a === void 0
++        ? void 0
++        : _a.supportedSignatureAlgorithms[0];
++    if (!_alg)
++      throw new core_1.CredoError(
++        `No supported signature algorithms for key type: ${key.keyType}`
++      );
++    return {
++      method: openId4VcTokenIssuer.method,
++      didUrl: openId4VcTokenIssuer.didUrl,
++      alg: _alg,
++    };
++  } else if (openId4VcTokenIssuer.method === "x5c") {
++    const issuer = openId4VcTokenIssuer.issuer;
++    const leafCertificate = core_1.X509Service.getLeafCertificate(
++      agentContext,
++      {
++        certificateChain: openId4VcTokenIssuer.x5c,
++      }
++    );
++    if (!issuer.startsWith("https://")) {
++      throw new core_1.CredoError(
++        "The X509 certificate issuer must be a HTTPS URI."
++      );
+     }
+-    else if (openId4VcTokenIssuer.method === 'x5c') {
+-        const issuer = openId4VcTokenIssuer.issuer;
+-        const leafCertificate = core_1.X509Service.getLeafCertificate(agentContext, {
+-            certificateChain: openId4VcTokenIssuer.x5c,
+-        });
+-        if (!issuer.startsWith('https://')) {
+-            throw new core_1.CredoError('The X509 certificate issuer must be a HTTPS URI.');
+-        }
+-        if ((_b = leafCertificate.sanUriNames) === null || _b === void 0 ? void 0 : _b.includes(issuer)) {
+-            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_uri' });
+-        }
+-        else {
+-            if (!((_c = leafCertificate.sanDnsNames) === null || _c === void 0 ? void 0 : _c.includes((0, core_1.getDomainFromUrl)(issuer)))) {
+-                throw new Error(`The 'iss' claim in the payload does not match a 'SAN-URI' or 'SAN-DNS' name in the x5c certificate.`);
+-            }
+-            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_dns' });
+-        }
++
++    const jwk = (0, core_1.getJwkFromKey)(leafCertificate.publicKey);
++    const alg = jwk.supportedSignatureAlgorithms[0]
++    if (
++      (_b = leafCertificate.sanUriNames) === null || _b === void 0
++        ? void 0
++        : _b.includes(issuer)
++    ) {
++      return Object.assign(Object.assign({}, openId4VcTokenIssuer), {
++        clientIdScheme: "x509_san_uri",
++        alg: alg,
++      });
++    } else {
++      if (
++        !((_c = leafCertificate.sanDnsNames) === null || _c === void 0
++          ? void 0
++          : _c.includes((0, core_1.getDomainFromUrl)(issuer)))
++      ) {
++        throw new Error(
++          `The 'iss' claim in the payload does not match a 'SAN-URI' or 'SAN-DNS' name in the x5c certificate.`
++        );
++      }
++      return Object.assign(Object.assign({}, openId4VcTokenIssuer), {
++        clientIdScheme: "x509_san_dns",
++        alg: alg,
++      });
+     }
+-    return openId4VcTokenIssuer;
++  }
++  return openId4VcTokenIssuer;
+ }
+ function getProofTypeFromKey(agentContext, key) {
+-    const signatureSuiteRegistry = agentContext.dependencyManager.resolve(core_1.SignatureSuiteRegistry);
+-    const supportedSignatureSuites = signatureSuiteRegistry.getAllByKeyType(key.keyType);
+-    if (supportedSignatureSuites.length === 0) {
+-        throw new core_1.CredoError(`Couldn't find a supported signature suite for the given key type '${key.keyType}'.`);
+-    }
+-    return supportedSignatureSuites[0].proofType;
++  const signatureSuiteRegistry = agentContext.dependencyManager.resolve(
++    core_1.SignatureSuiteRegistry
++  );
++  const supportedSignatureSuites = signatureSuiteRegistry.getAllByKeyType(
++    key.keyType
++  );
++  if (supportedSignatureSuites.length === 0) {
++    throw new core_1.CredoError(
++      `Couldn't find a supported signature suite for the given key type '${key.keyType}'.`
++    );
++  }
++  return supportedSignatureSuites[0].proofType;
+ }
+ const isCredentialOfferV1Draft13 = (credentialOffer) => {
+-    return 'credential_configuration_ids' in credentialOffer;
++  return "credential_configuration_ids" in credentialOffer;
+ };
+ exports.isCredentialOfferV1Draft13 = isCredentialOfferV1Draft13;
+ //# sourceMappingURL=utils.js.map

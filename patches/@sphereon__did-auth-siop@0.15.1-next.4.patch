@@ -1,0 +1,13 @@
+diff --git a/dist/types/JwtVerifier.js b/dist/types/JwtVerifier.js
+index 90ecefe0c7b0859b05af643e5d7d88b271821e03..592e8823fcc94a4a197e193ef2275fdffe5ad6e3 100644
+--- a/dist/types/JwtVerifier.js
++++ b/dist/types/JwtVerifier.js
+@@ -57,7 +57,7 @@ const getJwkVerifier = (jwt, options) => __awaiter(void 0, void 0, void 0, funct
+     if (selfComputedJwkThumbPrintUri !== jwkThumbPrintUri) {
+         throw new Error(`${Errors_1.default.INVALID_JWT} '${type}' contains an invalid sub_jwk claim.`);
+     }
+-    return { method: 'jwk', type, jwk: jwt.header.jwk, jwkThumbprint: jwt.payload.sub_jwk };
++    return { method: 'jwk', type, jwk: jwt.header.jwk, jwkThumbprint: jwt.payload.sub_jwk, alg: jwt.header.alg };
+ });
+ exports.getJwkVerifier = getJwkVerifier;
+ const getJwtVerifierWithContext = (jwt, options) => __awaiter(void 0, void 0, void 0, function* () {

@@ -6,5 +6,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@sphereon/did-auth-siop@0.15.1-next.4": "patches/@sphereon__did-auth-siop@0.15.1-next.4.patch",
+      "@credo-ts/openid4vc@0.5.9": "patches/@credo-ts__openid4vc@0.5.9.patch"
+    }
   }
 }
