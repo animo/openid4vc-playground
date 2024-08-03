@@ -1,10 +1,10 @@
 {
   "name": "agent",
   "dependencies": {
-    "@credo-ts/askar": "^0.5.9",
-    "@credo-ts/core": "^0.5.9",
-    "@credo-ts/node": "^0.5.9",
-    "@credo-ts/openid4vc": "^0.5.9",
+    "@credo-ts/askar": "0.5.10-alpha-20240801095850",
+    "@credo-ts/core": "0.5.10-alpha-20240801095850",
+    "@credo-ts/node": "0.5.10-alpha-20240801095850",
+    "@credo-ts/openid4vc": "0.5.10-alpha-20240801095850",
     "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

@@ -61,7 +61,7 @@ export function VerifyTab() {
               limit_disclosure: 'preferred',
               fields: [
                 {
-                  path: ['$.given_name', '$.family_name', '$.address'],
+                  path: ['$.given_name'],
                 },
               ],
             },

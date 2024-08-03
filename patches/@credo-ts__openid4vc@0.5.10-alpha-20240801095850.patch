@@ -1,0 +1,48 @@
+diff --git a/build/shared/utils.js b/build/shared/utils.js
+index 36037ab98cf59f64b56d107aef9b2eb02b491c60..7eccc2ab99d396366299138df8d99376ca35696c 100644
+--- a/build/shared/utils.js
++++ b/build/shared/utils.js
+@@ -64,9 +64,10 @@ function getCreateJwtCallback(agentContext) {
+             return jws;
+         }
+         else if (jwtIssuer.method === 'jwk') {
+-            const key = (0, core_1.getJwkFromJson)(jwtIssuer.jwk).key;
++            const jwk = core_1.getJwkFromJson(jwtIssuer.jwk);
++            const key = jwk.key;
+             const jws = await jwsService.createJwsCompact(agentContext, {
+-                protectedHeaderOptions: jwt.header,
++                protectedHeaderOptions: Object.assign(jwt.header, { jwk, alg: jwtIssuer.alg }),
+                 payload: core_1.JwtPayload.fromJson(jwt.payload),
+                 key,
+             });
+@@ -75,7 +76,7 @@ function getCreateJwtCallback(agentContext) {
+         else if (jwtIssuer.method === 'x5c') {
+             const key = core_1.X509Service.getLeafCertificate(agentContext, { certificateChain: jwtIssuer.x5c }).publicKey;
+             const jws = await jwsService.createJwsCompact(agentContext, {
+-                protectedHeaderOptions: jwt.header,
++                protectedHeaderOptions: Object.assign(jwt.header, { jwk: undefined, alg: jwtIssuer.alg }),
+                 payload: core_1.JwtPayload.fromJson(jwt.payload),
+                 key,
+             });
+@@ -102,17 +103,19 @@ async function openIdTokenIssuerToJwtIssuer(agentContext, openId4VcTokenIssuer)
+         const leafCertificate = core_1.X509Service.getLeafCertificate(agentContext, {
+             certificateChain: openId4VcTokenIssuer.x5c,
+         });
++        const jwk = (0, core_1.getJwkFromKey)(leafCertificate.publicKey);
++        const alg = jwk.supportedSignatureAlgorithms[0]
+         if (!issuer.startsWith('https://')) {
+             throw new core_1.CredoError('The X509 certificate issuer must be a HTTPS URI.');
+         }
+         if ((_b = leafCertificate.sanUriNames) === null || _b === void 0 ? void 0 : _b.includes(issuer)) {
+-            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_uri' });
++            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_uri', alg });
+         }
+         else {
+             if (!((_c = leafCertificate.sanDnsNames) === null || _c === void 0 ? void 0 : _c.includes((0, core_1.getDomainFromUrl)(issuer)))) {
+                 throw new Error(`The 'iss' claim in the payload does not match a 'SAN-URI' or 'SAN-DNS' name in the x5c certificate.`);
+             }
+-            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_dns' });
++            return Object.assign(Object.assign({}, openId4VcTokenIssuer), { clientIdScheme: 'x509_san_dns', alg });
+         }
+     }
+     return openId4VcTokenIssuer;

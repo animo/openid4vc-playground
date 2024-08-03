@@ -99,8 +99,14 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
     },
   })
 
+  for (const credential of credentials) {
+    if ('compact' in credential.credential) {
+      await agent.sdJwtVc.store(credential.credential.compact as string)
+    }
+  }
+
   return response.json({
-    credentials: credentials.map((credential) => JSON.stringify(credential.credential.payload)),
+    credentials: credentials.map((credential) => credential.credential.payload),
   })
 })
 
@@ -227,7 +233,7 @@ apiRouter.post('/requests/receive', async (request: Request, response: Response)
   return response.status(serverResponse.status).json(submittedResponse)
 })
 
-apiRouter.use((error: Error, request: Request, response: Response, next: NextFunction) => {
+apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
   console.error('Unhandled error', error)
   return response.status(500).json({
     error: error.message,

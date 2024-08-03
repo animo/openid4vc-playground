@@ -1,5 +1,17 @@
+diff --git a/dist/request-object/RequestObject.js b/dist/request-object/RequestObject.js
+index dc3a12be88d9ecf399433b42cbc93b46bccfef0d..359f45a7c4fc49fce2a8b67f2b9f596a1440b79c 100644
+--- a/dist/request-object/RequestObject.js
++++ b/dist/request-object/RequestObject.js
+@@ -92,7 +92,6 @@ class RequestObject {
+                 else if (jwtIssuer.method === 'x5c') {
+                     this.payload.iss = jwtIssuer.issuer;
+                     this.payload.client_id = jwtIssuer.issuer;
+-                    this.payload.redirect_uri = jwtIssuer.issuer;
+                     this.payload.client_id_scheme = jwtIssuer.clientIdScheme;
+                     const header = { x5c: jwtIssuer.x5c, typ: 'JWT' };
+                     this.jwt = yield this.opts.createJwtCallback(jwtIssuer, { header, payload: this.payload });
 diff --git a/dist/types/JwtVerifier.js b/dist/types/JwtVerifier.js
-index 90ecefe0c7b0859b05af643e5d7d88b271821e03..592e8823fcc94a4a197e193ef2275fdffe5ad6e3 100644
+index 90ecefe0c7b0859b05af643e5d7d88b271821e03..78eb1a0f24e79bead215b0ce507c17d230792791 100644
 --- a/dist/types/JwtVerifier.js
 +++ b/dist/types/JwtVerifier.js
 @@ -57,7 +57,7 @@ const getJwkVerifier = (jwt, options) => __awaiter(void 0, void 0, void 0, funct
