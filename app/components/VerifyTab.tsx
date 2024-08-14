@@ -16,6 +16,33 @@ export function VerifyTab() {
                 {
                   path: ['$.given_name'],
                 },
+                {
+                  path: ['$.family_name'],
+                },
+                {
+                  path: ['$.age_equal_or_over.21'],
+                  filter: {
+                    type: 'boolean',
+                    const: true,
+                  },
+                },
+                {
+                  path: ['$.nationalities'],
+                },
+                {
+                  path: ['$.iss'],
+                  filter: {
+                    type: 'string',
+                    const: 'https://demo.pid-issuer.bundesdruckerei.de/c',
+                  },
+                },
+                {
+                  path: ['$.vct'],
+                  filter: {
+                    type: 'string',
+                    enum: ['https://example.bmi.bund.de/credential/pid/1.0', 'urn:eu.europa.ec.eudi:pid:1'],
+                  },
+                },
               ],
             },
             name: 'PID Name',
