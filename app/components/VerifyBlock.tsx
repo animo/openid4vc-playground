@@ -1,82 +1,68 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
-import { Card } from "./ui/card";
-import QRCode from "react-qr-code";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { CheckboxIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { TypographyH2, TypographyH3, TypographyH4 } from "./ui/typography";
-import { HighLight } from "./highLight";
-import { Button } from "./ui/button";
-import { FormEvent, useState } from "react";
-import { useInterval } from "@/lib/hooks";
-import { getRequestStatus } from "@/lib/api";
+import { getRequestStatus } from '@/lib/api'
+import { useInterval } from '@/lib/hooks'
+import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
+import { type FormEvent, useState } from 'react'
+import QRCode from 'react-qr-code'
+import { HighLight } from './highLight'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
+import { TypographyH2, TypographyH3, TypographyH4 } from './ui/typography'
 
 type VerifyBlockProps = {
-  flowName: string;
+  flowName: string
   createRequest: () => Promise<{
-    verificationSessionId: string;
-    authorizationRequestUri: string;
-  }>;
-};
+    verificationSessionId: string
+    authorizationRequestUri: string
+  }>
+}
 
-export const VerifyBlock: React.FC<VerifyBlockProps> = ({
-  createRequest,
-  flowName,
-}) => {
-  const [authorizationRequestUri, setAuthorizationRequestUri] =
-    useState<string>();
-  const [verificationSessionId, setVerificationSessionId] = useState<string>();
+export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowName }) => {
+  const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
+  const [verificationSessionId, setVerificationSessionId] = useState<string>()
   const [requestStatus, setRequestStatus] = useState<{
-    verificationSessionId: string;
-    responseStatus:
-      | "RequestCreated"
-      | "RequestUriRetrieved"
-      | "ResponseVerified"
-      | "Error";
-    error?: string;
-    submission?: Record<string, unknown>;
-    definition?: Record<string, unknown>;
-    presentations?: Array<string | Record<string, unknown>>;
-  }>();
+    verificationSessionId: string
+    responseStatus: 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
+    error?: string
+    submission?: Record<string, unknown>
+    definition?: Record<string, unknown>
+    presentations?: Array<string | Record<string, unknown>>
+  }>()
 
   const enabled =
     verificationSessionId !== undefined &&
-    requestStatus?.responseStatus !== "ResponseVerified" &&
-    requestStatus?.responseStatus !== "Error";
+    requestStatus?.responseStatus !== 'ResponseVerified' &&
+    requestStatus?.responseStatus !== 'Error'
 
-  const authorizationRequestUriHasBeenFetched =
-    requestStatus?.responseStatus === "RequestUriRetrieved";
-  const hasResponse = requestStatus?.responseStatus === "ResponseVerified";
-  const isSuccess = requestStatus?.responseStatus === "ResponseVerified";
+  const authorizationRequestUriHasBeenFetched = requestStatus?.responseStatus === 'RequestUriRetrieved'
+  const hasResponse = requestStatus?.responseStatus === 'ResponseVerified'
+  const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
 
   useInterval({
     callback: async () => {
-      if (!verificationSessionId) return;
+      if (!verificationSessionId) return
 
-      const requestStatus = await getRequestStatus({ verificationSessionId });
-      setRequestStatus(requestStatus);
+      const requestStatus = await getRequestStatus({ verificationSessionId })
+      setRequestStatus(requestStatus)
     },
     interval: 500,
     enabled,
-  });
+  })
 
   const onSubmitCreateRequest = async (e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Clear state
-    setAuthorizationRequestUri(undefined);
-    setVerificationSessionId(undefined);
-    setRequestStatus(undefined);
+    setAuthorizationRequestUri(undefined)
+    setVerificationSessionId(undefined)
+    setRequestStatus(undefined)
 
-    const request = await createRequest();
+    const request = await createRequest()
 
-    setVerificationSessionId(request.verificationSessionId);
-    setAuthorizationRequestUri(request.authorizationRequestUri);
-  };
+    setVerificationSessionId(request.verificationSessionId)
+    setAuthorizationRequestUri(request.authorizationRequestUri)
+  }
 
   return (
     <Card className="p-6">
@@ -93,11 +79,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({
                     </div>
                     <TooltipTrigger asChild>
                       <p
-                        onClick={(e) =>
-                          navigator.clipboard.writeText(
-                            e.currentTarget.innerText
-                          )
-                        }
+                        onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                         className="text-gray-500 break-all cursor-pointer"
                       >
                         {authorizationRequestUri}
@@ -112,66 +94,42 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({
               </TooltipProvider>
             ) : authorizationRequestUriHasBeenFetched ? (
               <p className="text-gray-500 break-all">
-                Authorization request has been retrieved. Waiting for
-                response...
+                Authorization request has been retrieved. Waiting for response...
               </p>
             ) : (
-              <p className="text-gray-500 break-all">
-                Authorization request will be displayed here
-              </p>
+              <p className="text-gray-500 break-all">Authorization request will be displayed here</p>
             )}
           </div>
         )}
         {hasResponse && (
           <div className="flex flex-col w-full gap-4">
-            <Alert variant={isSuccess ? "success" : "warning"}>
-              {isSuccess ? (
-                <CheckboxIcon className="h-5 w-5" />
-              ) : (
-                <ExclamationTriangleIcon className="h-4 w-4" />
-              )}
-              <AlertTitle className={isSuccess ? "mt-0.5" : ""}>
-                {isSuccess
-                  ? "Verification Successful"
-                  : "Verification Unsuccessful"}
+            <Alert variant={isSuccess ? 'success' : 'warning'}>
+              {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
+              <AlertTitle className={isSuccess ? 'mt-0.5' : ''}>
+                {isSuccess ? 'Verification Successful' : 'Verification Unsuccessful'}
               </AlertTitle>
               {!isSuccess && (
-                <AlertDescription className="mt-2">
-                  {requestStatus?.error ?? "Unknown error occurred"}
-                </AlertDescription>
+                <AlertDescription className="mt-2">{requestStatus?.error ?? 'Unknown error occurred'}</AlertDescription>
               )}
             </Alert>
             <div>
               <TypographyH4>Presentation Definition</TypographyH4>
-              <HighLight
-                code={JSON.stringify(requestStatus?.definition, null, 2)}
-                language="json"
-              />
+              <HighLight code={JSON.stringify(requestStatus?.definition, null, 2)} language="json" />
             </div>
             <div>
               <TypographyH4>Presentation Submission</TypographyH4>
-              <HighLight
-                code={JSON.stringify(requestStatus?.submission, null, 2)}
-                language="json"
-              />
+              <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
             </div>
             <div>
               <TypographyH4>Presentations</TypographyH4>
-              <HighLight
-                code={JSON.stringify(requestStatus?.presentations, null, 2)}
-                language="json"
-              />
+              <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
             </div>
           </div>
         )}
-        <Button
-          onClick={onSubmitCreateRequest}
-          className="w-full"
-          onSubmit={onSubmitCreateRequest}
-        >
+        <Button onClick={onSubmitCreateRequest} className="w-full" onSubmit={onSubmitCreateRequest}>
           Verify Credential
         </Button>
       </form>
     </Card>
-  );
-};
+  )
+}

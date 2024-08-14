@@ -1,29 +1,29 @@
-import { createRequest } from "../lib/api";
-import { VerifyBlock } from "./VerifyBlock";
+import { createRequest } from '../lib/api'
+import { VerifyBlock } from './VerifyBlock'
 
 export function VerifyTab() {
   const createCRequest = () =>
     createRequest({
       presentationDefinition: {
         id: crypto.randomUUID(),
-        name: "PID Credential request for C",
+        name: 'PID Credential request for C',
         input_descriptors: [
           {
             id: crypto.randomUUID(),
             constraints: {
-              limit_disclosure: "preferred",
+              limit_disclosure: 'preferred',
               fields: [
                 {
-                  path: ["$.given_name"],
+                  path: ['$.given_name'],
                 },
               ],
             },
-            name: "PID Name",
-            purpose: "Verify your name",
+            name: 'PID Name',
+            purpose: 'Verify your name',
           },
         ],
       },
-    });
+    })
 
   const createBPrimeRequest = () =>
     createRequest({
@@ -34,19 +34,19 @@ export function VerifyTab() {
           {
             id: crypto.randomUUID(),
             constraints: {
-              limit_disclosure: "preferred",
+              limit_disclosure: 'preferred',
               fields: [
                 {
-                  path: ["$.given_name"],
+                  path: ['$.given_name'],
                 },
               ],
             },
-            name: "PID Name",
-            purpose: "Verify your name",
+            name: 'PID Name',
+            purpose: 'Verify your name',
           },
         ],
       },
-    });
+    })
 
   return (
     <>
@@ -54,11 +54,11 @@ export function VerifyTab() {
         flowName="Signed Credential in generic flow (C) with SD-JWT and mDoc"
         createRequest={createCRequest}
       />
-      <div style={{ height: "20px" }} />
+      <div style={{ height: '20px' }} />
       <VerifyBlock
         flowName="Authenticated Channel with Cloud Support (B') with SD-JWT and mDoc"
         createRequest={createBPrimeRequest}
       />
     </>
-  );
+  )
 }
