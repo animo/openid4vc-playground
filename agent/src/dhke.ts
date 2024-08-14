@@ -10,7 +10,7 @@ const getPrivateKeyFromAskar = async (context: AgentContext, keyId: string) => {
     async (session) => (await session.fetchKey({ name: keyId }))?.key.jwkSecret
   )
 
-  if (!secretJwk.d) {
+  if (!secretJwk?.d) {
     throw new Error('JWK does not contain a `d` param')
   }
 
