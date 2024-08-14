@@ -4,7 +4,7 @@
 
 </p>
 
-<h1 align="center"><b>Animo OpenID4VC Playground</b></h1>
+<h1 align="center"><b>Funke OpenID4VC Playground</b></h1>
 <div align="center">
     <a
     href="https://raw.githubusercontent.com/animo/openid4vc-playground/main/LICENSE"
@@ -15,11 +15,11 @@
 </div>
 
 > [!TIP]
-> Check out the demo at https://openid4vc.animo.id
+> Check out the demo at https://funke.animo.id
 
 ## ✨ Hi there!
 
-Welcome to the repository of Animo's OpenID4VC Playground. This interactive playground demonstrates the use of OpenID4VC with different credential formats (such as SD-JWT VCs). This demo is built using [Aries Framework Javascript (AFJ)](https://github.com/hyperledger/aries-framework-javascript). AFJ is a framework written in TypeScript for building decentralized identity services.
+Welcome to the repository of Animo's OpenID4VC Playground. This interactive playground demonstrates the use of OpenID4VC with different credential formats (such as SD-JWT VCs). This demo is built using [Credo](https://github.com/openwallet-foundation/credo-ts). Credo is a framework written in TypeScript for building decentralized identity services.
 
 ## 🛠️ Usage
 
