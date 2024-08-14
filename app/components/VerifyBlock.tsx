@@ -8,7 +8,7 @@ import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { TypographyH2, TypographyH3, TypographyH4 } from './ui/typography'
+import { TypographyH3, TypographyH4 } from './ui/typography'
 
 type VerifyBlockProps = {
   flowName: string
@@ -36,7 +36,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     requestStatus?.responseStatus !== 'Error'
 
   const authorizationRequestUriHasBeenFetched = requestStatus?.responseStatus === 'RequestUriRetrieved'
-  const hasResponse = requestStatus?.responseStatus === 'ResponseVerified'
+  const hasResponse = requestStatus?.responseStatus === 'ResponseVerified' || requestStatus?.responseStatus === 'Error'
   const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
 
   useInterval({
@@ -67,10 +67,14 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   return (
     <Card className="p-6">
       <TypographyH3>{flowName}</TypographyH3>
-      <form className="space-y-4" onSubmit={onSubmitCreateRequest}>
+      <form className="space-y-4 mt-4" onSubmit={onSubmitCreateRequest}>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
-            {authorizationRequestUri ? (
+            {authorizationRequestUriHasBeenFetched ? (
+              <p className="text-gray-500 break-all">
+                Authorization request has been retrieved. Waiting for response...
+              </p>
+            ) : authorizationRequestUri ? (
               <TooltipProvider>
                 <Tooltip>
                   <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
@@ -92,11 +96,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            ) : authorizationRequestUriHasBeenFetched ? (
-              <p className="text-gray-500 break-all">
-                Authorization request has been retrieved. Waiting for response...
-              </p>
-            ) : (
+            )  : (
               <p className="text-gray-500 break-all">Authorization request will be displayed here</p>
             )}
           </div>
@@ -112,18 +112,18 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                 <AlertDescription className="mt-2">{requestStatus?.error ?? 'Unknown error occurred'}</AlertDescription>
               )}
             </Alert>
-            <div>
+            {requestStatus.definition && <div>
               <TypographyH4>Presentation Definition</TypographyH4>
               <HighLight code={JSON.stringify(requestStatus?.definition, null, 2)} language="json" />
-            </div>
-            <div>
+            </div>}
+            {requestStatus.submission && <div>
               <TypographyH4>Presentation Submission</TypographyH4>
               <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
-            </div>
-            <div>
+            </div>}
+            {requestStatus.presentations && <div>
               <TypographyH4>Presentations</TypographyH4>
               <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
-            </div>
+            </div>}
           </div>
         )}
         <Button onClick={onSubmitCreateRequest} className="w-full" onSubmit={onSubmitCreateRequest}>
