@@ -10,13 +10,13 @@ WORKDIR /app
 
 FROM base AS prod-deps
 COPY tsconfig.json /app/tsconfig.json
-
 COPY patches /app/patches
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
 
 FROM base AS build
 COPY tsconfig.json /app/tsconfig.json
+COPY patches /app/patches
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 COPY src src
