@@ -131,14 +131,12 @@ jobs:
         uses: appleboy/ssh-action@v0.1.4
         env:
           AGENT_WALLET_KEY: ${{ secrets.AGENT_WALLET_KEY }}
-          CHEQD_TESTNET_COSMOS_PAYER_SEED: ${{ secrets.CHEQD_TESTNET_COSMOS_PAYER_SEED }}
-          DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED: ${{ secrets.DID_INDY_INDICIO_TESTNET_PUBLIC_DID_SEED }}
           P256_SEED: ${{ secrets.P256_SEED }}
-          ED25519_SEED: ${{ secrets.ED25519_SEED }}
+          X509_CERTIFICATE: ${{ secrets.X509_CERTIFICATE }}
         with:
           host: dashboard.dev.animo.id
           username: root
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          envs: P256_SEED,AGENT_WALLET_KEY
+          envs: P256_SEED,AGENT_WALLET_KEY,X509_CERTIFICATE
           script: |
-            P256_SEED=${P256_SEED} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} docker stack deploy --compose-file openid4vc-playground-funke/docker-compose.yml openid4vc-playground-funke --with-registry-auth
+            P256_SEED=${P256_SEED} X509_CERTIFICATE=${X509_CERTIFICATE} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} docker stack deploy --compose-file openid4vc-playground-funke/docker-compose.yml openid4vc-playground-funke --with-registry-auth

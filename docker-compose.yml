@@ -20,6 +20,7 @@ services:
     environment:
       AGENT_WALLET_KEY: ${AGENT_WALLET_KEY}
       P256_SEED: ${P256_SEED}
+      X509_CERTIFICATE: ${X509_CERTIFICATE}
       AGENT_HOST: "https://funke.animo.id"
 
     networks:
