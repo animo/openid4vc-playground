@@ -1,5 +1,5 @@
 if (!process.env.P256_SEED || !process.env.AGENT_HOST || !process.env.AGENT_WALLET_KEY || !process.env.AGENT_DNS) {
-  throw new Error('P256_SEED, AGENT_HOST or AGENT_WALLET_KEY env variable not set')
+  throw new Error('P256_SEED, AGENT_HOST or AGENT_WALLET_KEY, AGENT_DNS env variable not set')
 }
 
 const AGENT_HOST = process.env.AGENT_HOST

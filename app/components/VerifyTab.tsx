@@ -33,7 +33,10 @@ export function VerifyTab() {
                   path: ['$.iss'],
                   filter: {
                     type: 'string',
-                    const: 'https://demo.pid-issuer.bundesdruckerei.de/c',
+                    enum: [
+                      'https://demo.pid-issuer.bundesdruckerei.de/c',
+                      'https://demo.pid-issuer.bundesdruckerei.de/c1',
+                    ],
                   },
                 },
                 {
