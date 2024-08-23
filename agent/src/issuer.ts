@@ -16,7 +16,6 @@ import {
 } from "./issuerMetadata";
 import { OfferSessionMetadata } from "./session";
 import { getAvailableDids } from "./did";
-import { OpenId4VcIssuanceSessionRepository } from "@credo-ts/openid4vc/build/openid4vc-issuer/repository";
 
 const issuerId = "e451c49f-1186-4fe4-816d-a942151dfd59";
 
@@ -51,9 +50,8 @@ export async function updateIssuer() {
 
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper =
   async ({
-    credentialsSupported,
-    credentialRequest,
     issuanceSession,
+    credentialsSupported,
     // FIXME: it would be useful if holderBinding would include some metadata on the key type / alg used
     // for the key binding
     holderBinding,
@@ -133,6 +131,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       return {
         format: "vc+sd-jwt",
         holder: holderBinding,
+        credentialSupportedId: credentialSupported.id,
         payload: {
           vct: credentialSupported.vct,
 
@@ -170,6 +169,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         format:
           credentialSupported.format === "jwt_vc_json" ? "jwt_vc" : "ldp_vc",
         verificationMethod: issuerDidUrl,
+        credentialSupportedId: credentialSupported.id,
         credential: W3cCredential.fromJson({
           // FIXME: we need to include/cache default contexts in AFJ
           // It quite slow the first time now

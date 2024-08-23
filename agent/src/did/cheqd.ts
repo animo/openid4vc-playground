@@ -31,14 +31,11 @@ export async function createDidCheqd() {
   const didResult = await agent.dids.create<CheqdDidCreateOptions>({
     method: "cheqd",
     didDocument,
-    options: {
-      network: "testnet",
-    },
     secret: {},
   });
 
   if (didResult.didState.state === "failed") {
-    throw new Error("cheqd DID creation failed. " + didResult.didState.reason);
+    throw new Error(`cheqd DID creation failed. ${didResult.didState.reason}`);
   }
 
   return [did];

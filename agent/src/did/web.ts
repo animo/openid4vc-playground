@@ -40,7 +40,7 @@ export async function getWebDidDocument() {
   const [createdDid] = await agent.dids.getCreatedDids({ did: didWeb });
 
   if (!createdDid || !createdDid.didDocument) {
-    throw new Error(`did does not exist`);
+    throw new Error('did does not exist');
   }
 
   return createdDid.didDocument;
