@@ -34,7 +34,12 @@ export function VerifyTab() {
                   path: ['$.iss'],
                   filter: {
                     type: 'string',
-                    enum: ['https://demo.pid-issuer.bundesdruckerei.de/c','https://demo.pid-issuer.bundesdruckerei.de/c1', issuer],
+                    enum: [
+                      'https://demo.pid-issuer.bundesdruckerei.de/c',
+                      'https://demo.pid-issuer.bundesdruckerei.de/c1',
+                      'https://demo.pid-issuer.bundesdruckerei.de/b1',
+                      issuer,
+                    ],
                   },
                 },
                 {
@@ -47,48 +52,18 @@ export function VerifyTab() {
               ],
             },
             name: 'PID Name',
-            purpose: 'Verify your name',
+            purpose: 'To open a bank account we need to verify your identity.',
           },
         ],
       },
-      flow: 'c'
     })
   }
-
-  const createBPrimeRequest = () =>
-    createRequest({
-      presentationDefinition: {
-        id: crypto.randomUUID(),
-        name: "PID Credential request for B'",
-        input_descriptors: [
-          {
-            id: crypto.randomUUID(),
-            constraints: {
-              limit_disclosure: 'preferred',
-              fields: [
-                {
-                  path: ['$.given_name'],
-                },
-              ],
-            },
-            name: 'PID Name',
-            purpose: 'Verify your name',
-          },
-        ],
-      },
-      flow: 'b'' 
-    })
 
   return (
     <>
       <VerifyBlock
-        flowName="Signed Credential in generic flow (C) with SD-JWT and mDoc"
+        flowName="Signed Credential (C or C') or Authenticated Channel (B') with SD-JWT"
         createRequest={createCRequest}
-      />
-      <div style={{ height: '20px' }} />
-      <VerifyBlock
-        flowName="Authenticated Channel with Cloud Support (B') with SD-JWT and mDoc"
-        createRequest={createBPrimeRequest}
       />
     </>
   )

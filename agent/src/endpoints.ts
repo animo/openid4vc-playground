@@ -6,11 +6,10 @@ import {
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
-  getJwkFromJson,
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { Key as AskarKey, KeyAlgs, keyAlgToString } from '@hyperledger/aries-askar-nodejs'
+import { Key as AskarKey, KeyAlgs } from '@hyperledger/aries-askar-nodejs'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
@@ -116,12 +115,10 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 
 const zCreatePresentationRequestBody = z.object({
   presentationDefinition: z.record(z.string(), z.any()),
-  flow: z.string(),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
   const verifier = await getVerifier()
-  // This will also be done for the C flow, but that does not matter right now
 
   // FIXME: somehow JSON doesn't work
   const createPresentationRequestBody = zCreatePresentationRequestBody.parse(
@@ -131,37 +128,35 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   const x509Certificate = getX509Certificate()
 
   const definition = createPresentationRequestBody.presentationDefinition
-  const flow = createPresentationRequestBody.flow
 
-  const additionalPayloadClaims: { rp_eph_pub?: Record<string, unknown> } = {}
-  if (flow === "b'") {
-    try {
-      // TODO: disable for real credential
-      // Key for the fake credential. Can be removed when the pid issuer updated
-      await agent.wallet.createKey({
-        keyType: KeyType.P256,
-        privateKey: TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb'),
-      })
-      // Ignore key already exist
-    } catch {}
-
-    const askarKey = AskarKey.fromSecretBytes({
-      secretKey: new Uint8Array(
-        TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb')
-      ),
-      algorithm: KeyAlgs.EcSecp256r1,
+  try {
+    // TODO: disable for real credential
+    // Key for the fake credential. Can be removed when the pid issuer updated
+    await agent.wallet.createKey({
+      keyType: KeyType.P256,
+      privateKey: TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb'),
     })
+    // Ignore key already exist
+  } catch {}
 
-    additionalPayloadClaims.rp_eph_pub = {
+  const askarKey = AskarKey.fromSecretBytes({
+    secretKey: new Uint8Array(
+      TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb')
+    ),
+    algorithm: KeyAlgs.EcSecp256r1,
+  })
+
+  const additionalPayloadClaims = {
+    rp_eph_pub: {
       jwk: askarKey.jwkPublic,
-    }
-
-    // TODO: enable for real credential
-    // const key = await agent.context.wallet.createKey({keyType: KeyType.P256})
-    // additionalClaims["rp_eph_pub"] = {
-    //   jwk: getJwkFromKey(key).toJson(),
-    // };
+    },
   }
+
+  // TODO: enable for real credential
+  // const key = await agent.context.wallet.createKey({keyType: KeyType.P256})
+  // additionalClaims["rp_eph_pub"] = {
+  //   jwk: getJwkFromKey(key).toJson(),
+  // };
 
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({
@@ -174,6 +169,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       presentationExchange: {
         definition: definition as any,
       },
+      // @ts-ignore
       additionalPayloadClaims,
     })
 
