@@ -87,7 +87,7 @@ index a523a1e668863929f49b50fea6786e42955e5149..cc156969b3ca6b7e853a62a9a6f4f5eb
 +            const parsedAuthorizationRequest = core_1.Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
 +            const rpEphPub = parsedAuthorizationRequest.payload.additionalClaims.rp_eph_pub
 +            if(rpEphPub !== null && rpEphPub !== void 0) {
-+              verifyHs256Callback = options.verifyHs256Callback(agentContext, rpEphPub.jwk)
++              verifyHs256Callback = config.verifyHs256Callback(agentContext, rpEphPub.jwk)
 +            }
 +            
              if (!verificationSession) {

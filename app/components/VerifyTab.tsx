@@ -7,7 +7,7 @@ export function VerifyTab() {
     return await createRequest({
       presentationDefinition: {
         id: crypto.randomUUID(),
-        name: 'PID Credential request for C',
+        name: "PID Credential Request C/B'",
         input_descriptors: [
           {
             id: crypto.randomUUID(),
@@ -51,7 +51,7 @@ export function VerifyTab() {
                 },
               ],
             },
-            name: 'PID Name',
+            name: 'Bank Account Identity Verification',
             purpose: 'To open a bank account we need to verify your identity.',
           },
         ],
