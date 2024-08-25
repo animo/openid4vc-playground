@@ -96,7 +96,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            )  : (
+            ) : (
               <p className="text-gray-500 break-all">Authorization request will be displayed here</p>
             )}
           </div>
@@ -112,18 +112,24 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                 <AlertDescription className="mt-2">{requestStatus?.error ?? 'Unknown error occurred'}</AlertDescription>
               )}
             </Alert>
-            {requestStatus.definition && <div>
-              <TypographyH4>Presentation Definition</TypographyH4>
-              <HighLight code={JSON.stringify(requestStatus?.definition, null, 2)} language="json" />
-            </div>}
-            {requestStatus.submission && <div>
-              <TypographyH4>Presentation Submission</TypographyH4>
-              <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
-            </div>}
-            {requestStatus.presentations && <div>
-              <TypographyH4>Presentations</TypographyH4>
-              <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
-            </div>}
+            {requestStatus.definition && (
+              <div>
+                <TypographyH4>Presentation Definition</TypographyH4>
+                <HighLight code={JSON.stringify(requestStatus?.definition, null, 2)} language="json" />
+              </div>
+            )}
+            {requestStatus.submission && (
+              <div>
+                <TypographyH4>Presentation Submission</TypographyH4>
+                <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
+              </div>
+            )}
+            {requestStatus.presentations && (
+              <div>
+                <TypographyH4>Presentations</TypographyH4>
+                <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
+              </div>
+            )}
           </div>
         )}
         <Button onClick={onSubmitCreateRequest} className="w-full" onSubmit={onSubmitCreateRequest}>

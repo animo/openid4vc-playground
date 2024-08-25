@@ -65,8 +65,10 @@ export async function receiveOffer(offerUri: string) {
 
 export async function createRequest({
   presentationDefinition,
+  flow,
 }: {
   presentationDefinition: any
+  flow: string
 }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
     method: 'POST',
@@ -75,6 +77,7 @@ export async function createRequest({
     },
     body: JSON.stringify({
       presentationDefinition,
+      flow,
     }),
   })
 

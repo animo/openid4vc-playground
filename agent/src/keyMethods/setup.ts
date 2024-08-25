@@ -1,7 +1,7 @@
 import { WalletKeyExistsError, X509Api, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
-import { createKeys } from './createKeys'
 import { X509_CERTIFICATE } from '../constants'
+import { createKeys } from './createKeys'
 import { createSelfSignedCertificate } from './createSelfSignedCertificate'
 
 let x509Certificate: string | undefined = undefined

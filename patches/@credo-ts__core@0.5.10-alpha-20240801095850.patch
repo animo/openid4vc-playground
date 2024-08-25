@@ -1,0 +1,54 @@
+diff --git a/build/modules/sd-jwt-vc/SdJwtVcOptions.d.ts b/build/modules/sd-jwt-vc/SdJwtVcOptions.d.ts
+index de5fe62881d049c4030125e0a4cc8ca38de41be9..1c1a48e75f081f2f52bddd0a970544e7438c77f2 100644
+--- a/build/modules/sd-jwt-vc/SdJwtVcOptions.d.ts
++++ b/build/modules/sd-jwt-vc/SdJwtVcOptions.d.ts
+@@ -90,4 +90,5 @@ export type SdJwtVcVerifyOptions = {
+         nonce: string;
+     };
+     requiredClaimKeys?: Array<string>;
++    verifyHs256Callback?: (key: Key, data: Uint8Array, signatureBase64Url: string) => Promise<string>
+ };
+diff --git a/build/modules/sd-jwt-vc/SdJwtVcService.js b/build/modules/sd-jwt-vc/SdJwtVcService.js
+index add911d9570edcad9945c4819bfc56cf6f715201..77a2279f8f42525bfcf11897b0b2f9e2a8fae452 100644
+--- a/build/modules/sd-jwt-vc/SdJwtVcService.js
++++ b/build/modules/sd-jwt-vc/SdJwtVcService.js
+@@ -112,7 +112,7 @@ let SdJwtVcService = class SdJwtVcService {
+             throw new SdJwtVcError_1.SdJwtVcError(`The 'iss' claim in the payload does not match a 'SAN-URI' name and the domain extracted from the HTTPS URI does not match a 'SAN-DNS' name in the x5c certificate.`);
+         }
+     }
+-    async verify(agentContext, { compactSdJwtVc, keyBinding, requiredClaimKeys }) {
++    async verify(agentContext, { compactSdJwtVc, keyBinding, requiredClaimKeys, verifyHs256Callback }) {
+         const sdjwt = new sd_jwt_vc_1.SDJwtVcInstance(this.getBaseSdJwtConfig(agentContext));
+         const verificationResult = {
+             isValid: false,
+@@ -142,7 +142,7 @@ let SdJwtVcService = class SdJwtVcService {
+             const holderBinding = this.parseHolderBindingFromCredential(sdJwtVc);
+             const holder = holderBinding ? await this.extractKeyFromHolderBinding(agentContext, holderBinding) : undefined;
+             sdjwt.config({
+-                verifier: this.verifier(agentContext, issuer.key),
++                verifier: this.verifier(agentContext, issuer.key, verifyHs256Callback),
+                 kbVerifier: holder ? this.verifier(agentContext, holder.key) : undefined,
+             });
+             const requiredKeys = requiredClaimKeys ? [...requiredClaimKeys, 'vct'] : ['vct'];
+@@ -261,11 +261,20 @@ let SdJwtVcService = class SdJwtVcService {
+     /**
+      * @todo validate the JWT header (alg)
+      */
+-    verifier(agentContext, key) {
++    verifier(agentContext, key, verifyHs256Callback) {
+         return async (message, signatureBase64Url) => {
+             if (!key) {
+                 throw new SdJwtVcError_1.SdJwtVcError('The public key used to verify the signature is missing');
+             }
++
++            const [header] = message.split(".")
++            if(header) {
++              const parsedHeader = utils_2.TypedArrayEncoder.fromBase64(header).toString()
++              const { alg } = JSON.parse(parsedHeader)
++              if(alg === "HS256") {
++                return await verifyHs256Callback(key, new Uint8Array(utils_2.TypedArrayEncoder.fromString(message)), signatureBase64Url)
++              }
++            }
+             return await agentContext.wallet.verify({
+                 signature: utils_2.TypedArrayEncoder.fromBase64(signatureBase64Url),
+                 key,

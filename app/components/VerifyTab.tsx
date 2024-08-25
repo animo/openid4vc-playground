@@ -1,9 +1,10 @@
-import { createRequest } from '../lib/api'
+import { createRequest, getIssuer } from '../lib/api'
 import { VerifyBlock } from './VerifyBlock'
 
 export function VerifyTab() {
-  const createCRequest = () =>
-    createRequest({
+  const createCRequest = async () => {
+    const issuer = (await getIssuer()).availableX509Certificates[0]
+    return await createRequest({
       presentationDefinition: {
         id: crypto.randomUUID(),
         name: 'PID Credential request for C',
@@ -33,10 +34,7 @@ export function VerifyTab() {
                   path: ['$.iss'],
                   filter: {
                     type: 'string',
-                    enum: [
-                      'https://demo.pid-issuer.bundesdruckerei.de/c',
-                      'https://demo.pid-issuer.bundesdruckerei.de/c1',
-                    ],
+                    enum: ['https://demo.pid-issuer.bundesdruckerei.de/c','https://demo.pid-issuer.bundesdruckerei.de/c1', issuer],
                   },
                 },
                 {
@@ -53,7 +51,9 @@ export function VerifyTab() {
           },
         ],
       },
+      flow: 'c'
     })
+  }
 
   const createBPrimeRequest = () =>
     createRequest({
@@ -76,6 +76,7 @@ export function VerifyTab() {
           },
         ],
       },
+      flow: 'b'' 
     })
 
   return (
