@@ -2,7 +2,7 @@ import { createRequest, getIssuer } from '../lib/api'
 import { VerifyBlock } from './VerifyBlock'
 
 export function VerifyTab() {
-  const createCRequest = async () => {
+  const createRequestForVerification = async () => {
     const issuer = (await getIssuer()).availableX509Certificates[0]
     return await createRequest({
       presentationDefinition: {
@@ -63,7 +63,7 @@ export function VerifyTab() {
     <>
       <VerifyBlock
         flowName="Signed Credential (C or C') or Authenticated Channel (B') with SD-JWT"
-        createRequest={createCRequest}
+        createRequest={createRequestForVerification}
       />
     </>
   )

@@ -1,25 +1,16 @@
 diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
-index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..606d46ca8f48281b6f5248b33e5e9baa1aba251e 100644
+index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..ee9bb2b30b132a8f29672ae84d2d241673895948 100644
 --- a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
 +++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
-@@ -81,13 +81,16 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
-             first: 10000,
-             meta: 'OpenId4VcSiopVerifierService.createAuthorizationRequest',
-         }), (0, rxjs_1.map)((e) => e.payload.record)));
-+        console.log(JSON.stringify(options, null ,2))
-         const authorizationRequest = await relyingParty.createAuthorizationRequest({
-             correlationId,
-             nonce,
+@@ -87,6 +87,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
              state,
              requestByReferenceURI: hostedAuthorizationRequestUri,
              jwtIssuer,
 +            additionalPayloadClaims: options.additionalPayloadClaims
          });
-+        console.log(JSON.stringify(authorizationRequest, null, 2))
          // NOTE: it's not possible to set the uri scheme when using the RP to create an auth request, only lower level
          // functions allow this. So we need to replace the uri scheme manually.
-         let authorizationRequestUri = (await authorizationRequest.uri()).encodedUri;
-@@ -144,6 +147,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+@@ -144,6 +145,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
                  presentationVerificationCallback: this.getPresentationVerificationCallback(agentContext, {
                      nonce: requestNonce,
                      audience: requestClientId,
@@ -27,16 +18,16 @@ index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..606d46ca8f48281b6f5248b33e5e9baa
                  }),
              },
          });
-@@ -335,6 +339,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
-                         keyBinding: {
+@@ -336,6 +338,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
                              audience: options.audience,
                              nonce: options.nonce,
-+                            verifyHs256Callback: options.verifyHs256Callback
                          },
++                        verifyHs256Callback: options.verifyHs256Callback
                      });
                      isValid = verificationResult.verification.isValid;
+                 }
 diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts b/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
-index 5abfb1bc5710849f656085593c77f3ab3898e4b7..c514681426c8f63b2a076070287ea54bc919fad7 100644
+index 5abfb1bc5710849f656085593c77f3ab3898e4b7..a8325ea21d0e44b148be522931af503218333b50 100644
 --- a/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
 +++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
 @@ -18,12 +18,15 @@ export interface OpenId4VcSiopCreateAuthorizationRequestOptions {
@@ -51,23 +42,23 @@ index 5abfb1bc5710849f656085593c77f3ab3898e4b7..c514681426c8f63b2a076070287ea54b
       * The authorization response received from the OpenID Provider (OP).
       */
      authorizationResponse: OpenId4VcSiopAuthorizationResponsePayload;
-+    verifyHs256Callback?: (key: Key, data: Uint8Array, signatureBase64Url: string) => Promise<boolean>
++    verifyHs256Callback?: (data: Uint8Array, signatureBase64Url: string) => Promise<boolean>
  }
  export interface OpenId4VcSiopCreateAuthorizationRequestReturn {
      authorizationRequest: string;
 diff --git a/build/openid4vc-verifier/router/authorizationEndpoint.d.ts b/build/openid4vc-verifier/router/authorizationEndpoint.d.ts
-index baffab5ef01cffde68fefefdd89f561f75b59032..c57f258de062a64cf5252f458bd5e6b279e42a79 100644
+index baffab5ef01cffde68fefefdd89f561f75b59032..bd46ce861b2141c0a7b1f8b6b3203b87eb3ab857 100644
 --- a/build/openid4vc-verifier/router/authorizationEndpoint.d.ts
 +++ b/build/openid4vc-verifier/router/authorizationEndpoint.d.ts
 @@ -7,5 +7,6 @@ export interface OpenId4VcSiopAuthorizationEndpointConfig {
       * @default /authorize
       */
      endpointPath: string;
-+    verifyHs256Callback: (agentContext: AgentContext, rpEphPub: Record<string, unknown>) => (key: Key, data: Uint8Array, signatureBase64Url: string) => Promise<boolean>
++    verifyHs256Callback: (agentContext: AgentContext, rpEphPub: Record<string, unknown>) => (data: Uint8Array, signatureBase64Url: string) => Promise<boolean>
  }
  export declare function configureAuthorizationEndpoint(router: Router, config: OpenId4VcSiopAuthorizationEndpointConfig): void;
 diff --git a/build/openid4vc-verifier/router/authorizationEndpoint.js b/build/openid4vc-verifier/router/authorizationEndpoint.js
-index a523a1e668863929f49b50fea6786e42955e5149..cc156969b3ca6b7e853a62a9a6f4f5ebfb182c03 100644
+index a523a1e668863929f49b50fea6786e42955e5149..f0ec69e858ad46d47bdbcbdced62103fa4469af3 100644
 --- a/build/openid4vc-verifier/router/authorizationEndpoint.js
 +++ b/build/openid4vc-verifier/router/authorizationEndpoint.js
 @@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });

@@ -1,5 +1,5 @@
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, ConsoleLogger, Key, LogLevel, X509Module, joinUriParts } from '@credo-ts/core'
+import { Agent, ConsoleLogger, LogLevel, X509Module, joinUriParts } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule } from '@credo-ts/openid4vc'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'

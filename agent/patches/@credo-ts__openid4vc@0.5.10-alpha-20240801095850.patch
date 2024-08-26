@@ -1,25 +1,16 @@
 diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
-index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..606d46ca8f48281b6f5248b33e5e9baa1aba251e 100644
+index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..5cd025a34d71622bb6a934f99457df9ab9fe4da0 100644
 --- a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
 +++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
-@@ -81,13 +81,16 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
-             first: 10000,
-             meta: 'OpenId4VcSiopVerifierService.createAuthorizationRequest',
-         }), (0, rxjs_1.map)((e) => e.payload.record)));
-+        console.log(JSON.stringify(options, null ,2))
-         const authorizationRequest = await relyingParty.createAuthorizationRequest({
-             correlationId,
-             nonce,
+@@ -87,6 +87,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
              state,
              requestByReferenceURI: hostedAuthorizationRequestUri,
              jwtIssuer,
 +            additionalPayloadClaims: options.additionalPayloadClaims
          });
-+        console.log(JSON.stringify(authorizationRequest, null, 2))
          // NOTE: it's not possible to set the uri scheme when using the RP to create an auth request, only lower level
          // functions allow this. So we need to replace the uri scheme manually.
-         let authorizationRequestUri = (await authorizationRequest.uri()).encodedUri;
-@@ -144,6 +147,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+@@ -144,6 +145,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
                  presentationVerificationCallback: this.getPresentationVerificationCallback(agentContext, {
                      nonce: requestNonce,
                      audience: requestClientId,
@@ -27,7 +18,7 @@ index d6fd170fd937b0d8df047e6fb9b74636d6ee84ab..606d46ca8f48281b6f5248b33e5e9baa
                  }),
              },
          });
-@@ -335,6 +339,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+@@ -335,6 +337,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
                          keyBinding: {
                              audience: options.audience,
                              nonce: options.nonce,
