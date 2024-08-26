@@ -47,7 +47,7 @@ index add911d9570edcad9945c4819bfc56cf6f715201..76bc45a0ac804a8d8f9318fc2847cadd
 +            if(header) {
 +              const parsedHeader = utils_2.TypedArrayEncoder.fromBase64(header).toString()
 +              const { alg } = JSON.parse(parsedHeader)
-+              if(alg === "DVS-P256-SHA2256-HS256") {
++              if(alg === "DVS-P256-SHA256-HS256") {
 +                return await verifyHs256Callback(new Uint8Array(utils_2.TypedArrayEncoder.fromString(message)), signatureBase64Url)
 +              }
              }
