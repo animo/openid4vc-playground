@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'OpenID4VC Playground',
+  title: 'Animo Funke Playground',
   description: 'By Animo',
 }
 
