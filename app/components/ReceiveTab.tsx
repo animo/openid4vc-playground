@@ -2,10 +2,10 @@ import { HighLight } from '@/components/highLight'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { type FormEvent, useState } from 'react'
 import { receiveOffer, receiveRequest } from '../lib/api'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 
 export function ReceiveTab({ disabled = false }: { disabled?: boolean }) {
   const [receiveCredentialOfferOrPresentationUri, setReceiveCredentialOfferUri] = useState<string>()

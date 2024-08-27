@@ -9,7 +9,7 @@ index de5fe62881d049c4030125e0a4cc8ca38de41be9..1c1a48e75f081f2f52bddd0a970544e7
 +    verifyHs256Callback?: (key: Key, data: Uint8Array, signatureBase64Url: string) => Promise<string>
  };
 diff --git a/build/modules/sd-jwt-vc/SdJwtVcService.js b/build/modules/sd-jwt-vc/SdJwtVcService.js
-index add911d9570edcad9945c4819bfc56cf6f715201..76bc45a0ac804a8d8f9318fc2847caddb753781e 100644
+index add911d9570edcad9945c4819bfc56cf6f715201..90f49bad702beb85194a0a7895dc9a9f8ad66b8c 100644
 --- a/build/modules/sd-jwt-vc/SdJwtVcService.js
 +++ b/build/modules/sd-jwt-vc/SdJwtVcService.js
 @@ -112,7 +112,7 @@ let SdJwtVcService = class SdJwtVcService {
@@ -48,22 +48,12 @@ index add911d9570edcad9945c4819bfc56cf6f715201..76bc45a0ac804a8d8f9318fc2847cadd
 +              const parsedHeader = utils_2.TypedArrayEncoder.fromBase64(header).toString()
 +              const { alg } = JSON.parse(parsedHeader)
 +              if(alg === "DVS-P256-SHA256-HS256") {
-+                return await verifyHs256Callback(new Uint8Array(utils_2.TypedArrayEncoder.fromString(message)), signatureBase64Url)
++                return await verifyHs256Callback(key, new Uint8Array(utils_2.TypedArrayEncoder.fromString(message)), signatureBase64Url)
 +              }
              }
              return await agentContext.wallet.verify({
                  signature: utils_2.TypedArrayEncoder.fromBase64(signatureBase64Url),
-@@ -274,6 +283,9 @@ let SdJwtVcService = class SdJwtVcService {
-         };
-     }
-     async extractKeyFromIssuer(agentContext, issuer) {
-+        if(issuer.method === 'http') {
-+          return { key: '' }
-+        }
-         if (issuer.method === 'did') {
-             const parsedDid = (0, dids_1.parseDid)(issuer.didUrl);
-             if (!parsedDid.fragment) {
-@@ -373,6 +385,11 @@ let SdJwtVcService = class SdJwtVcService {
+@@ -373,6 +382,11 @@ let SdJwtVcService = class SdJwtVcService {
                  didUrl,
              };
          }

@@ -139,34 +139,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
   const definition = createPresentationRequestBody.presentationDefinition
 
-  try {
-    // TODO: disable for real credential
-    // Key for the fake credential. Can be removed when the pid issuer updated
-    await agent.wallet.createKey({
-      keyType: KeyType.P256,
-      privateKey: TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb'),
-    })
-    // Ignore key already exist
-  } catch {}
-
-  const askarKey = AskarKey.fromSecretBytes({
-    secretKey: new Uint8Array(
-      TypedArrayEncoder.fromHex('ad38184e0d5d9af97b023b6421707dc079f7d66a185bfd4c589837e3cb69fbfb')
-    ),
-    algorithm: KeyAlgs.EcSecp256r1,
-  })
-
-  const additionalPayloadClaims = {
-    rp_eph_pub: {
-      jwk: askarKey.jwkPublic,
-    },
-  }
-
-  // TODO: enable for real credential
-  // const key = await agent.context.wallet.createKey({keyType: KeyType.P256})
-  // additionalClaims["rp_eph_pub"] = {
-  //   jwk: getJwkFromKey(key).toJson(),
-  // };
+  const key = await agent.context.wallet.createKey({ keyType: KeyType.P256 })
+  const additionalPayloadClaims = { rp_eph_pub: getJwkFromKey(key).toJson() }
 
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({
@@ -183,6 +157,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       // @ts-ignore
       additionalPayloadClaims,
     })
+
+  console.log(authorizationRequest)
 
   return response.json({
     authorizationRequestUri: authorizationRequest,

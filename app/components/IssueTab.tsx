@@ -3,11 +3,11 @@ import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { createOffer, getIssuer, getX509Certificate } from '../lib/api'
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { Alert, AlertTitle, AlertDescription } from './ui/alert'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [x509Certificate, setX509Certificate] = useState<string>()

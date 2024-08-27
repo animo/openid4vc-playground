@@ -90,16 +90,12 @@ const compressP256PublicKey = (uncompressed: Uint8Array): Uint8Array => {
 }
 
 export const verifyHs256Callback = (context: AgentContext, verifierKey: Record<string, unknown>) => {
-  const cert = X509Service.parseCertificate(context, {
-    encodedCertificate: bdrPidIssuerCertificate,
-  })
-  return async (data: Uint8Array, signatureBase64Url: string) => {
-    console.error('arrived!')
+  return async (key: Key, data: Uint8Array, signatureBase64Url: string) => {
     const mac = TypedArrayEncoder.fromBase64(signatureBase64Url)
 
     const jwk = getJwkFromJson(verifierKey as JwkJson)
 
-    const theirKeyBytes = compressP256PublicKey(new Uint8Array(cert.publicKey.publicKey))
+    const theirKeyBytes = compressP256PublicKey(new Uint8Array(key.publicKey))
 
     const isValid = await diffieHellmanKeyExchangeAndVerify({
       mac: Buffer.from(mac),

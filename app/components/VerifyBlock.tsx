@@ -8,9 +8,9 @@ import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { TypographyH3, TypographyH4 } from './ui/typography'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { TypographyH3, TypographyH4 } from './ui/typography'
 
 export type CredentialType = 'mdoc' | 'sdjwt'
 export type RequestType = 'name_age_over_21' | 'city' | 'age_birth_family_name'
@@ -91,7 +91,8 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
           . It is only compatible with the current deployed version of{' '}
           <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
             Animo's EUDI Wallet Prototype
-          </a>.
+          </a>
+          .
         </AlertDescription>
       </Alert>
       <TypographyH3>{flowName}</TypographyH3>

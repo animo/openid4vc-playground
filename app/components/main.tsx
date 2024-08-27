@@ -1,10 +1,10 @@
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { VerifyTab } from './VerifyTab'
+import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { IssueTab } from './IssueTab'
 import { ReceiveTab } from './ReceiveTab'
-import { GitHubLogoIcon } from '@radix-ui/react-icons'
+import { VerifyTab } from './VerifyTab'
 
 export function Main() {
   return (

@@ -9,7 +9,7 @@ export function VerifyTab() {
     credentialType: CredentialType
     requestType: RequestType
   }) => {
-    const issuer = (await getIssuer()).availableX509Certificates[0]  
+    const issuer = (await getIssuer()).availableX509Certificates[0]
     return await createRequest({
       presentationDefinition:
         options.credentialType === 'sdjwt'
