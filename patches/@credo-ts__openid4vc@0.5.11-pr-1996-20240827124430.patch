@@ -1,5 +1,5 @@
 diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
-index 1d35b8285d451933101b686de77cfe8780976516..cce871816074d5c0eb7fdab994a88afb67b99dad 100644
+index f3edbf9e979147ddf582f8104d05873ffcae74a3..e00bd3f39fad47697b8cfbc747de11b5d5a14ce6 100644
 --- a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
 +++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
 @@ -107,6 +107,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
@@ -10,7 +10,15 @@ index 1d35b8285d451933101b686de77cfe8780976516..cce871816074d5c0eb7fdab994a88afb
          });
          // NOTE: it's not possible to set the uri scheme when using the RP to create an auth request, only lower level
          // functions allow this. So we need to replace the uri scheme manually.
-@@ -363,6 +364,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+@@ -169,6 +170,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+                 presentationVerificationCallback: this.getPresentationVerificationCallback(agentContext, {
+                     nonce: requestNonce,
+                     audience: requestClientId,
++		    verifyHs256Callback: options.verifyHs256Callback
+                 }),
+             },
+         });
+@@ -363,6 +365,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
                              audience: options.audience,
                              nonce: options.nonce,
                          },
@@ -39,7 +47,7 @@ index 5abfb1bc5710849f656085593c77f3ab3898e4b7..b0bd7238fe142f47bb6526d3cb01ba97
  export interface OpenId4VcSiopCreateAuthorizationRequestReturn {
      authorizationRequest: string;
 diff --git a/build/openid4vc-verifier/router/authorizationEndpoint.js b/build/openid4vc-verifier/router/authorizationEndpoint.js
-index a523a1e668863929f49b50fea6786e42955e5149..b9430b6ac375640d9a78c82e4cd334cf90e0483b 100644
+index a523a1e668863929f49b50fea6786e42955e5149..ee3c6ac3a39850ffd50da4bf0cb3333a0d1c1a04 100644
 --- a/build/openid4vc-verifier/router/authorizationEndpoint.js
 +++ b/build/openid4vc-verifier/router/authorizationEndpoint.js
 @@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
@@ -58,7 +66,7 @@ index a523a1e668863929f49b50fea6786e42955e5149..b9430b6ac375640d9a78c82e4cd334cf
 +            const parsedAuthorizationRequest = core_1.Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
 +            const rpEphPub = parsedAuthorizationRequest.payload.additionalClaims.rp_eph_pub
 +            if(rpEphPub !== null && rpEphPub !== void 0) {
-+              verifyHs256Callback = config.verifyHs256Callback(agentContext, rpEphPub.jwk)
++              verifyHs256Callback = config.verifyHs256Callback(agentContext, rpEphPub)
 +            }
              if (!verificationSession) {
                  agentContext.config.logger.warn(`No verification session found for incoming authorization response for verifier ${verifier.verifierId}`);

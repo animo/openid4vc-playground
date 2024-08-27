@@ -7,7 +7,6 @@ import {
   KeyType,
   type P256Jwk,
   TypedArrayEncoder,
-  X509Service,
   getJwkFromJson,
   getJwkFromKey,
 } from '@credo-ts/core'
