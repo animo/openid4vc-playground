@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VerifyTab } from './VerifyTab'
 import { IssueTab } from './IssueTab'
 import { ReceiveTab } from './ReceiveTab'
+import { GitHubLogoIcon } from '@radix-ui/react-icons'
 
 export function Main() {
   return (
@@ -43,6 +44,24 @@ export function Main() {
             </TabsContent>
           </Tabs>
         </div>
+        <footer className="flex items-center justify-center w-full p-4 gap-8">
+          <p className="text-sm text-gray-500">
+            <a className="flex items-center gap-2" href="https://github.com/animo/openid4vc-playground-funke">
+              <GitHubLogoIcon /> Playground GitHub
+            </a>
+          </p>
+          <p className="text-sm text-gray-500">
+            Built with ❤️ by <a href="https://animo.id">Animo</a>
+          </p>
+          <p className="text-sm text-gray-500">
+            <a
+              className="flex items-center gap-2"
+              href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid"
+            >
+              <GitHubLogoIcon /> EUDI Wallet Protoype GitHub
+            </a>
+          </p>
+        </footer>
       </main>
     </>
   )

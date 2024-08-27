@@ -44,21 +44,21 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
 
   return (
     <Card className="p-6">
-        <Alert variant="warning" className="mb-5">
-          <ExclamationTriangleIcon className="h-4 w-4" />
-          <AlertTitle>Warning</AlertTitle>
-          <AlertDescription>
-            This playground was built in the context for the{' '}
-            <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
-              EUDI Wallet Prototype Funke
-            </a>
-            . Tabs that are not compatible with the current deployed version of{' '}
-            <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-              Animo's EUDI Wallet Prototype
-            </a>{' '}
-            are disabled for public use.
-          </AlertDescription>
-        </Alert>
+      <Alert variant="warning" className="mb-5">
+        <ExclamationTriangleIcon className="h-4 w-4" />
+        <AlertTitle>Warning</AlertTitle>
+        <AlertDescription>
+          This playground was built in the context for the{' '}
+          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
+            EUDI Wallet Prototype Funke
+          </a>
+          . Tabs that are not compatible with the current deployed version of{' '}
+          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
+            Animo's EUDI Wallet Prototype
+          </a>{' '}
+          are disabled for public use.
+        </AlertDescription>
+      </Alert>
       <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitIssueCredential}>
         <div className="space-y-2">
           <Label htmlFor="credential-type">Credential Type</Label>
