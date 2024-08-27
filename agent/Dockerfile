@@ -18,6 +18,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
 FROM base AS build
 COPY tsconfig.json /app/tsconfig.json
 COPY patches /app/patches
+COPY sphereon-did-auth-siop-0.16.0.tgz /app/sphereon-did-auth-siop-0.16.0.tgz
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 COPY src src
