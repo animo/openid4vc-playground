@@ -1,0 +1,73 @@
+diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
+index 1d35b8285d451933101b686de77cfe8780976516..cce871816074d5c0eb7fdab994a88afb67b99dad 100644
+--- a/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
++++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierService.js
+@@ -107,6 +107,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+             state,
+             requestByReferenceURI: hostedAuthorizationRequestUri,
+             jwtIssuer,
++            additionalPayloadClaims: options.additionalPayloadClaims
+         });
+         // NOTE: it's not possible to set the uri scheme when using the RP to create an auth request, only lower level
+         // functions allow this. So we need to replace the uri scheme manually.
+@@ -363,6 +364,7 @@ let OpenId4VcSiopVerifierService = class OpenId4VcSiopVerifierService {
+                             audience: options.audience,
+                             nonce: options.nonce,
+                         },
++                        verifyHs256Callback: options.verifyHs256Callback
+                     });
+                     isValid = verificationResult.verification.isValid;
+                 }
+diff --git a/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts b/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
+index 5abfb1bc5710849f656085593c77f3ab3898e4b7..b0bd7238fe142f47bb6526d3cb01ba97b98b16e8 100644
+--- a/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
++++ b/build/openid4vc-verifier/OpenId4VcSiopVerifierServiceOptions.d.ts
+@@ -18,12 +18,15 @@ export interface OpenId4VcSiopCreateAuthorizationRequestOptions {
+     presentationExchange?: {
+         definition: DifPresentationExchangeDefinitionV2;
+     };
++
++    additionalPayloadClaims?: Record<string, unknown>
+ }
+ export interface OpenId4VcSiopVerifyAuthorizationResponseOptions {
+     /**
+      * The authorization response received from the OpenID Provider (OP).
+      */
+     authorizationResponse: OpenId4VcSiopAuthorizationResponsePayload;
++    verifyHs256Callback?: (key: Key, data: Uint8Array, signatureInBase64url: string) => Promise<boolean>
+ }
+ export interface OpenId4VcSiopCreateAuthorizationRequestReturn {
+     authorizationRequest: string;
+diff --git a/build/openid4vc-verifier/router/authorizationEndpoint.js b/build/openid4vc-verifier/router/authorizationEndpoint.js
+index a523a1e668863929f49b50fea6786e42955e5149..b9430b6ac375640d9a78c82e4cd334cf90e0483b 100644
+--- a/build/openid4vc-verifier/router/authorizationEndpoint.js
++++ b/build/openid4vc-verifier/router/authorizationEndpoint.js
+@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.configureAuthorizationEndpoint = configureAuthorizationEndpoint;
+ const router_1 = require("../../shared/router");
+ const OpenId4VcSiopVerifierService_1 = require("../OpenId4VcSiopVerifierService");
++const core_1 = require("@credo-ts/core");
+ function configureAuthorizationEndpoint(router, config) {
+     router.post(config.endpointPath, async (request, response, next) => {
+         const { agentContext, verifier } = (0, router_1.getRequestContext)(request);
+@@ -16,6 +17,12 @@ function configureAuthorizationEndpoint(router, config) {
+                 authorizationResponse,
+                 verifierId: verifier.verifierId,
+             });
++            let verifyHs256Callback = undefined
++            const parsedAuthorizationRequest = core_1.Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
++            const rpEphPub = parsedAuthorizationRequest.payload.additionalClaims.rp_eph_pub
++            if(rpEphPub !== null && rpEphPub !== void 0) {
++              verifyHs256Callback = config.verifyHs256Callback(agentContext, rpEphPub.jwk)
++            }
+             if (!verificationSession) {
+                 agentContext.config.logger.warn(`No verification session found for incoming authorization response for verifier ${verifier.verifierId}`);
+                 return (0, router_1.sendErrorResponse)(response, agentContext.config.logger, 404, 'invalid_request', null);
+@@ -23,6 +30,7 @@ function configureAuthorizationEndpoint(router, config) {
+             await openId4VcVerifierService.verifyAuthorizationResponse(agentContext, {
+                 authorizationResponse: request.body,
+                 verificationSession,
++                verifyHs256Callback: verifyHs256Callback
+             });
+             response.status(200).send();
+         }

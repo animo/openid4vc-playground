@@ -12,8 +12,8 @@
       "@sphereon/did-auth-siop": "file:./sphereon-did-auth-siop-0.16.0.tgz"
     },
     "patchedDependencies": {
-      "@credo-ts/core@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__core@0.5.11-pr-1996-20240826150533.patch",
-      "@credo-ts/openid4vc@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__openid4vc@0.5.11-pr-1996-20240826150533.patch"
+      "@credo-ts/openid4vc@0.5.11-pr-1996-20240827124430": "patches/@credo-ts__openid4vc@0.5.11-pr-1996-20240827124430.patch",
+      "@credo-ts/core@0.5.11-pr-1996-20240827124430": "patches/@credo-ts__core@0.5.11-pr-1996-20240827124430.patch"
     }
   }
 }
