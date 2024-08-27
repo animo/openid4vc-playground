@@ -8,10 +8,12 @@
     "@biomejs/biome": "^1.8.3"
   },
   "pnpm": {
+    "overrides": {
+      "@sphereon/did-auth-siop": "file:./sphereon-did-auth-siop-0.16.0.tgz"
+    },
     "patchedDependencies": {
-      "@sphereon/did-auth-siop@0.15.1-next.4": "patches/@sphereon__did-auth-siop@0.15.1-next.4.patch",
-      "@credo-ts/openid4vc@0.5.10-alpha-20240801095850": "patches/@credo-ts__openid4vc@0.5.10-alpha-20240801095850.patch",
-      "@credo-ts/core@0.5.10-alpha-20240801095850": "patches/@credo-ts__core@0.5.10-alpha-20240801095850.patch"
+      "@credo-ts/core@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__core@0.5.11-pr-1996-20240826150533.patch",
+      "@credo-ts/openid4vc@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__openid4vc@0.5.11-pr-1996-20240826150533.patch"
     }
   }
 }

@@ -1,10 +1,12 @@
 {
   "name": "agent",
   "dependencies": {
-    "@credo-ts/askar": "0.5.10-alpha-20240801095850",
-    "@credo-ts/core": "0.5.10-alpha-20240801095850",
-    "@credo-ts/node": "0.5.10-alpha-20240801095850",
-    "@credo-ts/openid4vc": "0.5.10-alpha-20240801095850",
+    "@credo-ts/askar": "0.5.11-pr-1996-20240826150533",
+    "@credo-ts/cheqd": "0.5.11-pr-1996-20240826150533",
+    "@credo-ts/core": "0.5.11-pr-1996-20240826150533",
+    "@credo-ts/indy-vdr": "0.5.11-pr-1996-20240826150533",
+    "@credo-ts/node": "0.5.11-pr-1996-20240826150533",
+    "@credo-ts/openid4vc": "0.5.11-pr-1996-20240826150533",
     "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -24,10 +26,13 @@
     "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development"
   },
   "pnpm": {
+    "overrides": {
+      "@sphereon/did-auth-siop": "file:./sphereon-did-auth-siop-0.16.0.tgz"
+    },
     "patchedDependencies": {
-      "@sphereon/did-auth-siop@0.15.1-next.4": "patches/@sphereon__did-auth-siop@0.15.1-next.4.patch",
-      "@credo-ts/openid4vc@0.5.10-alpha-20240801095850": "patches/@credo-ts__openid4vc@0.5.10-alpha-20240801095850.patch",
-      "@credo-ts/core@0.5.10-alpha-20240801095850": "patches/@credo-ts__core@0.5.10-alpha-20240801095850.patch"
+      "@sphereon/did-auth-siop@0.16.0": "patches/@sphereon__did-auth-siop@0.16.0.patch",
+      "@credo-ts/openid4vc@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__openid4vc@0.5.11-pr-1996-20240826150533.patch",
+      "@credo-ts/core@0.5.11-pr-1996-20240826150533": "patches/@credo-ts__core@0.5.11-pr-1996-20240826150533.patch"
     }
   }
 }

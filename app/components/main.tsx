@@ -2,6 +2,8 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VerifyTab } from './VerifyTab'
+import { IssueTab } from './IssueTab'
+import { ReceiveTab } from './ReceiveTab'
 
 export function Main() {
   return (
@@ -27,9 +29,17 @@ export function Main() {
           <Tabs className="w-full max-w-5xl px-6" defaultValue="verify">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="verify">Verify</TabsTrigger>
+              <TabsTrigger value="issue">Issue</TabsTrigger>
+              <TabsTrigger value="receive">Receive</TabsTrigger>
             </TabsList>
             <TabsContent value="verify">
               <VerifyTab />
+            </TabsContent>
+            <TabsContent value="issue">
+              <IssueTab disabled />
+            </TabsContent>
+            <TabsContent value="receive">
+              <ReceiveTab disabled />
             </TabsContent>
           </Tabs>
         </div>

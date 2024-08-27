@@ -2,6 +2,8 @@ import {
   DifPresentationExchangeService,
   JsonTransformer,
   KeyType,
+  Mdoc,
+  MdocVerifiablePresentation,
   RecordNotFoundError,
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
@@ -109,7 +111,15 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
   }
 
   return response.json({
-    credentials: credentials.map((credential) => credential.credential.payload),
+    credentials: credentials.map((credential) => {
+      if (credential instanceof Mdoc) {
+        return credential.credential
+      }
+      if ('payload' in credential.credential) {
+        return credential.credential.payload
+      }
+      throw new Error('Unsupported credential type')
+    }),
   })
 })
 
@@ -164,7 +174,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       requestSigner: {
         method: 'x5c',
         x5c: [x509Certificate],
-        issuer: AGENT_HOST,
+        // FIXME: remove issuer param from credo as we can infer it from the url
+        issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
       presentationExchange: {
         definition: definition as any,
@@ -192,12 +203,10 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
     if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
       const verified = await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(verificationSessionId)
 
-      return response.json({
-        verificationSessionId: verificationSession.id,
-        responseStatus: verificationSession.state,
-        error: verificationSession.errorMessage,
+      console.log(verified.presentationExchange?.presentations)
 
-        presentations: verified.presentationExchange?.presentations.map((presentation) => {
+      const presentations = await Promise.all(
+        verified.presentationExchange?.presentations.map(async (presentation) => {
           if (presentation instanceof W3cJsonLdVerifiablePresentation) {
             return {
               pretty: presentation.toJson(),
@@ -212,6 +221,17 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
             }
           }
 
+          if (presentation instanceof MdocVerifiablePresentation) {
+            const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
+            const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
+            console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
+
+            return {
+              pretty: JsonTransformer.toJSON(disclosedClaims),
+              encoded: deviceSigned,
+            }
+          }
+
           return {
             pretty: {
               ...presentation,
@@ -219,7 +239,17 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
             },
             encoded: presentation.compact,
           }
-        }),
+        }) ?? []
+      )
+
+      console.log('presentations', presentations)
+
+      return response.json({
+        verificationSessionId: verificationSession.id,
+        responseStatus: verificationSession.state,
+        error: verificationSession.errorMessage,
+
+        presentations: presentations,
         submission: verified.presentationExchange?.submission,
         definition: verified.presentationExchange?.definition,
       })

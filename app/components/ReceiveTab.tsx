@@ -4,8 +4,10 @@ import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { type FormEvent, useState } from 'react'
 import { receiveOffer, receiveRequest } from '../lib/api'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 
-export function ReceiveTab() {
+export function ReceiveTab({ disabled = false }: { disabled?: boolean }) {
   const [receiveCredentialOfferOrPresentationUri, setReceiveCredentialOfferUri] = useState<string>()
   const [receivedCredentials, setReceivedCredentials] = useState()
   const [receivedPresentation, setReceivedPresentation] = useState()
@@ -22,10 +24,26 @@ export function ReceiveTab() {
 
   return (
     <Card className="p-6">
-      <form className="space-y-4" onSubmit={onSubmitReceiveOffer}>
+      <Alert variant="warning" className="mb-5">
+        <ExclamationTriangleIcon className="h-4 w-4" />
+        <AlertTitle>Warning</AlertTitle>
+        <AlertDescription>
+          This playground was built in the context for the{' '}
+          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
+            EUDI Wallet Prototype Funke
+          </a>
+          . Tabs that are not compatible with the current deployed version of{' '}
+          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
+            Animo's EUDI Wallet Prototype
+          </a>{' '}
+          are disabled for public use.
+        </AlertDescription>
+      </Alert>
+      <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitReceiveOffer}>
         <div className="space-y-2">
           <Label htmlFor="credential-offer-uri">Credential Offer or SIOP URI</Label>
           <textarea
+            disabled={disabled}
             className="w-full h-20 p-2 rounded-md bg-white border border-gray-300"
             id="credential-offer-uri"
             required
@@ -41,7 +59,7 @@ export function ReceiveTab() {
             <p className="text-gray-500">JSON content of the credential will be displayed here</p>
           )}
         </div>
-        <Button className="w-full" onClick={onSubmitReceiveOffer} onSubmit={onSubmitReceiveOffer}>
+        <Button disabled={disabled} className="w-full" onClick={onSubmitReceiveOffer} onSubmit={onSubmitReceiveOffer}>
           Receive Credential
         </Button>
       </form>

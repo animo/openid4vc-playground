@@ -6,8 +6,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { createOffer, getIssuer, getX509Certificate } from '../lib/api'
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import { Alert, AlertTitle, AlertDescription } from './ui/alert'
 
-export function IssueTab() {
+export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [x509Certificate, setX509Certificate] = useState<string>()
   const [credentialType, setCredentialType] = useState<string>()
   const [issuerId, setIssuerid] = useState<string>()
@@ -42,10 +44,25 @@ export function IssueTab() {
 
   return (
     <Card className="p-6">
-      <form className="space-y-4" onSubmit={onSubmitIssueCredential}>
+        <Alert variant="warning" className="mb-5">
+          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTitle>Warning</AlertTitle>
+          <AlertDescription>
+            This playground was built in the context for the{' '}
+            <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
+              EUDI Wallet Prototype Funke
+            </a>
+            . Tabs that are not compatible with the current deployed version of{' '}
+            <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
+              Animo's EUDI Wallet Prototype
+            </a>{' '}
+            are disabled for public use.
+          </AlertDescription>
+        </Alert>
+      <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitIssueCredential}>
         <div className="space-y-2">
           <Label htmlFor="credential-type">Credential Type</Label>
-          <Select name="credential-type" required onValueChange={setCredentialType}>
+          <Select name="credential-type" disabled={disabled} required onValueChange={setCredentialType}>
             <SelectTrigger className="w-[320px]">
               <SelectValue placeholder={!issuer ? 'Loading' : 'Select a credential type'} />
             </SelectTrigger>
@@ -62,7 +79,7 @@ export function IssueTab() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="issuer-did">Issuer Id</Label>
-          <Select name="issuer-did" required onValueChange={setIssuerid}>
+          <Select name="issuer-did" disabled={disabled} required onValueChange={setIssuerid}>
             <SelectTrigger className="w-[320px]">
               <SelectValue placeholder={!issuer ? 'Loading' : 'Select an issuer id'} />
             </SelectTrigger>
@@ -106,7 +123,12 @@ export function IssueTab() {
             <p className="text-gray-500 break-all">Credential offer will be displayed here</p>
           )}
         </div>
-        <Button onClick={onSubmitIssueCredential} className="w-full" onSubmit={onSubmitIssueCredential}>
+        <Button
+          onClick={onSubmitIssueCredential}
+          disabled={disabled}
+          className="w-full"
+          onSubmit={onSubmitIssueCredential}
+        >
           Issue Credential
         </Button>
         <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md p-7">
