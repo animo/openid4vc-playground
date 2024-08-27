@@ -50,6 +50,7 @@ export const agent = new Agent({
       router: openId4VpRouter,
       endpoints: {
         authorization: {
+          // @ts-ignore
           verifyHs256Callback,
         },
       },

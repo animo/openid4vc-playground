@@ -26,6 +26,8 @@ export const mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   vct: 'https://example.bmi.bund.de/credential/pid/1.0',
   cryptographic_binding_methods_supported: ['jwk'],
+  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  // @ts-ignore
   credential_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
   display: [
     {
