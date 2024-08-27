@@ -90,7 +90,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
           </a>
           . It is only compatible with the current deployed version of{' '}
           <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo's EUDI Wallet Prototype
+            Animo&apos;s EUDI Wallet Prototype
           </a>
           .
         </AlertDescription>
@@ -111,10 +111,10 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             <SelectContent>
               <SelectGroup>
                 <SelectItem key="sdjwt" value="sdjwt">
-                  SD-JWT VC (C/C'/B')
+                  SD-JWT VC (C/C&apos;/B&apos;)
                 </SelectItem>
                 <SelectItem key="mdoc" value="mdoc">
-                  mDOC (C/C')
+                  mDOC (C/C&apos;)
                 </SelectItem>
               </SelectGroup>
             </SelectContent>

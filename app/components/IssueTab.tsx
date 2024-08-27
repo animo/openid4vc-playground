@@ -54,7 +54,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
           </a>
           . Tabs that are not compatible with the current deployed version of{' '}
           <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo's EUDI Wallet Prototype
+            Animo&apos;s EUDI Wallet Prototype
           </a>{' '}
           are disabled for public use.
         </AlertDescription>
