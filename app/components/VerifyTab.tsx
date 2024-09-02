@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { createRequest, getIssuer, getX509Certificate } from '../lib/api'
 import { type CredentialType, type RequestType, VerifyBlock } from './VerifyBlock'
 
+const randomId = () => (Math.random() + 1).toString(36).substring(7)
+
 export function VerifyTab() {
   const [x509Certificate, setX509Certificate] = useState<string>()
 
@@ -65,12 +67,12 @@ const getSdJwtPresentationDefinition = (issuer: string, requestType: RequestType
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     name: 'Bank account identity verification',
     purpose: 'To open a bank account we need to verify your identity.',
     input_descriptors: [
       {
-        id: crypto.randomUUID(),
+        id: randomId(),
         constraints: {
           limit_disclosure: 'required',
           fields: [
@@ -142,7 +144,7 @@ const getMdocPresentationDefinition = (requestType: RequestType) => {
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     name: 'Bank account identity verification',
     purpose: 'To open a bank account we need to verify your identity.',
     input_descriptors: [

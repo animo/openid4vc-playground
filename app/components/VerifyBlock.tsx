@@ -11,6 +11,7 @@ import { Card } from './ui/card'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { TypographyH3, TypographyH4 } from './ui/typography'
+import Link from 'next/link'
 
 export type CredentialType = 'mdoc' | 'sdjwt'
 export type RequestType = 'name_age_over_21' | 'city' | 'age_birth_family_name'
@@ -161,6 +162,13 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                         {authorizationRequestUri}
                       </p>
                     </TooltipTrigger>
+                    <div className="gap-2 w-full justify-center flex flex-1">
+                      <div>
+                        <Link href={authorizationRequestUri}>
+                          <Button>Open in Wallet</Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
 
                   <TooltipContent>
