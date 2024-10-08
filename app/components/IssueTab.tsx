@@ -20,6 +20,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
       display: string
     }>
     availableX509Certificates: string[]
+    // biome-ignore lint/complexity/noBannedTypes: <explanation>
     display: {}
   }>()
 

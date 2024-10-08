@@ -9,11 +9,17 @@
   },
   "pnpm": {
     "overrides": {
-      "@sphereon/did-auth-siop": "file:./sphereon-did-auth-siop-0.16.0.tgz"
-    },
-    "patchedDependencies": {
-      "@credo-ts/openid4vc@0.5.11-pr-1996-20240827124430": "patches/@credo-ts__openid4vc@0.5.11-pr-1996-20240827124430.patch",
-      "@credo-ts/core@0.5.11-pr-1996-20240827124430": "patches/@credo-ts__core@0.5.11-pr-1996-20240827124430.patch"
+      "@credo-ts/askar": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/askar?funke",
+      "@credo-ts/core": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/core?funke",
+      "@credo-ts/openid4vc": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/openid4vc?funke",
+      "@credo-ts/node": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/node?funke",
+      "@sphereon/did-auth-siop": "https://gitpkg.vercel.app/animo/OID4VC/packages/siop-oid4vp?funke",
+      "@sphereon/oid4vc-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke",
+      "@sphereon/oid4vci-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/oid4vci-common?funke",
+      "@sphereon/oid4vci-issuer": "https://gitpkg.vercel.app/animo/OID4VC/packages/issuer?funke",
+      "@sphereon/oid4vci-client": "https://gitpkg.vercel.app/animo/OID4VC/packages/client?funke",
+      "@sphereon/jarm": "https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke",
+      "@sphereon/ssi-types": "0.29.1-unstable.208"
     }
   }
 }

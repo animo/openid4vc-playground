@@ -88,7 +88,7 @@ const compressP256PublicKey = (uncompressed: Uint8Array): Uint8Array => {
   return new Uint8Array(compressed)
 }
 
-export const verifyHs256Callback = (context: AgentContext, verifierKey: Record<string, unknown>) => {
+export const getVerifyHs256Callback = (context: AgentContext, verifierKey: Record<string, unknown>) => {
   return async (key: Key, data: Uint8Array, signatureBase64Url: string) => {
     const mac = TypedArrayEncoder.fromBase64(signatureBase64Url)
 

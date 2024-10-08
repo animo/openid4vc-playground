@@ -2,8 +2,8 @@ import {
   DifPresentationExchangeService,
   JsonTransformer,
   KeyType,
-  Mdoc,
-  MdocVerifiablePresentation,
+  // Mdoc,
+  // MdocVerifiablePresentation,
   RecordNotFoundError,
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
@@ -105,6 +105,9 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
   })
 
   for (const credential of credentials) {
+    // authenticated channel issuance, not relevant here
+    if (typeof credential === 'string') continue
+
     if ('compact' in credential.credential) {
       await agent.sdJwtVc.store(credential.credential.compact as string)
     }
@@ -112,9 +115,10 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 
   return response.json({
     credentials: credentials.map((credential) => {
-      if (credential instanceof Mdoc) {
-        return credential.credential
-      }
+      // if (credential instanceof Mdoc) {
+      //   return credential.credential
+      // }
+      if (typeof credential === 'string') return credential
       if ('payload' in credential.credential) {
         return credential.credential.payload
       }
@@ -152,10 +156,11 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
       presentationExchange: {
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         definition: definition as any,
       },
-      // @ts-ignore
       additionalPayloadClaims,
+      responseMode: 'direct_post.jwt',
     })
 
   console.log(authorizationRequest)
@@ -197,16 +202,16 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
             }
           }
 
-          if (presentation instanceof MdocVerifiablePresentation) {
-            const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
-            const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
-            console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
+          // if (presentation instanceof MdocVerifiablePresentation) {
+          //   const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
+          //   const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
+          //   console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
 
-            return {
-              pretty: JsonTransformer.toJSON(disclosedClaims),
-              encoded: deviceSigned,
-            }
-          }
+          //   return {
+          //     pretty: JsonTransformer.toJSON(disclosedClaims),
+          //     encoded: deviceSigned,
+          //   }
+          // }
 
           return {
             pretty: {
