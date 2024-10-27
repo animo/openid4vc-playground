@@ -129,6 +129,7 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 
 const zCreatePresentationRequestBody = z.object({
   presentationDefinition: z.record(z.string(), z.any()),
+  requestScheme: z.string(),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
@@ -166,7 +167,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   console.log(authorizationRequest)
 
   return response.json({
-    authorizationRequestUri: authorizationRequest,
+    authorizationRequestUri: authorizationRequest.replace('openid4vp://', createPresentationRequestBody.requestScheme),
     verificationSessionId: verificationSession.id,
   })
 })

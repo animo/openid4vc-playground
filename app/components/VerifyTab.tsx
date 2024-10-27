@@ -10,9 +10,11 @@ export function VerifyTab() {
   const createRequestForVerification = async (options: {
     credentialType: CredentialType
     requestType: RequestType
+    requestScheme: string
   }) => {
     const issuer = (await getIssuer()).availableX509Certificates[0]
     return await createRequest({
+      requestScheme: options.requestScheme,
       presentationDefinition:
         options.credentialType === 'sdjwt'
           ? getSdJwtPresentationDefinition(issuer, options.requestType)

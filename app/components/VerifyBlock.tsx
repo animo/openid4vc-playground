@@ -12,6 +12,7 @@ import { Card } from './ui/card'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { TypographyH3, TypographyH4 } from './ui/typography'
+import { Input } from './ui/input'
 
 export type CredentialType = 'mdoc' | 'sdjwt'
 export type RequestType = 'name_age_over_21' | 'city' | 'age_birth_family_name'
@@ -22,9 +23,11 @@ type VerifyBlockProps = {
   createRequest: ({
     credentialType,
     requestType,
+    requestScheme,
   }: {
     credentialType: CredentialType
     requestType: RequestType
+    requestScheme: string
   }) => Promise<{
     verificationSessionId: string
     authorizationRequestUri: string
@@ -53,6 +56,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
   const [credentialType, setCredentialType] = useState<CredentialType>('sdjwt')
   const [requestType, setRequestType] = useState<RequestType>('name_age_over_21')
+  const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
 
   useInterval({
     callback: async () => {
@@ -73,7 +77,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     setVerificationSessionId(undefined)
     setRequestStatus(undefined)
 
-    const request = await createRequest({ credentialType, requestType })
+    const request = await createRequest({ credentialType, requestType, requestScheme })
 
     setVerificationSessionId(request.verificationSessionId)
     setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -140,6 +144,15 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
               </SelectGroup>
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="request-scheme">Scheme</Label>
+          <Input
+            name="request-scheme"
+            required
+            value={requestScheme}
+            onChange={({ target }) => setRequestScheme(target.value)}
+          />
         </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
