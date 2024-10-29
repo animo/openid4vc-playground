@@ -2,16 +2,15 @@ import {
   DifPresentationExchangeService,
   JsonTransformer,
   KeyType,
+  MdocVerifiablePresentation,
   // Mdoc,
   // MdocVerifiablePresentation,
   RecordNotFoundError,
-  TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { Key as AskarKey, KeyAlgs } from '@hyperledger/aries-askar-nodejs'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
@@ -60,15 +59,16 @@ apiRouter.get('/issuer', async (_, response: Response) => {
   const issuer = await getIssuer()
 
   return response.json({
-    credentialsSupported: issuer.credentialsSupported.map((c) => ({
-      display:
-        c.format === 'vc+sd-jwt'
-          ? `${c.vct} (vc+sd-jwt)`
-          : c.format === 'mso_mdoc'
-            ? `${c.doctype} (mso_mdoc)`
-            : 'Unregistered format',
-      id: c.id,
-    })),
+    credentialsSupported: issuer.credentialsSupported.map((c) => {
+      const displayName =
+        c.display?.[0]?.name ??
+        (c.format === 'vc+sd-jwt' ? c.vct : c.format === 'mso_mdoc' ? c.doctype : 'Unregistered format')
+
+      return {
+        display: `${displayName} (${c.format})`,
+        id: c.id,
+      }
+    }),
     display: issuer.display,
     availableX509Certificates: [AGENT_HOST],
   })
@@ -208,16 +208,16 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
             }
           }
 
-          // if (presentation instanceof MdocVerifiablePresentation) {
-          //   const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
-          //   const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
-          //   console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
+          if (presentation instanceof MdocVerifiablePresentation) {
+            const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
+            // const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
+            // console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
 
-          //   return {
-          //     pretty: JsonTransformer.toJSON(disclosedClaims),
-          //     encoded: deviceSigned,
-          //   }
-          // }
+            return {
+              pretty: JsonTransformer.toJSON({}),
+              encoded: deviceSigned,
+            }
+          }
 
           return {
             pretty: {

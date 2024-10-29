@@ -1,10 +1,16 @@
 import type { KeyType } from '@credo-ts/core'
-import type { OpenId4VciCredentialRequestToCredentialMapper, OpenId4VciSignMdocCredential } from '@credo-ts/openid4vc'
+import type {
+  OpenId4VciCredentialRequestToCredentialMapper,
+  OpenId4VciSignMdocCredential,
+  OpenId4VciSignSdJwtCredential,
+} from '@credo-ts/openid4vc'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import {
   credentialsSupported,
   issuerDisplay,
+  mockEmployeeBadgeMdoc,
+  mockIdenticonAttendeeSdJwt,
   mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk,
   mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk,
 } from './issuerMetadata'
@@ -46,7 +52,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   // for the key binding
   holderBinding,
   credentialConfigurationIds,
-}) => {
+}): Promise<OpenId4VciSignMdocCredential | OpenId4VciSignSdJwtCredential> => {
   const credentialConfigurationId = credentialConfigurationIds[0]
 
   const x509Certificate = getX509Certificate()
@@ -112,7 +118,29 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         ],
         age_equal_or_over: { _sd: ['12', '14', '16', '18', '21', '65'] },
       },
-    }
+    } as const satisfies OpenId4VciSignSdJwtCredential
+  }
+
+  if (credentialConfigurationId === mockIdenticonAttendeeSdJwt.id) {
+    return {
+      credentialSupportedId: mockIdenticonAttendeeSdJwt.id,
+      format: 'vc+sd-jwt',
+      holder: holderBinding,
+      payload: {
+        vct: mockIdenticonAttendeeSdJwt.vct,
+        first_name: 'Erika',
+        last_name: 'Mustermann',
+        sponsorship_tier: 'Platinum',
+      },
+      issuer: {
+        method: 'x5c',
+        x5c: [x509Certificate],
+        issuer: AGENT_HOST,
+      },
+      disclosureFrame: {
+        _sd: ['first_name', 'last_name'],
+      },
+    } as const
   }
 
   if (credentialConfigurationId === mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk.id) {
@@ -156,7 +184,31 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         validFrom: new Date('2024-08-12T14:49:42.124Z'),
         signed: new Date(),
       },
-    } satisfies OpenId4VciSignMdocCredential
+    } as const satisfies OpenId4VciSignMdocCredential
+  }
+
+  if (credentialConfigurationId === mockEmployeeBadgeMdoc.id) {
+    return {
+      credentialSupportedId: mockEmployeeBadgeMdoc.id,
+      format: 'mso_mdoc',
+      holderKey: holderBinding.key,
+      docType: mockEmployeeBadgeMdoc.doctype,
+      issuerCertificate: x509Certificate,
+      namespaces: {
+        [mockEmployeeBadgeMdoc.doctype]: {
+          is_admin: true,
+          last_name: 'Mustermann',
+          first_name: 'Erika',
+          department: 'Sales',
+          employee_id: '181888100',
+        },
+      },
+      validityInfo: {
+        validUntil: new Date('2025-08-26T14:49:42.124Z'),
+        validFrom: new Date('2024-08-12T14:49:42.124Z'),
+        signed: new Date(),
+      },
+    } as const satisfies OpenId4VciSignMdocCredential
   }
 
   throw new Error(`Unsupported credential ${credentialConfigurationId}`)
