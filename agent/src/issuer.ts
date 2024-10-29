@@ -1,8 +1,13 @@
 import type { KeyType } from '@credo-ts/core'
-import type { OpenId4VciCredentialRequestToCredentialMapper } from '@credo-ts/openid4vc'
+import type { OpenId4VciCredentialRequestToCredentialMapper, OpenId4VciSignMdocCredential } from '@credo-ts/openid4vc'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
-import { credentialsSupported, issuerDisplay, mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk } from './issuerMetadata'
+import {
+  credentialsSupported,
+  issuerDisplay,
+  mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk,
+  mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk,
+} from './issuerMetadata'
 import { getX509Certificate } from './keyMethods'
 
 const issuerId = 'e451c49f-1186-4fe4-816d-a942151dfd59'
@@ -40,8 +45,9 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   // FIXME: it would be useful if holderBinding would include some metadata on the key type / alg used
   // for the key binding
   holderBinding,
+  credentialConfigurationIds,
 }) => {
-  const credentialSupported = credentialsSupported[0]
+  const credentialConfigurationId = credentialConfigurationIds[0]
 
   const x509Certificate = getX509Certificate()
 
@@ -52,16 +58,13 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     throw new Error(`Unsupported holder binding method: ${holderBinding.method}`)
   }
 
-  if (
-    credentialSupported.format === 'vc+sd-jwt' &&
-    credentialSupported.id === mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk.id
-  ) {
+  if (credentialConfigurationId === mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk.id) {
     return {
-      credentialSupportedId: credentialSupported.id,
+      credentialSupportedId: mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk.id,
       format: 'vc+sd-jwt',
       holder: holderBinding,
       payload: {
-        vct: credentialSupported.vct,
+        vct: mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk.vct,
         given_name: 'Erika',
         family_name: 'Mustermann',
         birthdate: '1963-08-12',
@@ -112,5 +115,49 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     }
   }
 
-  throw new Error(`Unsupported credential ${credentialSupported.id}`)
+  if (credentialConfigurationId === mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk.id) {
+    return {
+      credentialSupportedId: mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk.id,
+      format: 'mso_mdoc',
+      holderKey: holderBinding.key,
+      docType: mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk.doctype,
+      issuerCertificate: x509Certificate,
+      namespaces: {
+        'eu.europa.ec.eudi.pid.1': {
+          resident_country: 'DE',
+          age_over_12: true,
+          family_name_birth: 'GABLER',
+          given_name: 'ERIKA',
+          age_birth_year: 1984,
+          age_over_18: true,
+          age_over_21: true,
+          resident_city: 'KÖLN',
+          family_name: 'MUSTERMANN',
+          birth_place: 'BERLIN',
+          expiry_date: new Date('2024-08-26T14:49:42.124Z'),
+          issuing_country: 'DE',
+          age_over_65: false,
+          issuance_date: new Date('2024-08-12T14:49:42.124Z'),
+          resident_street: 'HEIDESTRASSE 17',
+          age_over_16: true,
+          resident_postal_code: '51147',
+          birth_date: '1984-01-26',
+          issuing_authority: 'DE',
+          age_over_14: true,
+          age_in_years: 40,
+          nationality: new Map([
+            ['value', 'DE'],
+            ['countryName', 'Germany'],
+          ]),
+        },
+      },
+      validityInfo: {
+        validUntil: new Date('2025-08-26T14:49:42.124Z'),
+        validFrom: new Date('2024-08-12T14:49:42.124Z'),
+        signed: new Date(),
+      },
+    } satisfies OpenId4VciSignMdocCredential
+  }
+
+  throw new Error(`Unsupported credential ${credentialConfigurationId}`)
 }

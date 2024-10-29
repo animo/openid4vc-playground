@@ -27,12 +27,27 @@ export const mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
   vct: 'https://example.bmi.bund.de/credential/pid/1.0',
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
-  // @ts-ignore
-  credential_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
   display: [
     {
-      name: 'SD-JWT-VC',
-      description: 'JWK holder binding',
+      name: 'PID',
+      description: 'Mock PID issued by Animo',
+      background_color: ANIMO_DARK_BACKGROUND,
+      locale: 'en',
+      text_color: WHITE,
+    },
+  ],
+} as const satisfies OpenId4VciCredentialSupportedWithId
+
+export const mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk = {
+  id: 'mockPidOpenId4VcPlaygroundMsoMdocJwk',
+  format: OpenId4VciCredentialFormatProfile.MsoMdoc,
+  doctype: 'eu.europa.ec.eudi.pid.1',
+  cryptographic_binding_methods_supported: ['jwk'],
+  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  display: [
+    {
+      name: 'PID',
+      description: 'Mock PID issued by Animo',
       background_color: ANIMO_DARK_BACKGROUND,
       locale: 'en',
       text_color: WHITE,
@@ -42,6 +57,7 @@ export const mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk = {
 
 export const credentialsSupported = [
   mockPidOpenId4VcPlaygroundCredentialSdJwtVcJwk,
+  mockPidOpenId4VcPlaygroundCredentialMsoMdocJwk,
 ] as const satisfies OpenId4VciCredentialSupportedWithId[]
 
 type CredentialSupportedId = (typeof credentialsSupported)[number]['id']

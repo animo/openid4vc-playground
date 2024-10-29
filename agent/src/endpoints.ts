@@ -61,7 +61,12 @@ apiRouter.get('/issuer', async (_, response: Response) => {
 
   return response.json({
     credentialsSupported: issuer.credentialsSupported.map((c) => ({
-      display: (c as { vct: string }).vct,
+      display:
+        c.format === 'vc+sd-jwt'
+          ? `${c.vct} (vc+sd-jwt)`
+          : c.format === 'mso_mdoc'
+            ? `${c.doctype} (mso_mdoc)`
+            : 'Unregistered format',
       id: c.id,
     })),
     display: issuer.display,

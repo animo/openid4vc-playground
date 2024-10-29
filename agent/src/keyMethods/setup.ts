@@ -52,8 +52,7 @@ export async function setupX509Certificate() {
   console.log('======= X.509 Certificate ===========')
   console.log(x509Certificate)
 
-  const x509 = agent.dependencyManager.resolve(X509Api)
-  await x509.addTrustedCertificate(x509Certificate)
+  agent.x509.addTrustedCertificate(x509Certificate)
 }
 
 export function getX509Certificate() {

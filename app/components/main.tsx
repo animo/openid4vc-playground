@@ -37,7 +37,7 @@ export function Main() {
               <VerifyTab />
             </TabsContent>
             <TabsContent value="issue">
-              <IssueTab disabled />
+              <IssueTab />
             </TabsContent>
             <TabsContent value="receive">
               <ReceiveTab disabled />
