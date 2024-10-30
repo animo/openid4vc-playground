@@ -135,6 +135,7 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 const zCreatePresentationRequestBody = z.object({
   presentationDefinition: z.record(z.string(), z.any()),
   requestScheme: z.string(),
+  responseMode: z.enum(['direct_post.jwt', 'direct_post']),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
@@ -166,7 +167,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         definition: definition as any,
       },
       additionalPayloadClaims,
-      responseMode: 'direct_post.jwt',
+      responseMode: createPresentationRequestBody.responseMode,
     })
 
   console.log(authorizationRequest)

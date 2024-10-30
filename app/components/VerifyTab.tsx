@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createRequest, getIssuer, getX509Certificate } from '../lib/api'
-import { type CredentialType, type RequestType, VerifyBlock } from './VerifyBlock'
+import { type CredentialType, type RequestType, type ResponseMode, VerifyBlock } from './VerifyBlock'
 
 const randomId = () => (Math.random() + 1).toString(36).substring(7)
 
@@ -11,6 +11,7 @@ export function VerifyTab() {
     credentialType: CredentialType
     requestType: RequestType
     requestScheme: string
+    responseMode: ResponseMode
   }) => {
     const issuer = (await getIssuer()).availableX509Certificates[0]
     return await createRequest({
@@ -19,6 +20,7 @@ export function VerifyTab() {
         options.credentialType === 'sdjwt'
           ? getSdJwtPresentationDefinition(issuer, options.requestType)
           : getMdocPresentationDefinition(options.requestType),
+      responseMode: options.responseMode,
     })
   }
 

@@ -16,6 +16,7 @@ import { TypographyH3, TypographyH4 } from './ui/typography'
 
 export type CredentialType = 'mdoc' | 'sdjwt'
 export type RequestType = 'name_age_over_21' | 'city' | 'age_birth_family_name'
+export type ResponseMode = 'direct_post' | 'direct_post.jwt'
 
 type VerifyBlockProps = {
   flowName: string
@@ -24,10 +25,12 @@ type VerifyBlockProps = {
     credentialType,
     requestType,
     requestScheme,
+    responseMode,
   }: {
     credentialType: CredentialType
     requestType: RequestType
     requestScheme: string
+    responseMode: ResponseMode
   }) => Promise<{
     verificationSessionId: string
     authorizationRequestUri: string
@@ -45,6 +48,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     definition?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
   }>()
+  const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
 
   const enabled =
     verificationSessionId !== undefined &&
@@ -77,7 +81,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     setVerificationSessionId(undefined)
     setRequestStatus(undefined)
 
-    const request = await createRequest({ credentialType, requestType, requestScheme })
+    const request = await createRequest({ credentialType, requestType, requestScheme, responseMode })
 
     setVerificationSessionId(request.verificationSessionId)
     setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -153,6 +157,29 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             value={requestScheme}
             onChange={({ target }) => setRequestScheme(target.value)}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="response-mode">Response Mode</Label>
+          <Select
+            name="response-mode"
+            required
+            value={responseMode}
+            onValueChange={(value) => setResponseMode(value as ResponseMode)}
+          >
+            <SelectTrigger className="w-1/2">
+              <SelectValue placeholder="Select a credential type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem key="direct_post.jwt" value="direct_post.jwt">
+                  <pre>direct_post.jwt - Response Encryption</pre>
+                </SelectItem>
+                <SelectItem key="direct_post" value="direct_post">
+                  <pre>direct_post</pre>
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
