@@ -4,10 +4,11 @@ import {
   OpenId4VciCredentialFormatProfile,
   type OpenId4VciCredentialSupportedWithId,
 } from '@credo-ts/openid4vc'
-import { DateOnly } from '@protokoll/mdoc-client/dist/cjs/src/cbor'
+
 import { AGENT_HOST } from '../constants'
 import type { CredentialDisplay, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
+  DateOnly,
   dateToSeconds,
   oneYearInMilliseconds,
   serverStartupTimeInMilliseconds,
