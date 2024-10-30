@@ -20,8 +20,6 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
       display: string
     }>
     availableX509Certificates: string[]
-    // biome-ignore lint/complexity/noBannedTypes: <explanation>
-    display: {}
   }>()
 
   useEffect(() => {
@@ -64,7 +62,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
         <div className="space-y-2">
           <Label htmlFor="credential-type">Credential Type</Label>
           <Select name="credential-type" disabled={disabled} required onValueChange={setCredentialType}>
-            <SelectTrigger className="w-[320px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder={!issuer ? 'Loading' : 'Select a credential type'} />
             </SelectTrigger>
             <SelectContent>
@@ -81,7 +79,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
         <div className="space-y-2">
           <Label htmlFor="issuer-did">Issuer Id</Label>
           <Select name="issuer-did" disabled={disabled} required onValueChange={setIssuerid}>
-            <SelectTrigger className="w-[320px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder={!issuer ? 'Loading' : 'Select an issuer id'} />
             </SelectTrigger>
             <SelectContent>

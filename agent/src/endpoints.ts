@@ -15,29 +15,30 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import z from 'zod'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
-import { getIssuer } from './issuer'
-import { credentialSupportedIds } from './issuerMetadata'
+import { getIssuerIdForCredentialConfigurationId } from './issuer'
+import { issuers } from './issuers'
 import { getX509Certificate } from './keyMethods'
 import { getVerifier } from './verifier'
 
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
-  credentialSupportedIds: z.array(z.enum(credentialSupportedIds)),
+  credentialSupportedIds: z.array(z.string()),
   issuerId: z.string(),
 })
 
 export const apiRouter = express.Router()
+
 apiRouter.use(express.json())
 apiRouter.use(express.text())
 apiRouter.post('/offers/create', async (request: Request, response: Response) => {
-  const issuer = await getIssuer()
   // FIXME: somehow JSON doesn't work
   const createOfferRequest = zCreateOfferRequest.parse(
     typeof request.body === 'string' ? JSON.parse(request.body) : request.body
   )
+  const issuerId = getIssuerIdForCredentialConfigurationId(createOfferRequest.credentialSupportedIds[0])
 
   const offer = await agent.modules.openId4VcIssuer.createCredentialOffer({
-    issuerId: issuer.issuerId,
+    issuerId,
     offeredCredentials: createOfferRequest.credentialSupportedIds,
     preAuthorizedCodeFlowConfig: {
       userPinRequired: false,
@@ -56,20 +57,19 @@ apiRouter.get('/x509', async (_, response: Response) => {
 })
 
 apiRouter.get('/issuer', async (_, response: Response) => {
-  const issuer = await getIssuer()
-
   return response.json({
-    credentialsSupported: issuer.credentialsSupported.map((c) => {
-      const displayName =
-        c.display?.[0]?.name ??
-        (c.format === 'vc+sd-jwt' ? c.vct : c.format === 'mso_mdoc' ? c.doctype : 'Unregistered format')
+    credentialsSupported: issuers.flatMap((i) =>
+      i.credentialsSupported.map((c) => {
+        const displayName =
+          c.display?.[0]?.name ??
+          (c.format === 'vc+sd-jwt' ? c.vct : c.format === 'mso_mdoc' ? c.doctype : 'Unregistered format')
 
-      return {
-        display: `${displayName} (${c.format})`,
-        id: c.id,
-      }
-    }),
-    display: issuer.display,
+        return {
+          display: `${i.display[0].name} - ${displayName} (${c.format})`,
+          id: c.id,
+        }
+      })
+    ),
     availableX509Certificates: [AGENT_HOST],
   })
 })
