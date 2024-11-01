@@ -25,6 +25,16 @@ export async function createOffer({
   return response.json()
 }
 
+export async function getVerifier() {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/verifier`)
+
+  if (!response.ok) {
+    throw new Error('Failed to get verifier')
+  }
+
+  return response.json()
+}
+
 export async function getIssuer() {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/issuer`)
 
@@ -64,11 +74,11 @@ export async function receiveOffer(offerUri: string) {
 }
 
 export async function createRequest({
-  presentationDefinition,
+  presentationDefinitionId,
   requestScheme,
   responseMode,
 }: {
-  presentationDefinition: any
+  presentationDefinitionId: string
   requestScheme: string
   responseMode: 'direct_post' | 'direct_post.jwt'
 }) {
@@ -78,7 +88,7 @@ export async function createRequest({
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      presentationDefinition,
+      presentationDefinitionId,
       requestScheme,
       responseMode,
     }),

@@ -1,9 +1,9 @@
-import { getRequestStatus } from '@/lib/api'
+import { getRequestStatus, getVerifier } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
 import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import Link from 'next/link'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
@@ -14,21 +14,17 @@ import { Label } from './ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { TypographyH3, TypographyH4 } from './ui/typography'
 
-export type CredentialType = 'mdoc' | 'sdjwt'
-export type RequestType = 'name_age_over_21' | 'city' | 'age_birth_family_name'
 export type ResponseMode = 'direct_post' | 'direct_post.jwt'
 
 type VerifyBlockProps = {
   flowName: string
   x509Certificate?: string
   createRequest: ({
-    credentialType,
-    requestType,
+    presentationDefinitionId,
     requestScheme,
     responseMode,
   }: {
-    credentialType: CredentialType
-    requestType: RequestType
+    presentationDefinitionId: string
     requestScheme: string
     responseMode: ResponseMode
   }) => Promise<{
@@ -48,6 +44,12 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     definition?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
   }>()
+  const [verifier, setVerifier] = useState<{
+    presentationRequests: Array<{
+      id: string
+      display: string
+    }>
+  }>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
 
   const enabled =
@@ -58,9 +60,12 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const authorizationRequestUriHasBeenFetched = requestStatus?.responseStatus === 'RequestUriRetrieved'
   const hasResponse = requestStatus?.responseStatus === 'ResponseVerified' || requestStatus?.responseStatus === 'Error'
   const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
-  const [credentialType, setCredentialType] = useState<CredentialType>('sdjwt')
-  const [requestType, setRequestType] = useState<RequestType>('name_age_over_21')
+  const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
+
+  useEffect(() => {
+    getVerifier().then(setVerifier)
+  }, [])
 
   useInterval({
     callback: async () => {
@@ -81,7 +86,11 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     setVerificationSessionId(undefined)
     setRequestStatus(undefined)
 
-    const request = await createRequest({ credentialType, requestType, requestScheme, responseMode })
+    const id = presentationDefinitionId ?? verifier?.presentationRequests[0]?.id
+    if (!id) {
+      throw new Error('No definition')
+    }
+    const request = await createRequest({ presentationDefinitionId: id, requestScheme, responseMode })
 
     setVerificationSessionId(request.verificationSessionId)
     setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -107,45 +116,22 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       <TypographyH3>{flowName}</TypographyH3>
       <form className="space-y-4 mt-4" onSubmit={onSubmitCreateRequest}>
         <div className="space-y-2">
-          <Label htmlFor="credential-type">Credential Type</Label>
+          <Label htmlFor="presentation-type">Preentation Type</Label>
           <Select
-            name="credential-type"
+            name="presentation-definition-id"
             required
-            value={credentialType}
-            onValueChange={(value) => setCredentialType(value as 'mdoc' | 'sdjwt')}
+            value={presentationDefinitionId}
+            onValueChange={(value) => setPresentationDefinitionId(value)}
           >
-            <SelectTrigger className="w-[320px]">
-              <SelectValue placeholder="Select a credential type" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a presentation type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
-                <SelectItem key="sdjwt" value="sdjwt">
-                  SD-JWT VC (C/C&apos;/B&apos;)
+              {verifier?.presentationRequests.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.display}
                 </SelectItem>
-                <SelectItem key="mdoc" value="mdoc">
-                  mDOC (C/C&apos;)
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="request-type">Request Type</Label>
-          <Select
-            name="request-type"
-            required
-            value={requestType}
-            onValueChange={(value) => setRequestType(value as RequestType)}
-          >
-            <SelectTrigger className="w-[320px]">
-              <SelectValue placeholder="Select the attributes to request" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="name_age_over_21">Names and Age over 21</SelectItem>
-                <SelectItem value="city">Address (City) and Place of Birth</SelectItem>
-                <SelectItem value="age_birth_family_name">Age and Birth Family Name</SelectItem>
-              </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -195,6 +181,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                       <QRCode size={256} value={authorizationRequestUri} />
                     </div>
                     <TooltipTrigger asChild>
+                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                       <p
                         onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                         className="text-gray-500 break-all cursor-pointer"
@@ -262,6 +249,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             <Tooltip>
               <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
                 <TooltipTrigger asChild>
+                  {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                   <p
                     onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                     className="text-gray-500 break-all cursor-pointer"

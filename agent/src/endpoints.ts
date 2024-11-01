@@ -2,9 +2,7 @@ import {
   DifPresentationExchangeService,
   JsonTransformer,
   KeyType,
-  MdocVerifiablePresentation,
-  // Mdoc,
-  // MdocVerifiablePresentation,
+  MdocDeviceResponse,
   RecordNotFoundError,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
@@ -19,6 +17,7 @@ import { getIssuerIdForCredentialConfigurationId } from './issuer'
 import { issuers } from './issuers'
 import { getX509Certificate } from './keyMethods'
 import { getVerifier } from './verifier'
+import { allDefinitions, verifiers } from './verifiers'
 
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
@@ -132,8 +131,21 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
   })
 })
 
+apiRouter.get('/verifier', async (_, response: Response) => {
+  return response.json({
+    presentationRequests: verifiers.flatMap((i) =>
+      i.presentationRequests.map((c) => {
+        return {
+          display: c.name,
+          id: c.id,
+        }
+      })
+    ),
+  })
+})
+
 const zCreatePresentationRequestBody = z.object({
-  presentationDefinition: z.record(z.string(), z.any()),
+  presentationDefinitionId: z.string(),
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post']),
 })
@@ -148,7 +160,13 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
   const x509Certificate = getX509Certificate()
 
-  const definition = createPresentationRequestBody.presentationDefinition
+  const definitionId = createPresentationRequestBody.presentationDefinitionId
+  const definition = allDefinitions.find((d) => d.id === definitionId)
+  if (!definition) {
+    return response.status(404).json({
+      error: 'Definition not found',
+    })
+  }
 
   const key = await agent.context.wallet.createKey({ keyType: KeyType.P256 })
   const additionalPayloadClaims = { rp_eph_pub: getJwkFromKey(key).toJson() }
@@ -163,8 +181,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
       presentationExchange: {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        definition: definition as any,
+        definition,
       },
       additionalPayloadClaims,
       responseMode: createPresentationRequestBody.responseMode,
@@ -209,14 +226,19 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
             }
           }
 
-          if (presentation instanceof MdocVerifiablePresentation) {
-            const deviceSigned = JSON.parse(presentation.deviceSignedBase64Url).deviceSigned
-            // const disclosedClaims = await Mdoc.getDisclosedClaims(deviceSigned)
-            // console.log('disclosedClaims', JSON.stringify(disclosedClaims, null, 2))
-
+          if (presentation instanceof MdocDeviceResponse) {
             return {
-              pretty: JsonTransformer.toJSON({}),
-              encoded: deviceSigned,
+              pretty: JsonTransformer.toJSON({
+                documents: presentation.documents.map((doc) => ({
+                  doctype: doc.docType,
+                  alg: doc.alg,
+                  base64Url: doc.base64Url,
+                  validityInfo: doc.validityInfo,
+                  deviceSignedNamespaces: doc.deviceSignedNamespaces,
+                  issuerSignedNamespaces: doc.issuerSignedNamespaces,
+                })),
+              }),
+              encoded: presentation.base64Url,
             }
           }
 

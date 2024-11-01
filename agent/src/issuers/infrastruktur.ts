@@ -75,7 +75,7 @@ export const mobileDriversLicenseMdoc = {
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'mobile-drivers-license-mdoc',
-  doctype: 'eu.europa.ec.eudi.hiid.1',
+  doctype: 'org.iso.18013.5.1.mDL.1',
   display: [mobileDriversLicenseDisplay],
 } as const satisfies OpenId4VciCredentialSupportedWithId
 
