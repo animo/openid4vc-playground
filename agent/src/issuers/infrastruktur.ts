@@ -34,8 +34,7 @@ const mobileDriversLicensePayload = {
   family_name: 'Mustermann',
   birth_date: new DateOnly('1964-08-12'),
   document_number: 'Z021AB37X13',
-  // FIXME: portrait currently broken for mdoc
-  // portrait: erikaPortrait,
+  portrait: new Uint8Array(erikaPortrait),
   un_distinguishing_sign: 'D',
   issuing_authority: 'Bundesrepublik Deutschland',
   issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),

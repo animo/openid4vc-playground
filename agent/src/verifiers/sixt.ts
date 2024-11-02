@@ -11,7 +11,15 @@ export const sixtVerifier = {
       input_descriptors: [
         sdJwtInputDescriptor({
           vcts: [mobileDriversLicenseSdJwt.vct],
-          fields: ['document_number', 'portrait', 'issue_date', 'expiry_date', 'issuing_country', 'issuing_authority'],
+          fields: [
+            'document_number',
+            'portrait',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            'driving_priviliges',
+          ],
         }),
         pidSdJwtInputDescriptor({
           fields: ['given_name', 'family_name', 'birthdate'],
@@ -26,7 +34,14 @@ export const sixtVerifier = {
         mdocInputDescriptor({
           doctype: mobileDriversLicenseMdoc.doctype,
           namespace: mobileDriversLicenseMdoc.doctype,
-          fields: ['document_number', 'issue_date', 'expiry_date', 'issuing_country', 'issuing_authority'],
+          fields: [
+            'document_number',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            'driving_priviliges',
+          ],
         }),
         pidSdJwtInputDescriptor({
           fields: ['given_name', 'family_name', 'birthdate'],

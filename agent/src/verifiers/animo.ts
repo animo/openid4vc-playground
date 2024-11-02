@@ -49,7 +49,7 @@ export const animoVerifier = {
       purpose: 'We need to verify your city',
       input_descriptors: [
         pidMdocInputDescriptor({
-          fields: ['birth_place', 'resident_city'],
+          fields: ['birth_place', 'resident_city', 'birth_date'],
         }),
       ],
     },
