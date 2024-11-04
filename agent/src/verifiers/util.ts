@@ -1,4 +1,5 @@
 import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
+import { randomUUID } from 'node:crypto'
 
 export function sdJwtInputDescriptor({
   vcts,
@@ -10,7 +11,7 @@ export function sdJwtInputDescriptor({
   issuers?: string[]
 }): DifPresentationExchangeDefinitionV2['input_descriptors'][number] {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     format: {
       'vc+sd-jwt': {
         'sd-jwt_alg_values': ['ES256'],
