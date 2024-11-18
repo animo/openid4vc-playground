@@ -196,6 +196,11 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                         </Link>
                       </div>
                     </div>
+                    <div>
+                      <Link href={authorizationRequestUri.replace('openid4vp://', 'https://funke.animo.id/invitation')}>
+                        <Button>Open in EasyPID Wallet</Button>
+                      </Link>
+                    </div>
                   </div>
 
                   <TooltipContent>

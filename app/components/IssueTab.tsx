@@ -111,6 +111,23 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                       {credentialOfferUri}
                     </p>
                   </TooltipTrigger>
+                  <div className="gap-2 w-full justify-center flex flex-1">
+                    <div>
+                      <Link href={credentialOfferUri}>
+                        <Button>Open in Wallet</Button>
+                      </Link>
+                    </div>
+                    <div>
+                      <Link
+                        href={credentialOfferUri.replace(
+                          'openid-credential-offer://',
+                          'https://funke.animo.id/invitation'
+                        )}
+                      >
+                        <Button>Open in EasyPID Wallet</Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
 
                 <TooltipContent>
