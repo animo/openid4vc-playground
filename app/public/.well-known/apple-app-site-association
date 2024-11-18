@@ -1,0 +1,36 @@
+{
+  "webcredentials": {
+    "apps": [
+      "G9667JTP83.id.animo.ausweis",
+      "G9667JTP83.id.animo.ausweis.preview",
+      "G9667JTP83.id.animo.ausweis.dev"
+    ]
+  },
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "G9667JTP83.id.animo.ausweis",
+        "appIDs": [
+          "G9667JTP83.id.animo.ausweis",
+          "G9667JTP83.id.animo.ausweis.preview",
+          "G9667JTP83.id.animo.ausweis.dev"
+        ],
+        "components": [
+          {
+            "/": "/invitation/*"
+          },
+          {
+            "/": "/invitation"
+          },
+          {
+            "/": "/wallet/redirect/*"
+          },
+          {
+            "/": "/wallet/redirect"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "id.animo.ausweis",
+      "sha256_cert_fingerprints": [
+        "80:54:3B:0C:99:56:3F:82:22:A8:E1:2C:F5:8A:07:FD:7F:01:66:89:F8:4E:89:76:B7:EF:20:9D:62:FB:1C:CE",
+        "F3:92:0F:96:07:18:9D:BD:AB:69:F5:91:65:B7:CC:4F:4F:3E:3F:CD:45:2C:07:C0:5D:94:FA:E5:52:09:21:0E"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "id.animo.ausweis.preview",
+      "sha256_cert_fingerprints": [
+        "80:54:3B:0C:99:56:3F:82:22:A8:E1:2C:F5:8A:07:FD:7F:01:66:89:F8:4E:89:76:B7:EF:20:9D:62:FB:1C:CE"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "id.animo.ausweis.dev",
+      "sha256_cert_fingerprints": [
+        "80:54:3B:0C:99:56:3F:82:22:A8:E1:2C:F5:8A:07:FD:7F:01:66:89:F8:4E:89:76:B7:EF:20:9D:62:FB:1C:CE"
+      ]
+    }
+  }
+]
