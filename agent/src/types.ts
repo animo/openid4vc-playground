@@ -1,9 +1,23 @@
 import type {
-  OpenId4VciCredentialSupported,
-  OpenId4VciSignMdocCredential,
-  OpenId4VciSignSdJwtCredential,
+  OpenId4VciCredentialConfigurationSupported,
+  OpenId4VciSignMdocCredentials,
+  OpenId4VciSignSdJwtCredentials,
 } from '@credo-ts/openid4vc'
 
-export type CredentialDisplay = NonNullable<OpenId4VciCredentialSupported['display']>[number]
-export type StaticSdJwtSignInput = Omit<OpenId4VciSignSdJwtCredential, 'holder' | 'issuer'>
-export type StaticMdocSignInput = Omit<OpenId4VciSignMdocCredential, 'issuerCertificate' | 'holderKey'>
+type CredentialAuthorizationType =
+  | {
+      type: 'pin' | 'none' | 'browser'
+    }
+  | {
+      type: 'presentation'
+      // TODO: details
+    }
+export type CredentialDisplay = NonNullable<OpenId4VciCredentialConfigurationSupported['display']>[number]
+export type StaticSdJwtSignInput = {
+  credential: Omit<OpenId4VciSignSdJwtCredentials['credentials'][number], 'holder' | 'issuer'>
+  authorization: CredentialAuthorizationType
+} & Omit<OpenId4VciSignSdJwtCredentials, 'credentials'>
+export type StaticMdocSignInput = {
+  credential: Omit<OpenId4VciSignMdocCredentials['credentials'][number], 'issuerCertificate' | 'holderKey'>
+  authorization: CredentialAuthorizationType
+} & Omit<OpenId4VciSignMdocCredentials, 'credentials'>

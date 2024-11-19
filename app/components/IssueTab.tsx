@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { InfoCircledIcon } from '@radix-ui/react-icons'
+import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { createOffer, getIssuer, getX509Certificate } from '../lib/api'
@@ -14,6 +15,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [credentialType, setCredentialType] = useState<string>()
   const [issuerId, setIssuerid] = useState<string>()
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
+  const [userPin, setUserPin] = useState<string>()
   const [issuer, setIssuer] = useState<{
     credentialsSupported: Array<{
       id: string
@@ -39,6 +41,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
       issuerId: _issuerId,
     })
     setCredentialOfferUri(offer.credentialOffer)
+    setUserPin(offer.issuanceSession.userPin)
   }
 
   return (
@@ -128,6 +131,12 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                       </Link>
                     </div>
                   </div>
+                  {userPin && (
+                    <div>
+                      <strong>Transaction Code: </strong>
+                      {userPin}
+                    </div>
+                  )}
                 </div>
 
                 <TooltipContent>

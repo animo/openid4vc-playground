@@ -1,8 +1,8 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
 import {
   type OpenId4VciCreateIssuerOptions,
+  type OpenId4VciCredentialConfigurationSupportedWithFormats,
   OpenId4VciCredentialFormatProfile,
-  type OpenId4VciCredentialSupportedWithId,
 } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants'
 import type { CredentialDisplay, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
@@ -46,21 +46,25 @@ export const steuerIdMdoc = {
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'steuer-id-mdoc',
+  scope: 'steuer-id-mdoc',
   doctype: 'eu.europa.ec.eudi.hiid.1',
   display: [steuerIdDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const steuerIdMdocData = {
-  credentialSupportedId: steuerIdMdoc.id,
+  credentialConfigurationId: steuerIdMdoc.id,
   format: ClaimFormat.MsoMdoc,
-  docType: steuerIdMdoc.doctype,
-  namespaces: {
-    [steuerIdMdoc.doctype]: steuerIdPayload,
+  credential: {
+    docType: steuerIdMdoc.doctype,
+    namespaces: {
+      [steuerIdMdoc.doctype]: steuerIdPayload,
+    },
+    validityInfo: {
+      validFrom: steuerIdPayload.issuance_date,
+      validUntil: steuerIdPayload.expiry_date,
+    },
   },
-  validityInfo: {
-    validFrom: steuerIdPayload.issuance_date,
-    validUntil: steuerIdPayload.expiry_date,
-  },
+  authorization: { type: 'none' },
 } satisfies StaticMdocSignInput
 
 export const steuerIdSdJwt = {
@@ -68,43 +72,47 @@ export const steuerIdSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'steuer-id-sd-jwt',
+  scope: 'steuer-id-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/tax-credential/1',
   display: [steuerIdDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const steuerIdSdJwtData = {
-  credentialSupportedId: steuerIdSdJwt.id,
+  credentialConfigurationId: steuerIdSdJwt.id,
   format: ClaimFormat.SdJwtVc,
-  payload: {
-    ...steuerIdPayload,
-    birth_date: steuerIdPayload.birth_date.toISOString(),
-    nbf: dateToSeconds(steuerIdPayload.issuance_date),
-    exp: dateToSeconds(steuerIdPayload.expiry_date),
-    issuance_date: steuerIdPayload.issuance_date.toISOString(),
-    expiry_date: steuerIdPayload.expiry_date.toISOString(),
-    vct: steuerIdSdJwt.vct,
+  credential: {
+    payload: {
+      ...steuerIdPayload,
+      birth_date: steuerIdPayload.birth_date.toISOString(),
+      nbf: dateToSeconds(steuerIdPayload.issuance_date),
+      exp: dateToSeconds(steuerIdPayload.expiry_date),
+      issuance_date: steuerIdPayload.issuance_date.toISOString(),
+      expiry_date: steuerIdPayload.expiry_date.toISOString(),
+      vct: steuerIdSdJwt.vct,
+    },
+    disclosureFrame: {
+      _sd: [
+        'tax_number',
+        'affiliation_country',
+        'registered_family_name',
+        'registered_given_name',
+        'resident_address',
+        'birth_date',
+        'iban',
+        'issuance_date',
+        'expiry_date',
+        'issuing_authority',
+        'issuing_country',
+      ],
+    },
   },
-  disclosureFrame: {
-    _sd: [
-      'tax_number',
-      'affiliation_country',
-      'registered_family_name',
-      'registered_given_name',
-      'resident_address',
-      'birth_date',
-      'iban',
-      'issuance_date',
-      'expiry_date',
-      'issuing_authority',
-      'issuing_country',
-    ],
-  },
+  authorization: { type: 'none' },
 } satisfies StaticSdJwtSignInput
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const steuernIssuer = {
   issuerId: '197625a0-b797-4559-80cc-bf5463b90dc3',
-  credentialsSupported: [steuerIdSdJwt, steuerIdMdoc],
+  credentialConfigurationsSupported: { [steuerIdSdJwt.id]: steuerIdSdJwt, [steuerIdMdoc.id]: steuerIdMdoc },
   display: [
     {
       name: 'Bundeszentralamt fur Steuern',
@@ -117,6 +125,6 @@ export const steuernIssuer = {
 } satisfies OpenId4VciCreateIssuerOptions
 
 export const steuernCredentialsData = {
-  [steuerIdSdJwtData.credentialSupportedId]: steuerIdSdJwtData,
-  [steuerIdMdocData.credentialSupportedId]: steuerIdMdocData,
+  [steuerIdSdJwtData.credentialConfigurationId]: steuerIdSdJwtData,
+  [steuerIdMdocData.credentialConfigurationId]: steuerIdMdocData,
 }

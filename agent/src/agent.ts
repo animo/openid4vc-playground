@@ -5,7 +5,7 @@ import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule }
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { Router } from 'express'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
-import { credentialRequestToCredentialMapper } from './issuer'
+import { credentialRequestToCredentialMapper, getVerificationSessionForIssuanceSession } from './issuer'
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)
@@ -37,11 +37,8 @@ export const agent = new Agent({
     openId4VcIssuer: new OpenId4VcIssuerModule({
       baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
       router: openId4VciRouter,
-      endpoints: {
-        credential: {
-          credentialRequestToCredentialMapper,
-        },
-      },
+      credentialRequestToCredentialMapper,
+      getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
     }),
     openId4VcHolder: new OpenId4VcHolderModule(),
     openId4VcVerifier: new OpenId4VcVerifierModule({

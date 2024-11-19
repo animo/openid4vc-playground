@@ -1,8 +1,8 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
 import {
   type OpenId4VciCreateIssuerOptions,
+  type OpenId4VciCredentialConfigurationSupportedWithFormats,
   OpenId4VciCredentialFormatProfile,
-  type OpenId4VciCredentialSupportedWithId,
 } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -74,21 +74,25 @@ export const mobileDriversLicenseMdoc = {
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'mobile-drivers-license-mdoc',
+  scope: 'mobile-drivers-license-mdoc',
   doctype: 'org.iso.18013.5.1.mDL.1',
   display: [mobileDriversLicenseDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const mobileDriversLicenseMdocData = {
-  credentialSupportedId: mobileDriversLicenseMdoc.id,
+  credentialConfigurationId: mobileDriversLicenseMdoc.id,
   format: ClaimFormat.MsoMdoc,
-  docType: mobileDriversLicenseMdoc.doctype,
-  namespaces: {
-    [mobileDriversLicenseMdoc.doctype]: mobileDriversLicensePayload,
+  credential: {
+    docType: mobileDriversLicenseMdoc.doctype,
+    namespaces: {
+      [mobileDriversLicenseMdoc.doctype]: mobileDriversLicensePayload,
+    },
+    validityInfo: {
+      validFrom: mobileDriversLicensePayload.issue_date,
+      validUntil: mobileDriversLicensePayload.expiry_date,
+    },
   },
-  validityInfo: {
-    validFrom: mobileDriversLicensePayload.issue_date,
-    validUntil: mobileDriversLicensePayload.expiry_date,
-  },
+  authorization: { type: 'presentation' },
 } satisfies StaticMdocSignInput
 
 export const mobileDriversLicenseSdJwt = {
@@ -96,56 +100,63 @@ export const mobileDriversLicenseSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'mobile-drivers-license-sd-jwt',
+  scope: 'mobile-drivers-license-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/mdl/1',
   display: [mobileDriversLicenseDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const mobileDriversLicenseSdJwtData = {
-  credentialSupportedId: mobileDriversLicenseSdJwt.id,
+  credentialConfigurationId: mobileDriversLicenseSdJwt.id,
   format: ClaimFormat.SdJwtVc,
-  payload: {
-    ...mobileDriversLicensePayload,
-    birth_date: mobileDriversLicensePayload.birth_date.toISOString(),
-    nbf: dateToSeconds(mobileDriversLicensePayload.issue_date),
-    exp: dateToSeconds(mobileDriversLicensePayload.expiry_date),
-    issue_date: mobileDriversLicensePayload.issue_date.toISOString(),
-    expiry_date: mobileDriversLicensePayload.expiry_date.toISOString(),
-    vct: mobileDriversLicenseSdJwt.vct,
-    portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
-    driving_priviliges: [
-      {
-        ...mobileDriversLicensePayload.driving_priviliges[0],
-        issue_date: mobileDriversLicensePayload.driving_priviliges[0].issue_date.toISOString(),
-        expiry_date: mobileDriversLicensePayload.driving_priviliges[0].expiry_date.toISOString(),
-      },
-    ],
+  credential: {
+    payload: {
+      ...mobileDriversLicensePayload,
+      birth_date: mobileDriversLicensePayload.birth_date.toISOString(),
+      nbf: dateToSeconds(mobileDriversLicensePayload.issue_date),
+      exp: dateToSeconds(mobileDriversLicensePayload.expiry_date),
+      issue_date: mobileDriversLicensePayload.issue_date.toISOString(),
+      expiry_date: mobileDriversLicensePayload.expiry_date.toISOString(),
+      vct: mobileDriversLicenseSdJwt.vct,
+      portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
+      driving_priviliges: [
+        {
+          ...mobileDriversLicensePayload.driving_priviliges[0],
+          issue_date: mobileDriversLicensePayload.driving_priviliges[0].issue_date.toISOString(),
+          expiry_date: mobileDriversLicensePayload.driving_priviliges[0].expiry_date.toISOString(),
+        },
+      ],
+    },
+    disclosureFrame: {
+      _sd: [
+        'given_name',
+        'family_name',
+        'birth_date',
+        'document_number',
+        'portrait',
+        'un_distinguishing_sign',
+        'issuing_authority',
+        'issue_date',
+        'expiry_date',
+        'issuing_country',
+        'driving_priviliges',
+      ],
+      // TODO: fix array disclosures?
+      // @ts-ignore
+      // driving_priviliges: mobileDriversLicensePayload.driving_priviliges.map((d) => ({
+      //   _sd: ['vehicle_category_code', 'issue_date', 'expiry_date', 'codes'],
+      // })),
+    },
   },
-  disclosureFrame: {
-    _sd: [
-      'given_name',
-      'family_name',
-      'birth_date',
-      'document_number',
-      'portrait',
-      'un_distinguishing_sign',
-      'issuing_authority',
-      'issue_date',
-      'expiry_date',
-      'issuing_country',
-      'driving_priviliges',
-    ],
-    // TODO: fix array disclosures?
-    // @ts-ignore
-    // driving_priviliges: mobileDriversLicensePayload.driving_priviliges.map((d) => ({
-    //   _sd: ['vehicle_category_code', 'issue_date', 'expiry_date', 'codes'],
-    // })),
-  },
+  authorization: { type: 'presentation' },
 } satisfies StaticSdJwtSignInput
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const infrastrukturIssuer = {
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
-  credentialsSupported: [mobileDriversLicenseSdJwt, mobileDriversLicenseMdoc],
+  credentialConfigurationsSupported: {
+    [mobileDriversLicenseSdJwt.id]: mobileDriversLicenseSdJwt,
+    [mobileDriversLicenseMdoc.id]: mobileDriversLicenseMdoc,
+  },
   display: [
     {
       name: 'Bundesministerium fur Verkehr und digitale Infrastruktur',
@@ -158,6 +169,6 @@ export const infrastrukturIssuer = {
 } satisfies OpenId4VciCreateIssuerOptions
 
 export const infrastrukturCredentialsData = {
-  [mobileDriversLicenseSdJwtData.credentialSupportedId]: mobileDriversLicenseSdJwtData,
-  [mobileDriversLicenseMdocData.credentialSupportedId]: mobileDriversLicenseMdocData,
+  [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
+  [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
 }

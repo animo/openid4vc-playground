@@ -5,13 +5,15 @@ export function sdJwtInputDescriptor({
   vcts,
   fields,
   issuers,
+  id,
 }: {
   vcts: string[]
   fields: string[]
   issuers?: string[]
+  id?: string
 }): DifPresentationExchangeDefinitionV2['input_descriptors'][number] {
   return {
-    id: randomUUID(),
+    id: id ?? randomUUID(),
     format: {
       'vc+sd-jwt': {
         'sd-jwt_alg_values': ['ES256'],
@@ -80,8 +82,9 @@ export function pidMdocInputDescriptor({ fields }: { fields: string[] }) {
     namespace: 'eu.europa.ec.eudi.pid.1',
   })
 }
-export function pidSdJwtInputDescriptor({ fields }: { fields: string[] }) {
+export function pidSdJwtInputDescriptor({ fields, id }: { fields: string[]; id?: string }) {
   return sdJwtInputDescriptor({
+    id,
     fields,
     vcts: ['https://example.bmi.bund.de/credential/pid/1.0', 'urn:eu.europa.ec.eudi:pid:1'],
     issuers: [

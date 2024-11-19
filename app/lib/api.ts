@@ -22,7 +22,7 @@ export async function createOffer({
     throw new Error('Failed to create offer')
   }
 
-  return response.json()
+  return (await response.json()) as { credentialOffer: string; issuanceSession: { userPin?: string } }
 }
 
 export async function getVerifier() {

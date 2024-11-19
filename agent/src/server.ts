@@ -7,13 +7,25 @@ import { apiRouter } from './endpoints'
 import { createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
 import { setupX509Certificate } from './keyMethods'
+import { oidc, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createVerifier, doesVerifierExist } from './verifier'
 
 async function run() {
   await agent.initialize()
 
   for (const issuer of issuers) {
-    await createOrUpdateIssuer(issuer)
+    await createOrUpdateIssuer({
+      ...issuer,
+      authorizationServerConfigs: [
+        {
+          issuer: oidcUrl,
+          clientAuthentication: {
+            clientId: 'issuer-server',
+            clientSecret: 'issuer-server',
+          },
+        },
+      ],
+    })
   }
 
   if (!(await doesVerifierExist())) {
@@ -24,6 +36,8 @@ async function run() {
 
   const app = express()
   app.use(cors({ origin: '*' }))
+  app.use(express.json())
+  app.use(express.urlencoded())
 
   // Hack for making images available
   if (AGENT_HOST.includes('ngrok') || AGENT_HOST.includes('localhost')) {
@@ -34,6 +48,14 @@ async function run() {
   app.use('/oid4vci', openId4VciRouter)
   app.use('/siop', openId4VpRouter)
   app.use('/api', apiRouter)
+  app.use((request, _, next) => {
+    if (request.path === '/provider/request' || request.path === '/provider/token') {
+      request.body.client_id = 'wallet'
+      request.body.client_secret = 'wallet'
+    }
+    next()
+  })
+  app.use(oidcRouterPath, oidc.callback())
 
   app.listen(3001, () => agent.config.logger.info('app listening on port 3001'))
 

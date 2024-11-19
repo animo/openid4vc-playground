@@ -1,8 +1,8 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
 import {
   type OpenId4VciCreateIssuerOptions,
+  type OpenId4VciCredentialConfigurationSupportedWithFormats,
   OpenId4VciCredentialFormatProfile,
-  type OpenId4VciCredentialSupportedWithId,
 } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -45,21 +45,26 @@ export const certificateOfResidenceMdoc = {
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'certificate-of-residence-mdoc',
+  scope: 'certificate-of-residence-mdoc',
   doctype: 'eu.europa.ec.eudi.cor.1',
   display: [certificateOfResidenceDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const certificateOfResidenceMdocData = {
-  credentialSupportedId: certificateOfResidenceMdoc.id,
+  credentialConfigurationId: certificateOfResidenceMdoc.id,
   format: ClaimFormat.MsoMdoc,
-  docType: certificateOfResidenceMdoc.doctype,
-  namespaces: {
-    [certificateOfResidenceMdoc.doctype]: { ...certificateOfResidencePayload },
+  credential: {
+    docType: certificateOfResidenceMdoc.doctype,
+    namespaces: {
+      [certificateOfResidenceMdoc.doctype]: { ...certificateOfResidencePayload },
+    },
+    validityInfo: {
+      validFrom: certificateOfResidencePayload.issuance_date,
+      validUntil: certificateOfResidencePayload.expiry_date,
+    },
   },
-  validityInfo: {
-    validFrom: certificateOfResidencePayload.issuance_date,
-    validUntil: certificateOfResidencePayload.expiry_date,
-  },
+
+  authorization: { type: 'pin' },
 } satisfies StaticMdocSignInput
 
 export const certificateOfResidenceSdJwt = {
@@ -67,41 +72,49 @@ export const certificateOfResidenceSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'certificate-of-residence-sd-jwt',
+  scope: 'certificate-of-residence-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/cor/1',
   display: [certificateOfResidenceDisplay],
-} as const satisfies OpenId4VciCredentialSupportedWithId
+} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const certificateOfResidenceSdJwtData = {
-  credentialSupportedId: certificateOfResidenceSdJwt.id,
+  credentialConfigurationId: certificateOfResidenceSdJwt.id,
   format: ClaimFormat.SdJwtVc,
-  payload: {
-    ...certificateOfResidencePayload,
-    birth_date: certificateOfResidencePayload.birth_date.toISOString(),
-    arrival_date: certificateOfResidencePayload.arrival_date.toISOString(),
-    nbf: dateToSeconds(certificateOfResidencePayload.issuance_date),
-    exp: dateToSeconds(certificateOfResidencePayload.expiry_date),
-    issuance_date: certificateOfResidencePayload.issuance_date.toISOString(),
-    expiry_date: certificateOfResidencePayload.expiry_date.toISOString(),
-    vct: certificateOfResidenceSdJwt.vct,
+  credential: {
+    payload: {
+      ...certificateOfResidencePayload,
+      birth_date: certificateOfResidencePayload.birth_date.toISOString(),
+      arrival_date: certificateOfResidencePayload.arrival_date.toISOString(),
+      nbf: dateToSeconds(certificateOfResidencePayload.issuance_date),
+      exp: dateToSeconds(certificateOfResidencePayload.expiry_date),
+      issuance_date: certificateOfResidencePayload.issuance_date.toISOString(),
+      expiry_date: certificateOfResidencePayload.expiry_date.toISOString(),
+      vct: certificateOfResidenceSdJwt.vct,
+    },
+    disclosureFrame: {
+      _sd: [
+        'family_name',
+        'given_name',
+        'resident_address',
+        'birth_date',
+        'gender',
+        'birth_place',
+        'arrival_date',
+        'nationality',
+      ],
+    },
   },
-  disclosureFrame: {
-    _sd: [
-      'family_name',
-      'given_name',
-      'resident_address',
-      'birth_date',
-      'gender',
-      'birth_place',
-      'arrival_date',
-      'nationality',
-    ],
-  },
+
+  authorization: { type: 'pin' },
 } satisfies StaticSdJwtSignInput
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const kolnIssuer = {
   issuerId: '832f1c72-817d-4a54-b0fc-9994ecaba291',
-  credentialsSupported: [certificateOfResidenceSdJwt, certificateOfResidenceMdoc],
+  credentialConfigurationsSupported: {
+    [certificateOfResidenceSdJwt.id]: certificateOfResidenceSdJwt,
+    [certificateOfResidenceMdoc.id]: certificateOfResidenceMdoc,
+  },
   display: [
     {
       name: 'Bürgeramt Köln',
@@ -114,6 +127,6 @@ export const kolnIssuer = {
 } satisfies OpenId4VciCreateIssuerOptions
 
 export const kolnCredentialsData = {
-  [certificateOfResidenceSdJwtData.credentialSupportedId]: certificateOfResidenceSdJwtData,
-  [certificateOfResidenceMdocData.credentialSupportedId]: certificateOfResidenceMdocData,
+  [certificateOfResidenceSdJwtData.credentialConfigurationId]: certificateOfResidenceSdJwtData,
+  [certificateOfResidenceMdocData.credentialConfigurationId]: certificateOfResidenceMdocData,
 }

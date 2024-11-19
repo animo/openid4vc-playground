@@ -1,6 +1,6 @@
 import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
-import { mdocInputDescriptor, pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
+import { mdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
 
 export const sixtVerifier = {
   presentationRequests: [

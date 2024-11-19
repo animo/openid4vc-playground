@@ -14,14 +14,19 @@ import z from 'zod'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { getIssuerIdForCredentialConfigurationId } from './issuer'
-import { issuers } from './issuers'
+import { issuers, issuersCredentialsData } from './issuers'
 import { getX509Certificate } from './keyMethods'
+import { oidcUrl } from './oidcProvider/provider'
 import { getVerifier } from './verifier'
 import { allDefinitions, verifiers } from './verifiers'
 
+type CredentialConfigurationId = keyof typeof issuersCredentialsData
+
 const zCreateOfferRequest = z.object({
   // FIXME: rename offeredCredentials to credentialSupportedIds in AFJ
-  credentialSupportedIds: z.array(z.string()),
+  credentialSupportedIds: z.array(
+    z.enum(Object.keys(issuersCredentialsData) as [CredentialConfigurationId, ...CredentialConfigurationId[]])
+  ),
   issuerId: z.string(),
 })
 
@@ -30,18 +35,38 @@ export const apiRouter = express.Router()
 apiRouter.use(express.json())
 apiRouter.use(express.text())
 apiRouter.post('/offers/create', async (request: Request, response: Response) => {
-  // FIXME: somehow JSON doesn't work
-  const createOfferRequest = zCreateOfferRequest.parse(
-    typeof request.body === 'string' ? JSON.parse(request.body) : request.body
-  )
-  const issuerId = getIssuerIdForCredentialConfigurationId(createOfferRequest.credentialSupportedIds[0])
+  const createOfferRequest = zCreateOfferRequest.parse(request.body)
+
+  // TODO: support multiple credential isuance
+  const configurationId = createOfferRequest.credentialSupportedIds[0]
+  const issuerId = getIssuerIdForCredentialConfigurationId(configurationId)
+  const authorization = issuersCredentialsData[configurationId].authorization
+  const issuerMetadata = await agent.modules.openId4VcIssuer.getIssuerMetadata(issuerId)
 
   const offer = await agent.modules.openId4VcIssuer.createCredentialOffer({
     issuerId,
     offeredCredentials: createOfferRequest.credentialSupportedIds,
-    preAuthorizedCodeFlowConfig: {
-      userPinRequired: false,
-    },
+    preAuthorizedCodeFlowConfig:
+      authorization.type === 'pin' || authorization.type === 'none'
+        ? {
+            authorizationServerUrl: issuerMetadata.credentialIssuer.credential_issuer,
+            txCode:
+              authorization.type === 'pin'
+                ? {
+                    input_mode: 'numeric',
+                    length: 4,
+                  }
+                : undefined,
+          }
+        : undefined,
+    authorizationCodeFlowConfig:
+      authorization.type === 'browser' || authorization.type === 'presentation'
+        ? {
+            requirePresentationDuringIssuance: authorization.type === 'presentation',
+            authorizationServerUrl:
+              authorization.type === 'browser' ? oidcUrl : issuerMetadata.credentialIssuer.credential_issuer,
+          }
+        : undefined,
   })
 
   return response.json(offer)
@@ -58,13 +83,25 @@ apiRouter.get('/x509', async (_, response: Response) => {
 apiRouter.get('/issuer', async (_, response: Response) => {
   return response.json({
     credentialsSupported: issuers.flatMap((i) =>
-      i.credentialsSupported.map((c) => {
+      Object.entries(i.credentialConfigurationsSupported).map(([id, c]) => {
         const displayName =
           c.display?.[0]?.name ??
           (c.format === 'vc+sd-jwt' ? c.vct : c.format === 'mso_mdoc' ? c.doctype : 'Unregistered format')
 
+        const data = issuersCredentialsData[id as keyof typeof issuersCredentialsData]
+        const authorizationLabel =
+          data.authorization.type === 'pin'
+            ? 'Requires PIN'
+            : data.authorization.type === 'browser'
+              ? 'Requires Sign In'
+              : data.authorization.type === 'presentation'
+                ? 'Requires Presentation'
+                : data.authorization.type === 'none'
+                  ? 'No authorization'
+                  : ''
+
         return {
-          display: `${i.display[0].name} - ${displayName} (${c.format})`,
+          display: `${i.display[0].name} - ${displayName} (${c.format}) - ${authorizationLabel}`,
           id: c.id,
         }
       })
@@ -78,9 +115,7 @@ const zReceiveOfferRequest = z.object({
 })
 
 apiRouter.post('/offers/receive', async (request: Request, response: Response) => {
-  const receiveOfferRequest = zReceiveOfferRequest.parse(
-    typeof request.body === 'string' ? JSON.parse(request.body) : request.body
-  )
+  const receiveOfferRequest = zReceiveOfferRequest.parse(request.body)
 
   const resolvedOffer = await agent.modules.openId4VcHolder.resolveCredentialOffer(
     receiveOfferRequest.credentialOfferUri
@@ -92,10 +127,10 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
     resolvedCredentialOffer: resolvedOffer,
     accessToken: token.accessToken,
     cNonce: token.cNonce,
-    credentialBindingResolver: async ({ keyType, supportsJwk }) => {
+    credentialBindingResolver: async ({ keyTypes, supportsJwk }) => {
       if (supportsJwk) {
         const key = await agent.wallet.createKey({
-          keyType,
+          keyType: keyTypes[0],
         })
 
         return {
@@ -108,23 +143,23 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
     },
   })
 
-  for (const credential of credentials) {
+  for (const credential of credentials.credentials) {
     // authenticated channel issuance, not relevant here
     if (typeof credential === 'string') continue
 
-    if ('compact' in credential.credential) {
-      await agent.sdJwtVc.store(credential.credential.compact as string)
+    if ('compact' in credential.credentials[0]) {
+      await agent.sdJwtVc.store(credential.credentials[0].compact as string)
     }
   }
 
   return response.json({
-    credentials: credentials.map((credential) => {
+    credentials: credentials.credentials.map((credential) => {
       // if (credential instanceof Mdoc) {
       //   return credential.credential
       // }
-      if (typeof credential === 'string') return credential
-      if ('payload' in credential.credential) {
-        return credential.credential.payload
+      if (typeof credential.credentials[0] === 'string') return credential
+      if ('payload' in credential.credentials[0]) {
+        return credential.credentials[0].payload
       }
       throw new Error('Unsupported credential type')
     }),
@@ -153,10 +188,7 @@ const zCreatePresentationRequestBody = z.object({
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
   const verifier = await getVerifier()
 
-  // FIXME: somehow JSON doesn't work
-  const createPresentationRequestBody = zCreatePresentationRequestBody.parse(
-    typeof request.body === 'string' ? JSON.parse(request.body) : request.body
-  )
+  const createPresentationRequestBody = zCreatePresentationRequestBody.parse(request.body)
 
   const x509Certificate = getX509Certificate()
 
@@ -274,9 +306,7 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
 })
 
 apiRouter.post('/requests/receive', async (request: Request, response: Response) => {
-  const receivePresentationRequestBody = zReceivePresentationRequestBody.parse(
-    typeof request.body === 'string' ? JSON.parse(request.body) : request.body
-  )
+  const receivePresentationRequestBody = zReceivePresentationRequestBody.parse(request.body)
 
   const resolved = await agent.modules.openId4VcHolder.resolveSiopAuthorizationRequest(
     receivePresentationRequestBody.authorizationRequestUri
