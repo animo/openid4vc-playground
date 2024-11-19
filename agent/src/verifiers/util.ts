@@ -1,5 +1,5 @@
-import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 import { randomUUID } from 'node:crypto'
+import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 
 export function sdJwtInputDescriptor({
   vcts,

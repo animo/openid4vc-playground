@@ -6,7 +6,6 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { Router } from 'express'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
 import { credentialRequestToCredentialMapper } from './issuer'
-import { getVerifyHs256Callback } from './verifyHs256Callback'
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)
@@ -48,11 +47,6 @@ export const agent = new Agent({
     openId4VcVerifier: new OpenId4VcVerifierModule({
       baseUrl: joinUriParts(AGENT_HOST, ['siop']),
       router: openId4VpRouter,
-      endpoints: {
-        authorization: {
-          getVerifyHs256Callback,
-        },
-      },
     }),
     x509: new X509Module({
       trustedCertificates: [x509PidIssuerCertificate, x509PidIssuerRootCertificate],

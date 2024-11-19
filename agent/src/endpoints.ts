@@ -168,9 +168,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     })
   }
 
-  const key = await agent.context.wallet.createKey({ keyType: KeyType.P256 })
-  const additionalPayloadClaims = { rp_eph_pub: getJwkFromKey(key).toJson() }
-
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({
       verifierId: verifier.verifierId,
@@ -183,7 +180,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       presentationExchange: {
         definition,
       },
-      additionalPayloadClaims,
       responseMode: createPresentationRequestBody.responseMode,
     })
 
