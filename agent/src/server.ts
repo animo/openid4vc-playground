@@ -7,7 +7,7 @@ import { apiRouter } from './endpoints'
 import { createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
 import { setupX509Certificate } from './keyMethods'
-import { oidc, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
+import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createVerifier, doesVerifierExist } from './verifier'
 
 async function run() {
@@ -55,6 +55,7 @@ async function run() {
     }
     next()
   })
+  const oidc = await getProvider()
   app.use(oidcRouterPath, oidc.callback())
 
   app.listen(3001, () => agent.config.logger.info('app listening on port 3001'))
