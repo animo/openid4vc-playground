@@ -186,8 +186,6 @@ const zCreatePresentationRequestBody = z.object({
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
-  const verifier = await getVerifier()
-
   const createPresentationRequestBody = zCreatePresentationRequestBody.parse(request.body)
 
   const x509Certificate = getX509Certificate()
@@ -199,6 +197,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       error: 'Definition not found',
     })
   }
+
+  const verifierId = verifiers.find((a) => a.presentationRequests.find((r) => r.id === definition.id))?.verifierId
+  if (!verifierId) {
+    return response.status(404).json({
+      error: 'Verifier not found',
+    })
+  }
+  const verifier = await getVerifier(verifierId)
 
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({

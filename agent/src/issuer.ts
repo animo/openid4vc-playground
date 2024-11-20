@@ -15,6 +15,7 @@ import { getX509Certificate } from './keyMethods'
 import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { pidSdJwtInputDescriptor } from './verifiers/util'
+import { animoVerifier } from './verifiers/animo'
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
@@ -51,7 +52,7 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
   async ({ agentContext, scopes }) => {
-    const verifier = await getVerifier()
+    const verifier = await getVerifier(animoVerifier.verifierId)
     const x509Certificate = getX509Certificate()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 

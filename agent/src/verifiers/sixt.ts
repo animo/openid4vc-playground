@@ -1,8 +1,14 @@
-import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
 import { mdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
+import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants'
 
 export const sixtVerifier = {
+  verifierId: 'c01ea0f3-34df-41d5-89d1-50ef3d181855',
+  clientMetadata: {
+    logo_uri: `${AGENT_HOST}/assets/verifiers/sixt/verifier.png`,
+    client_name: 'Sixt - Rent a Car',
+  },
   presentationRequests: [
     {
       id: '1ad8ea6e-ec51-4e14-b316-dd76a6275480',
@@ -49,6 +55,4 @@ export const sixtVerifier = {
       ],
     },
   ],
-} as const satisfies {
-  presentationRequests: Array<DifPresentationExchangeDefinitionV2>
-}
+} as const satisfies PlaygroundVerifierOptions

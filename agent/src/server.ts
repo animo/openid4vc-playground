@@ -8,7 +8,8 @@ import { createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
 import { setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
-import { createVerifier, doesVerifierExist } from './verifier'
+import { createOrUpdateVerifier } from './verifier'
+import { verifiers } from './verifiers'
 
 async function run() {
   await agent.initialize()
@@ -28,8 +29,8 @@ async function run() {
     })
   }
 
-  if (!(await doesVerifierExist())) {
-    await createVerifier()
+  for (const verifier of verifiers) {
+    await createOrUpdateVerifier(verifier)
   }
 
   await setupX509Certificate()

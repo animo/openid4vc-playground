@@ -1,7 +1,13 @@
-import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './util'
+import type { PlaygroundVerifierOptions } from '../verifier'
 
 export const animoVerifier = {
+  clientMetadata: {
+    logo_uri:
+      'https://camo.githubusercontent.com/e19cc0e590529e86cb0d39e2528d36284e5c2ac454cd038473c8bd71b2927720/68747470733a2f2f7265732e636c6f7564696e6172792e636f6d2f616e696d6f2d736f6c7574696f6e732f696d6167652f75706c6f61642f76313635363537383332302f616e696d6f2d6c6f676f2d6c696768742d6e6f2d746578745f6f6b396175792e737667',
+    client_name: 'Animo',
+  },
+  verifierId: 'd8662712-ee78-406c-a88c-df4ff1ed9468',
   presentationRequests: [
     {
       id: '4db74328-9e94-49bb-97b7-bbfcb2d11a06',
@@ -64,6 +70,4 @@ export const animoVerifier = {
       ],
     },
   ],
-} as const satisfies {
-  presentationRequests: Array<DifPresentationExchangeDefinitionV2>
-}
+} as const satisfies PlaygroundVerifierOptions

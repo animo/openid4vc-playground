@@ -1,14 +1,28 @@
+import type { OpenId4VcSiopCreateVerifierOptions } from '@credo-ts/openid4vc'
 import { agent } from './agent'
+import type { DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 
-const verifierId = 'c01ea0f3-34df-41d5-89d1-50ef3d181855'
-
-export async function createVerifier() {
-  return agent.modules.openId4VcVerifier.createVerifier({
-    verifierId,
-  })
+export interface PlaygroundVerifierOptions {
+  verifierId: string
+  clientMetadata?: OpenId4VcSiopCreateVerifierOptions['clientMetadata']
+  presentationRequests: Array<DifPresentationExchangeDefinitionV2>
 }
 
-export async function doesVerifierExist() {
+export async function createOrUpdateVerifier(options: PlaygroundVerifierOptions) {
+  if (await doesVerifierExist(options.verifierId)) {
+    await agent.modules.openId4VcVerifier.updateVerifierMetadata({
+      verifierId: options.verifierId,
+      clientMetadata: options.clientMetadata,
+    })
+  } else {
+    return agent.modules.openId4VcVerifier.createVerifier({
+      clientMetadata: options.clientMetadata,
+      verifierId: options.verifierId,
+    })
+  }
+}
+
+export async function doesVerifierExist(verifierId: string) {
   try {
     await agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId)
     return true
@@ -17,6 +31,6 @@ export async function doesVerifierExist() {
   }
 }
 
-export async function getVerifier() {
+export async function getVerifier(verifierId: string) {
   return agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId)
 }
