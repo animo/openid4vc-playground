@@ -6,6 +6,8 @@ import {
   RecordNotFoundError,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
+  X509Certificate,
+  X509ModuleConfig,
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
@@ -28,6 +30,10 @@ const zCreateOfferRequest = z.object({
     z.enum(Object.keys(issuersCredentialsData) as [CredentialConfigurationId, ...CredentialConfigurationId[]])
   ),
   issuerId: z.string(),
+})
+
+const zAddX509CertificateRequest = z.object({
+  certificate: z.string(),
 })
 
 export const apiRouter = express.Router()
@@ -78,6 +84,27 @@ apiRouter.get('/x509', async (_, response: Response) => {
   return response.json({
     certificate,
   })
+})
+
+apiRouter.post('/x509', async (request: Request, response: Response) => {
+  const addX509CertificateRequest = zAddX509CertificateRequest.parse(request.body)
+
+  const trustedCertificates = agent.dependencyManager.resolve(X509ModuleConfig).trustedCertificates
+  try {
+    const instance = X509Certificate.fromEncodedCertificate(addX509CertificateRequest.certificate)
+    const base64 = instance.toString('base64')
+
+    if (!trustedCertificates?.includes(base64)) {
+      await agent.x509.addTrustedCertificate(base64)
+    }
+
+    return response.send(instance.toString('text'))
+  } catch (error) {
+    return response.status(500).json({
+      errorMessage: 'error adding x509 certificate',
+      error,
+    })
+  }
 })
 
 apiRouter.get('/issuer', async (_, response: Response) => {

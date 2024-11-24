@@ -5,6 +5,7 @@ import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { IssueTab } from './IssueTab'
 import { ReceiveTab } from './ReceiveTab'
 import { VerifyTab } from './VerifyTab'
+import { X509Tab } from './X509Tab'
 
 export function Main() {
   return (
@@ -31,7 +32,8 @@ export function Main() {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="verify">Verify</TabsTrigger>
               <TabsTrigger value="issue">Issue</TabsTrigger>
-              <TabsTrigger value="receive">Receive</TabsTrigger>
+              <TabsTrigger value="x509">Manage Certificates</TabsTrigger>
+              {/* <TabsTrigger value="receive">Receive</TabsTrigger> */}
             </TabsList>
             <TabsContent value="verify">
               <VerifyTab />
@@ -39,9 +41,12 @@ export function Main() {
             <TabsContent value="issue">
               <IssueTab />
             </TabsContent>
-            <TabsContent value="receive">
-              <ReceiveTab disabled />
+            <TabsContent value="x509">
+              <X509Tab />
             </TabsContent>
+            {/* <TabsContent value="receive">
+              <ReceiveTab disabled />
+            </TabsContent> */}
           </Tabs>
         </div>
         <footer className="flex items-center justify-center w-full p-4 gap-8">
