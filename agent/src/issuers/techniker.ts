@@ -48,6 +48,11 @@ export const healthIdMdoc = {
   scope: 'health-id-mdoc',
   doctype: 'eu.europa.ec.eudi.hiid.1',
   display: [healthIdDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const healthIdMdocData = {
@@ -74,6 +79,11 @@ export const healthIdSdJwt = {
   scope: 'health-id-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/hiid/1',
   display: [healthIdDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const healthIdSdJwtData = {

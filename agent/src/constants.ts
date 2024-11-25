@@ -3,7 +3,7 @@ if (!process.env.P256_SEED || !process.env.AGENT_HOST || !process.env.AGENT_WALL
 }
 
 const AGENT_HOST = process.env.AGENT_HOST
-const AGENT_DNS = process.env.AGENT_DNS ?? process.env.AGENT_HOST.replace('https://', '')
+const AGENT_DNS = AGENT_HOST.replace('https://', '')
 const AGENT_WALLET_KEY = process.env.AGENT_WALLET_KEY
 
 const P256_SEED = process.env.P256_SEED

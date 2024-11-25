@@ -37,9 +37,9 @@ const mobileDriversLicensePayload = {
   portrait: new Uint8Array(erikaPortrait),
   un_distinguishing_sign: 'D',
   issuing_authority: 'Bundesrepublik Deutschland',
-  issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
-  expiry_date: new DateOnly(new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()),
-  issuing_country: 'DE',
+  issue_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
+  expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
+  issuing_country: 'NL',
   driving_priviliges: [
     {
       vehicle_category_code: 'B',
@@ -75,8 +75,13 @@ export const mobileDriversLicenseMdoc = {
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   id: 'mobile-drivers-license-mdoc',
   scope: 'mobile-drivers-license-mdoc',
-  doctype: 'org.iso.18013.5.1.mDL.1',
+  doctype: 'org.iso.18013.5.1.mDL',
   display: [mobileDriversLicenseDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const mobileDriversLicenseMdocData = {
@@ -85,11 +90,20 @@ export const mobileDriversLicenseMdocData = {
   credential: {
     docType: mobileDriversLicenseMdoc.doctype,
     namespaces: {
-      [mobileDriversLicenseMdoc.doctype]: mobileDriversLicensePayload,
+      'org.iso.18013.5.1': {
+        ...mobileDriversLicensePayload,
+        // Causes issue in google identity credential if not string
+        birth_date: mobileDriversLicensePayload.birth_date.toISOString(),
+      },
     },
     validityInfo: {
       validFrom: mobileDriversLicensePayload.issue_date,
       validUntil: mobileDriversLicensePayload.expiry_date,
+
+      // Causes issue in google identity credential if not present
+      // Update half year before expiry
+      expectedUpdate: new Date(serverStartupTimeInMilliseconds + Math.floor(oneYearInMilliseconds / 2)),
+      signed: mobileDriversLicensePayload.issue_date,
     },
   },
   authorization: { type: 'presentation' },
@@ -103,6 +117,11 @@ export const mobileDriversLicenseSdJwt = {
   scope: 'mobile-drivers-license-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/mdl/1',
   display: [mobileDriversLicenseDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const mobileDriversLicenseSdJwtData = {

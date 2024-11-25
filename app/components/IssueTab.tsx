@@ -8,10 +8,10 @@ import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { createOffer, getIssuer, getX509Certificate } from '../lib/api'
+import { X509Certificates } from './X509Certificates'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function IssueTab({ disabled = false }: { disabled?: boolean }) {
-  const [x509Certificate, setX509Certificate] = useState<string>()
   const [credentialType, setCredentialType] = useState<string>()
   const [issuerId, setIssuerid] = useState<string>()
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
@@ -26,8 +26,8 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
 
   useEffect(() => {
     getIssuer().then(setIssuer)
-    getX509Certificate().then(({ certificate }) => setX509Certificate(certificate))
   }, [])
+
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
     const _issuerId = issuerId ?? issuer?.availableX509Certificates[0]
@@ -107,6 +107,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                     <QRCode size={256} value={credentialOfferUri} />
                   </div>
                   <TooltipTrigger asChild>
+                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                     <p
                       onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                       className="text-gray-500 break-all cursor-pointer"
@@ -156,27 +157,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
         >
           Issue Credential
         </Button>
-        <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md p-7">
-          <h3>X.509 Certificate in base64 format</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
-                <TooltipTrigger asChild>
-                  <p
-                    onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-                    className="text-gray-500 break-all cursor-pointer"
-                  >
-                    {x509Certificate ?? 'No X.509 Certificate found'}
-                  </p>
-                </TooltipTrigger>
-              </div>
-
-              <TooltipContent>
-                <p>Click to copy</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <X509Certificates />
       </form>
     </Card>
   )

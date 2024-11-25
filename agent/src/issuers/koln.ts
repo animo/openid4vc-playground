@@ -48,6 +48,11 @@ export const certificateOfResidenceMdoc = {
   scope: 'certificate-of-residence-mdoc',
   doctype: 'eu.europa.ec.eudi.cor.1',
   display: [certificateOfResidenceDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const certificateOfResidenceMdocData = {
@@ -75,6 +80,11 @@ export const certificateOfResidenceSdJwt = {
   scope: 'certificate-of-residence-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/cor/1',
   display: [certificateOfResidenceDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const certificateOfResidenceSdJwtData = {

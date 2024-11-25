@@ -1,4 +1,4 @@
-import { ClaimFormat } from '@credo-ts/core'
+import { ClaimFormat, X509Certificate } from '@credo-ts/core'
 import {
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
@@ -14,8 +14,8 @@ import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from './issuers/i
 import { getX509Certificate } from './keyMethods'
 import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
-import { pidSdJwtInputDescriptor } from './verifiers/util'
 import { animoVerifier } from './verifiers/animo'
+import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
@@ -73,7 +73,19 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
             pidSdJwtInputDescriptor({
               id: 'pid-sd-jwt-issuance',
               fields: ['given_name', 'family_name', 'birthdate'],
+              group: 'PID',
             }),
+            pidMdocInputDescriptor({
+              fields: ['given_name', 'family_name', 'birth_date', 'issuing_country', 'issuing_authority'],
+              group: 'PID',
+            }),
+          ],
+          submission_requirements: [
+            {
+              rule: 'pick',
+              count: 1,
+              from: 'PID',
+            },
           ],
         },
       },
@@ -106,37 +118,86 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     (credentialData.credentialConfigurationId === mobileDriversLicenseMdoc.id ||
       credentialData.credentialConfigurationId === mobileDriversLicenseSdJwt.id)
   ) {
-    const descriptor = verification?.presentationExchange.descriptors.find(
+    const descriptor = verification?.presentationExchange?.descriptors.find(
       (descriptor) => descriptor.descriptor.id === 'pid-sd-jwt-issuance'
     )
-    if (credentialData.format === ClaimFormat.SdJwtVc && descriptor && descriptor.format === ClaimFormat.SdJwtVc) {
-      const { authorization, credential, ...restCredentialData } = credentialData
 
-      return {
-        ...restCredentialData,
-        credentials: holderBindings.map((holderBinding) => ({
-          ...credential,
-          payload: {
-            ...credential.payload,
-            given_name: descriptor.credential.prettyClaims.given_name,
-            family_name: descriptor.credential.prettyClaims.family_name,
-            birth_date: descriptor.credential.prettyClaims.birth_date,
-            document_number: 'Z021AB37X13',
-            un_distinguishing_sign: 'D',
+    // We allow receiving the PID in both SD-JWT and mdoc when issuing in sd-jwt or mdoc format
+    if (descriptor?.format === ClaimFormat.SdJwtVc || descriptor?.format === ClaimFormat.MsoMdoc) {
+      const formatSpecificClaims =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              given_name: descriptor.credential.prettyClaims.given_name,
+              family_name: descriptor.credential.prettyClaims.family_name,
+              birth_date: descriptor.credential.prettyClaims.birthdate,
 
-            issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
-            issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
-            expiry_date: new DateOnly(new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()),
-            issuing_country: descriptor.credential.prettyClaims.issuing_country,
-          },
-          holder: holderBinding,
-          issuer: {
-            method: 'x5c',
-            x5c: [x509Certificate],
-            issuer: AGENT_HOST,
-          },
-        })),
-      } satisfies OpenId4VciSignSdJwtCredentials
+              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+            }
+          : {
+              given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              family_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+
+              issuing_authority:
+                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
+              issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+            }
+
+      if (credentialData.format === ClaimFormat.SdJwtVc) {
+        const { authorization, credential, ...restCredentialData } = credentialData
+
+        return {
+          ...restCredentialData,
+          credentials: holderBindings.map((holderBinding) => ({
+            ...credential,
+            payload: {
+              ...credential.payload,
+              ...formatSpecificClaims,
+              issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
+              expiry_date: new DateOnly(
+                new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()
+              ),
+            },
+            holder: holderBinding,
+            issuer: {
+              method: 'x5c',
+              x5c: [x509Certificate],
+              issuer: AGENT_HOST,
+            },
+          })),
+        } satisfies OpenId4VciSignSdJwtCredentials
+      }
+
+      if (credentialData.format === ClaimFormat.MsoMdoc) {
+        const { authorization, credential, ...restCredentialData } = credentialData
+
+        return {
+          ...restCredentialData,
+          credentials: holderBindings.map((holderBinding) => ({
+            ...credential,
+            namespaces: {
+              'org.iso.18013.5.1': {
+                ...credential.namespaces['org.iso.18013.5.1'],
+                ...formatSpecificClaims,
+
+                // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
+                issuing_country: 'NL',
+
+                issue_date: new DateOnly(
+                  new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()
+                ),
+                expiry_date: new DateOnly(
+                  new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()
+                ),
+              },
+            },
+
+            holderKey: holderBinding.key,
+            issuerCertificate: x509Certificate,
+          })),
+        } satisfies OpenId4VciSignMdocCredentials
+      }
     }
   }
 

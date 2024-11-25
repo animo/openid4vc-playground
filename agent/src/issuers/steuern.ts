@@ -49,6 +49,11 @@ export const steuerIdMdoc = {
   scope: 'steuer-id-mdoc',
   doctype: 'eu.europa.ec.eudi.hiid.1',
   display: [steuerIdDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const steuerIdMdocData = {
@@ -75,6 +80,11 @@ export const steuerIdSdJwt = {
   scope: 'steuer-id-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/tax-credential/1',
   display: [steuerIdDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
 } as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
 
 export const steuerIdSdJwtData = {

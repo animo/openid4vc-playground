@@ -1,7 +1,7 @@
 import {
   DifPresentationExchangeService,
   JsonTransformer,
-  KeyType,
+  Jwt,
   MdocDeviceResponse,
   RecordNotFoundError,
   W3cJsonLdVerifiablePresentation,
@@ -80,9 +80,11 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
 
 apiRouter.get('/x509', async (_, response: Response) => {
   const certificate = getX509Certificate()
-
+  const instance = X509Certificate.fromEncodedCertificate(certificate)
   return response.json({
-    certificate,
+    base64: instance.toString('base64'),
+    pem: instance.toString('pem'),
+    decoded: instance.toString('text'),
   })
 })
 
@@ -195,14 +197,20 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 
 apiRouter.get('/verifier', async (_, response: Response) => {
   return response.json({
-    presentationRequests: verifiers.flatMap((i) =>
-      i.presentationRequests.map((c) => {
+    presentationRequests: verifiers.flatMap((i) => [
+      ...i.presentationRequests.map((c) => {
         return {
-          display: c.name,
+          display: `${i.clientMetadata.client_name} - ${c.name} - DIF PEX`,
           id: c.id,
         }
-      })
-    ),
+      }),
+      ...i.dcqlRequests.map((c) => {
+        return {
+          display: `${i.clientMetadata.client_name} - ${c.name} - DCQL`,
+          id: c.id,
+        }
+      }),
+    ]),
   })
 })
 
@@ -225,13 +233,17 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     })
   }
 
-  const verifierId = verifiers.find((a) => a.presentationRequests.find((r) => r.id === definition.id))?.verifierId
+  const verifierId = verifiers.find(
+    (a) =>
+      a.presentationRequests.find((r) => r.id === definition.id) ?? a.dcqlRequests.find((r) => r.id === definition.id)
+  )?.verifierId
   if (!verifierId) {
     return response.status(404).json({
       error: 'Verifier not found',
     })
   }
   const verifier = await getVerifier(verifierId)
+  console.log('Requesting definition', JSON.stringify(definition, null, 2))
 
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({
@@ -242,17 +254,37 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         // FIXME: remove issuer param from credo as we can infer it from the url
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
-      presentationExchange: {
-        definition,
-      },
+      presentationExchange:
+        'input_descriptors' in definition
+          ? {
+              definition,
+            }
+          : undefined,
+      dcql:
+        'credentials' in definition
+          ? {
+              query: definition,
+            }
+          : undefined,
       responseMode: createPresentationRequestBody.responseMode,
     })
 
   console.log(authorizationRequest)
 
+  const authorizationRequestJwt = Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
+  const dcqlQuery = authorizationRequestJwt.payload.additionalClaims.dcql_query
+  const presentationDefinition = authorizationRequestJwt.payload.additionalClaims.presentation_definition
+
   return response.json({
     authorizationRequestUri: authorizationRequest.replace('openid4vp://', createPresentationRequestBody.requestScheme),
     verificationSessionId: verificationSession.id,
+    responseStatus: verificationSession.state,
+    dcqlQuery: dcqlQuery ? JSON.parse(dcqlQuery as string) : undefined,
+    definition: presentationDefinition,
+    authorizationRequest: {
+      payload: authorizationRequestJwt.payload.toJson(),
+      header: authorizationRequestJwt.header,
+    },
   })
 })
 
@@ -266,52 +298,69 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
   try {
     const verificationSession = await agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
 
+    const authorizationRequestJwt = Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
+    const authorizationRequest = {
+      payload: authorizationRequestJwt.payload.toJson(),
+      header: authorizationRequestJwt.header,
+    }
+    const dcqlQuery = authorizationRequestJwt.payload.additionalClaims.dcql_query
+    const presentationDefinition = authorizationRequestJwt.payload.additionalClaims.presentation_definition
+
     if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
       const verified = await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(verificationSessionId)
-
       console.log(verified.presentationExchange?.presentations)
+      console.log(verified.dcql?.presentationResult)
 
       const presentations = await Promise.all(
-        verified.presentationExchange?.presentations.map(async (presentation) => {
-          if (presentation instanceof W3cJsonLdVerifiablePresentation) {
+        (verified.presentationExchange?.presentations ?? Object.values(verified.dcql?.presentation ?? {})).map(
+          async (presentation) => {
+            if (presentation instanceof W3cJsonLdVerifiablePresentation) {
+              return {
+                pretty: presentation.toJson(),
+                encoded: presentation.toJson(),
+              }
+            }
+
+            if (presentation instanceof W3cJwtVerifiablePresentation) {
+              return {
+                pretty: JsonTransformer.toJSON(presentation.presentation),
+                encoded: presentation.serializedJwt,
+              }
+            }
+
+            if (presentation instanceof MdocDeviceResponse) {
+              return {
+                pretty: JsonTransformer.toJSON({
+                  documents: presentation.documents.map((doc) => ({
+                    doctype: doc.docType,
+                    alg: doc.alg,
+                    base64Url: doc.base64Url,
+                    validityInfo: doc.validityInfo,
+                    deviceSignedNamespaces: doc.deviceSignedNamespaces,
+                    issuerSignedNamespaces: doc.issuerSignedNamespaces,
+                  })),
+                }),
+                encoded: presentation.base64Url,
+              }
+            }
+
             return {
-              pretty: presentation.toJson(),
-              encoded: presentation.toJson(),
+              pretty: {
+                ...presentation,
+                compact: undefined,
+              },
+              encoded: presentation.compact,
             }
           }
-
-          if (presentation instanceof W3cJwtVerifiablePresentation) {
-            return {
-              pretty: JsonTransformer.toJSON(presentation.presentation),
-              encoded: presentation.serializedJwt,
-            }
-          }
-
-          if (presentation instanceof MdocDeviceResponse) {
-            return {
-              pretty: JsonTransformer.toJSON({
-                documents: presentation.documents.map((doc) => ({
-                  doctype: doc.docType,
-                  alg: doc.alg,
-                  base64Url: doc.base64Url,
-                  validityInfo: doc.validityInfo,
-                  deviceSignedNamespaces: doc.deviceSignedNamespaces,
-                  issuerSignedNamespaces: doc.issuerSignedNamespaces,
-                })),
-              }),
-              encoded: presentation.base64Url,
-            }
-          }
-
-          return {
-            pretty: {
-              ...presentation,
-              compact: undefined,
-            },
-            encoded: presentation.compact,
-          }
-        }) ?? []
+        ) ?? []
       )
+
+      const dcqlSubmission = verified.dcql
+        ? Object.keys(verified.dcql.presentation).map((key, index) => ({
+            queryCredentialId: key,
+            presentationIndex: index,
+          }))
+        : undefined
 
       console.log('presentations', presentations)
 
@@ -319,10 +368,17 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
         verificationSessionId: verificationSession.id,
         responseStatus: verificationSession.state,
         error: verificationSession.errorMessage,
+        authorizationRequest,
 
         presentations: presentations,
+
         submission: verified.presentationExchange?.submission,
         definition: verified.presentationExchange?.definition,
+
+        dcqlQuery: dcqlQuery ? JSON.parse(dcqlQuery as string) : undefined,
+        dcqlSubmission: verified.dcql
+          ? { ...verified.dcql.presentationResult, vpTokenMapping: dcqlSubmission }
+          : undefined,
       })
     }
 
@@ -330,6 +386,9 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
       verificationSessionId: verificationSession.id,
       responseStatus: verificationSession.state,
       error: verificationSession.errorMessage,
+      authorizationRequest,
+      definition: presentationDefinition,
+      dcqlQuery: dcqlQuery ? JSON.parse(dcqlQuery as string) : undefined,
     })
   } catch (error) {
     if (error instanceof RecordNotFoundError) {

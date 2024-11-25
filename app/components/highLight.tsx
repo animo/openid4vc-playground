@@ -14,9 +14,11 @@ export const HighLight = ({
     {({ className, style, tokens, getLineProps, getTokenProps }) => (
       <pre className={cn(className, styles.line, 'break-all w-full')} style={style}>
         {tokens.map((line, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <div key={i} {...getLineProps({ line })}>
             <span className={cn(styles.lineNumber, 'break-all')}>{i + 1}</span>
             {line.map((token, key) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               <span key={key} {...getTokenProps({ token })} className="break-all" />
             ))}
           </div>

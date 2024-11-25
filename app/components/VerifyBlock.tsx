@@ -5,6 +5,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix
 import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { CollapsibleSection } from './CollapsibleSection'
+import { X509Certificates } from './X509Certificates'
 import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
@@ -12,13 +14,13 @@ import { Card } from './ui/card'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { TypographyH3, TypographyH4 } from './ui/typography'
+import { TypographyH3 } from './ui/typography'
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt'
+type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type VerifyBlockProps = {
   flowName: string
-  x509Certificate?: string
   createRequest: ({
     presentationDefinitionId,
     requestScheme,
@@ -30,18 +32,23 @@ type VerifyBlockProps = {
   }) => Promise<{
     verificationSessionId: string
     authorizationRequestUri: string
+    authorizationRequest: Record<string, unknown>
+    responseStatus: ResponseStatus
   }>
 }
 
-export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowName, x509Certificate }) => {
+export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowName }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
   const [verificationSessionId, setVerificationSessionId] = useState<string>()
   const [requestStatus, setRequestStatus] = useState<{
     verificationSessionId: string
-    responseStatus: 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
+    responseStatus: ResponseStatus
+    authorizationRequest: Record<string, unknown>
     error?: string
     submission?: Record<string, unknown>
     definition?: Record<string, unknown>
+    dcqlQuery?: Record<string, unknown>
+    dcqlSubmission?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
   }>()
   const [verifier, setVerifier] = useState<{
@@ -91,7 +98,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       throw new Error('No definition')
     }
     const request = await createRequest({ presentationDefinitionId: id, requestScheme, responseMode })
-
+    setRequestStatus(request)
     setVerificationSessionId(request.verificationSessionId)
     setAuthorizationRequestUri(request.authorizationRequestUri)
   }
@@ -116,7 +123,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       <TypographyH3>{flowName}</TypographyH3>
       <form className="space-y-4 mt-4" onSubmit={onSubmitCreateRequest}>
         <div className="space-y-2">
-          <Label htmlFor="presentation-type">Preentation Type</Label>
+          <Label htmlFor="presentation-type">Presentation Type</Label>
           <Select
             name="presentation-definition-id"
             required
@@ -213,63 +220,61 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             )}
           </div>
         )}
-        {hasResponse && (
-          <div className="flex flex-col w-full gap-4">
-            <Alert variant={isSuccess ? 'success' : 'warning'}>
-              {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
-              <AlertTitle className={isSuccess ? 'mt-0.5' : ''}>
-                {isSuccess ? 'Verification Successful' : 'Verification Unsuccessful'}
-              </AlertTitle>
-              {!isSuccess && (
-                <AlertDescription className="mt-2">{requestStatus?.error ?? 'Unknown error occurred'}</AlertDescription>
-              )}
-            </Alert>
-            {requestStatus.definition && (
-              <div>
-                <TypographyH4>Presentation Definition</TypographyH4>
-                <HighLight code={JSON.stringify(requestStatus?.definition, null, 2)} language="json" />
-              </div>
-            )}
-            {requestStatus.submission && (
-              <div>
-                <TypographyH4>Presentation Submission</TypographyH4>
-                <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
-              </div>
-            )}
-            {requestStatus.presentations && (
-              <div>
-                <TypographyH4>Presentations</TypographyH4>
-                <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
-              </div>
-            )}
-          </div>
-        )}
         <Button onClick={onSubmitCreateRequest} className="w-full" onSubmit={onSubmitCreateRequest}>
           Verify Credential
         </Button>
 
-        <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md p-7">
-          <h3>X.509 Certificate in base64 format</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
-                <TooltipTrigger asChild>
-                  {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                  <p
-                    onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-                    className="text-gray-500 break-all cursor-pointer"
-                  >
-                    {x509Certificate ?? 'No X.509 Certificate found'}
-                  </p>
-                </TooltipTrigger>
-              </div>
+        {hasResponse && (
+          <div className="flex flex-col w-full gap-4">
+            {hasResponse && (
+              <Alert variant={isSuccess ? 'success' : 'warning'}>
+                {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
+                <AlertTitle className={isSuccess ? 'mt-0.5' : ''}>
+                  {isSuccess ? 'Verification Successful' : 'Verification Unsuccessful'}
+                </AlertTitle>
+                {!isSuccess && (
+                  <AlertDescription className="mt-2">
+                    {requestStatus?.error ?? 'Unknown error occurred'}
+                  </AlertDescription>
+                )}
+              </Alert>
+            )}
+            {requestStatus.presentations && (
+              <CollapsibleSection title="Presentations" initial="open">
+                <HighLight code={JSON.stringify(requestStatus?.presentations, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+            {requestStatus.submission && (
+              <CollapsibleSection title="Presentation Submission">
+                <HighLight code={JSON.stringify(requestStatus?.submission, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+            {requestStatus.dcqlSubmission && (
+              <CollapsibleSection title="DCQL Submission">
+                <HighLight code={JSON.stringify(requestStatus?.dcqlSubmission, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+          </div>
+        )}
+        {requestStatus && (
+          <div className="flex flex-col w-full gap-4">
+            <CollapsibleSection title="Authorization Request">
+              <HighLight code={JSON.stringify(requestStatus.authorizationRequest, null, 2)} language="json" />
+            </CollapsibleSection>
+            {requestStatus.dcqlQuery && (
+              <CollapsibleSection title="DCQL Query">
+                <HighLight code={JSON.stringify(requestStatus.dcqlQuery, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+            {requestStatus.definition && (
+              <CollapsibleSection title="Presentation Definition">
+                <HighLight code={JSON.stringify(requestStatus.definition, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+          </div>
+        )}
 
-              <TooltipContent>
-                <p>Click to copy</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <X509Certificates />
       </form>
     </Card>
   )

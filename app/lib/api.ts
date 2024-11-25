@@ -59,7 +59,7 @@ export async function addX509Certificate(certificate: string) {
   return response
 }
 
-export async function getX509Certificate() {
+export async function getX509Certificate(): Promise<{ base64: string; pem: string; decoded: string }> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/x509`)
 
   if (!response.ok) {
