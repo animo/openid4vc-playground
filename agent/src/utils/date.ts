@@ -7,5 +7,5 @@ export const oneYearInMilliseconds = 365 * oneDayInMilliseconds
 export const serverStartupTimeInMilliseconds = Date.now()
 
 export function dateToSeconds(date: Date) {
-  Math.floor(date.getTime() / 1000)
+  return Math.floor(date.getTime() / 1000)
 }
