@@ -15,7 +15,8 @@
       "@credo-ts/askar": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/askar?funke",
       "@credo-ts/core": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/core?funke",
       "@credo-ts/node": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/node?funke",
-      "@credo-ts/openid4vc": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/openid4vc?funke"
+      "@credo-ts/openid4vc": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/openid4vc?funke",
+      "dcql": "0.2.13"
     }
   }
 }
