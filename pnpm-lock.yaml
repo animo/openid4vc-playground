@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@sphereon/did-auth-siop@0.16.1-fix.173':
+    hash: rn5adxouj5bsvhuewuqwjrfnsi
+    path: patches/@sphereon__did-auth-siop@0.16.1-fix.173.patch
+
 importers:
 
   .:
@@ -2137,6 +2142,7 @@ packages:
 
   '@sphereon/kmp-mdl-mdoc@0.2.0-SNAPSHOT.22':
     resolution: {integrity: sha512-uAZZExVy+ug9JLircejWa5eLtAZ7bnBP6xb7DO2+86LRsHNLh2k2jMWJYxp+iWtGHTsh6RYsZl14ScQLvjiQ/A==}
+    bundledDependencies: []
 
   '@sphereon/oid4vc-common@0.16.1-fix.173':
     resolution: {integrity: sha512-+AAUvEEFs0vzz1mrgjSgvDkcBtr18d2XEVgJex7QlAqxCKVGfjzZlqL2Q2vOLKYVaXsazhD5LnYiY6B5WMTC3Q==}
@@ -7951,7 +7957,7 @@ snapshots:
       '@animo-id/oauth2': 0.1.3(typescript@5.3.3)
       '@animo-id/oid4vci': 0.1.3(typescript@5.3.3)
       '@credo-ts/core': 0.6.0-alpha-20241119125554(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(web-streams-polyfill@3.3.3)
-      '@sphereon/did-auth-siop': 0.16.1-fix.173(typescript@5.3.3)
+      '@sphereon/did-auth-siop': 0.16.1-fix.173(patch_hash=rn5adxouj5bsvhuewuqwjrfnsi)(typescript@5.3.3)
       '@sphereon/oid4vc-common': 0.16.1-fix.173
       '@sphereon/ssi-types': 0.30.2-next.135
       class-transformer: 0.5.1
@@ -9606,7 +9612,7 @@ snapshots:
 
   '@sovpro/delimited-stream@1.1.0': {}
 
-  '@sphereon/did-auth-siop@0.16.1-fix.173(typescript@5.3.3)':
+  '@sphereon/did-auth-siop@0.16.1-fix.173(patch_hash=rn5adxouj5bsvhuewuqwjrfnsi)(typescript@5.3.3)':
     dependencies:
       '@astronautlabs/jsonpath': 1.1.2
       '@sphereon/jarm': 0.16.1-fix.173(typescript@5.3.3)

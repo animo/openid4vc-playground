@@ -6,5 +6,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@sphereon/did-auth-siop@0.16.1-fix.173": "patches/@sphereon__did-auth-siop@0.16.1-fix.173.patch"
+    }
   }
 }
