@@ -122,12 +122,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                       </Link>
                     </div>
                     <div>
-                      <Link
-                        href={credentialOfferUri.replace(
-                          'openid-credential-offer://',
-                          'https://funke.animo.id/invitation'
-                        )}
-                      >
+                      <Link href={credentialOfferUri.replace('openid-credential-offer://', 'id.animo.ausweis:')}>
                         <Button>Open in EasyPID Wallet</Button>
                       </Link>
                     </div>
