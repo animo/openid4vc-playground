@@ -13,6 +13,7 @@ overrides:
   '@credo-ts/node': https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/node?funke
   '@credo-ts/openid4vc': https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/openid4vc?funke
   dcql: 0.2.13
+  '@sphereon/pex-models': 2.3.2
 
 importers:
 
@@ -2116,15 +2117,14 @@ packages:
 
   '@sphereon/kmp-mdl-mdoc@0.2.0-SNAPSHOT.22':
     resolution: {integrity: sha512-uAZZExVy+ug9JLircejWa5eLtAZ7bnBP6xb7DO2+86LRsHNLh2k2jMWJYxp+iWtGHTsh6RYsZl14ScQLvjiQ/A==}
-    bundledDependencies: []
 
   '@sphereon/oid4vc-common@https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke':
     resolution: {tarball: https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke}
     version: 0.16.0
     engines: {node: '>=18'}
 
-  '@sphereon/pex-models@2.3.1':
-    resolution: {integrity: sha512-SByU4cJ0XYA6VZQ/L6lsSiRcFtBPHbFioCeQ4GP7/W/jQ+PSBD7uK2oTnKQ9/0iEiMK/6JYqhKgLs4a9UX3UTQ==}
+  '@sphereon/pex-models@2.3.2':
+    resolution: {integrity: sha512-foFxfLkRwcn/MOp/eht46Q7wsvpQGlO7aowowIIb5Tz9u97kYZ2kz6K2h2ODxWuv5CRA7Q0MY8XUBGE2lfOhOQ==}
 
   '@sphereon/pex@5.0.0-unstable.24':
     resolution: {integrity: sha512-CZc+kr8cJqPsFSpg4kHyamr5oB5xLVP2E5eJ0pbetOfOE2uSxqk0/A8zGazcPhU1zZILrO51hD4vW/hJRgtKJQ==}
@@ -6373,7 +6373,7 @@ snapshots:
       '@sd-jwt/decode': 0.7.2
       '@sd-jwt/present': 0.7.2
       '@sd-jwt/types': 0.7.2
-      '@sphereon/pex-models': 2.3.1
+      '@sphereon/pex-models': 2.3.2
       '@sphereon/ssi-types': 0.30.2-next.135
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
@@ -7553,7 +7553,7 @@ snapshots:
       '@sd-jwt/sd-jwt-vc': 0.7.2
       '@sd-jwt/types': 0.7.2
       '@sd-jwt/utils': 0.7.2
-      '@sphereon/pex-models': 2.3.1
+      '@sphereon/pex-models': 2.3.2
       '@sphereon/ssi-types': 0.30.2-next.135
       '@stablelib/ed25519': 1.0.3
       '@types/ws': 8.5.12
@@ -9186,7 +9186,7 @@ snapshots:
       '@sphereon/jarm': https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke(typescript@5.3.3)
       '@sphereon/oid4vc-common': https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke
       '@sphereon/pex': 5.0.0-unstable.24
-      '@sphereon/pex-models': 2.3.1
+      '@sphereon/pex-models': 2.3.2
       '@sphereon/ssi-types': 0.30.2-next.279
       cross-fetch: 4.0.0
       dcql: 0.2.13(typescript@5.3.3)
@@ -9226,7 +9226,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sphereon/pex-models@2.3.1': {}
+  '@sphereon/pex-models@2.3.2': {}
 
   '@sphereon/pex@5.0.0-unstable.24':
     dependencies:
@@ -9234,7 +9234,7 @@ snapshots:
       '@sd-jwt/decode': 0.7.2
       '@sd-jwt/present': 0.7.2
       '@sd-jwt/types': 0.7.2
-      '@sphereon/pex-models': 2.3.1
+      '@sphereon/pex-models': 2.3.2
       '@sphereon/ssi-types': 0.30.2-next.129
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
