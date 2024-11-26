@@ -1,6 +1,7 @@
 import { AGENT_HOST } from '../constants'
+import { steuerIdMdoc, steuerIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './util'
+import { mdocDcqlCredential, pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtDcqlCredential } from './util'
 
 export const animoVerifier = {
   clientMetadata: {
@@ -70,5 +71,21 @@ export const animoVerifier = {
       ],
     },
   ],
-  dcqlRequests: [],
+  dcqlRequests: [
+    {
+      id: '6a93d69f-b1d5-4f21-b1d4-a2cc102b2341',
+      name: 'Steuer ID two formats (vc+sd-jwt/mso_mdoc)',
+      credentials: [
+        mdocDcqlCredential({
+          doctype: steuerIdMdoc.doctype,
+          namespace: 'eu.europa.ec.eudi.hiid.1',
+          fields: ['resident_address', 'issuance_date'],
+        }),
+        sdJwtDcqlCredential({
+          vcts: [steuerIdSdJwt.vct],
+          fields: ['credential_type', 'resident_address', 'birth_date'],
+        }),
+      ],
+    },
+  ],
 } as const satisfies PlaygroundVerifierOptions

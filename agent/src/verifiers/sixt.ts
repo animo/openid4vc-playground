@@ -1,5 +1,6 @@
 import { AGENT_HOST } from '../constants'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
+import { steuerIdMdoc, steuerIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import {
   mdocDcqlCredential,
