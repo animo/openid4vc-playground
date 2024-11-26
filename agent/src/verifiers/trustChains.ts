@@ -1,6 +1,3 @@
-import { animoVerifier } from './animo'
-import { turboKeysVerifier } from './sixt'
-
 export type EntityId = string
 
 export type TrustChain = {
