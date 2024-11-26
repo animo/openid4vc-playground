@@ -11,7 +11,7 @@ import {
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import express, { response, type NextFunction, type Request, type Response } from 'express'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
@@ -20,7 +20,7 @@ import { issuers, issuersCredentialsData } from './issuers'
 import { getX509Certificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { getVerifier } from './verifier'
-import { allDefinitions, verifierTrustChains, verifiers } from './verifiers'
+import { allDefinitions, verifiers } from './verifiers'
 
 type CredentialConfigurationId = keyof typeof issuersCredentialsData
 
