@@ -78,13 +78,21 @@ export const bundesregierungVerifier = {
     {
       id: '6a93d69f-b1d5-4f21-b1d4-a2cc102b2341',
       name: 'Steuer ID two formats (vc+sd-jwt/mso_mdoc)',
+      credential_sets: [
+        {
+          options: [['01936a55-560e-7aae-9bde-562848e741cf', '01936a54-da89-700c-936d-ad8545379910']],
+          purpose: 'We need to verify your tax number and address',
+        },
+      ],
       credentials: [
         mdocDcqlCredential({
+          id: '01936a55-560e-7aae-9bde-562848e741cf',
           doctype: steuerIdMdoc.doctype,
           namespace: 'eu.europa.ec.eudi.hiid.1',
           fields: ['resident_address', 'issuance_date'],
         }),
         sdJwtDcqlCredential({
+          id: '01936a54-da89-700c-936d-ad8545379910',
           vcts: [steuerIdSdJwt.vct],
           fields: ['credential_type', 'resident_address', 'birth_date'],
         }),

@@ -85,13 +85,15 @@ export function mdocDcqlCredential({
   doctype,
   namespace,
   fields,
+  id,
 }: {
+  id?: string
   doctype: string
   namespace: string
   fields: [string, ...string[]]
 }): DcqlQuery['credentials'][number] {
   return {
-    id: randomUUID(),
+    id: id ?? randomUUID(),
     format: 'mso_mdoc',
     meta: {
       doctype_value: doctype,

@@ -1,11 +1,9 @@
 import { AGENT_HOST } from '../constants'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
-import { steuerIdMdoc, steuerIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import {
   mdocDcqlCredential,
   mdocInputDescriptor,
-  pidMdocDcqlCredential,
   pidSdJwtDcqlCredential,
   pidSdJwtInputDescriptor,
   sdJwtDcqlCredential,
@@ -72,8 +70,15 @@ export const turboKeysVerifier = {
     {
       id: 'dc195d0e-114d-41d1-8803-e1ad08041dca',
       name: 'PID and MDL - Rent a Car (vc+sd-jwt)',
+      credential_sets: [
+        {
+          options: [['01936a3d-b6a4-7771-b0a0-979f01a97dda', '01936a3d-5904-766d-b9bb-705040408ea1']],
+          purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
+        },
+      ],
       credentials: [
         sdJwtDcqlCredential({
+          id: '01936a3d-b6a4-7771-b0a0-979f01a97dda',
           vcts: [mobileDriversLicenseSdJwt.vct],
           fields: [
             'document_number',
@@ -87,6 +92,7 @@ export const turboKeysVerifier = {
           ],
         }),
         pidSdJwtDcqlCredential({
+          id: '01936a3d-5904-766d-b9bb-705040408ea1',
           fields: ['given_name', 'family_name', 'birthdate'],
         }),
       ],
