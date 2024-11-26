@@ -22,7 +22,7 @@ export const verifiers = [
   farmatecVerifier,
   pgeuVerifier,
   europeanUnionVerifier,
-] as const
+]
 export const allDefinitions = verifiers.flatMap(
   (
     v
