@@ -198,20 +198,24 @@ apiRouter.post('/offers/receive', async (request: Request, response: Response) =
 
 apiRouter.get('/verifier', async (_, response: Response) => {
   return response.json({
-    presentationRequests: verifiers.flatMap((i) => [
-      ...i.presentationRequests.map((c) => {
-        return {
-          display: `${i.clientMetadata.client_name} - ${c.name} - DIF PEX`,
-          id: c.id,
-        }
-      }),
-      ...i.dcqlRequests.map((c) => {
-        return {
-          display: `${i.clientMetadata.client_name} - ${c.name} - DCQL`,
-          id: c.id,
-        }
-      }),
-    ]),
+    presentationRequests: verifiers
+      .filter((v) => 'useCase' in v)
+      .flatMap((verifier) => [
+        ...verifier.presentationRequests.map((c) => {
+          return {
+            useCase: verifier.useCase,
+            display: `${verifier.clientMetadata.client_name} - ${c.name} - DIF PEX`,
+            id: c.id,
+          }
+        }),
+        ...verifier.dcqlRequests.map((c) => {
+          return {
+            useCase: verifier.useCase,
+            display: `${verifier.clientMetadata.client_name} - ${c.name} - DCQL`,
+            id: c.id,
+          }
+        }),
+      ]),
   })
 })
 

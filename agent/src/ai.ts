@@ -86,12 +86,11 @@ Analyze the request by following these steps:
 1. Carefully review the verifier and the request name and purpose.
 2. Examine each requested card, including its name, subtitle, and attributes.
 3. For each piece of requested information, consider whether it is necessary and appropriate for the stated purpose.
-4. Identify any instances of overasking, where the requested information exceeds what is reasonably required for the purpose.
+4. Identify any instances of overasking of personal information, where the requested information exceeds what is reasonably required for the purpose.
 
 Guidelines for identifying overasking:
-- Consider the sensitivity of the requested information.
-- Evaluate whether less sensitive alternatives could serve the same purpose.
-- Assess if the quantity of requested information is excessive for the stated purpose.
+- Consider only if overasking of personal information is the case. Overasking of metadata related to the card is not a reason to reject the request.
+- Assess if the quantity of requested personal information is excessive for the stated purpose.
 - Determine if the information request aligns with common practices for similar purposes.
 - If you cannot determine whether the request is overasking, respond with "could_not_determine".
 
