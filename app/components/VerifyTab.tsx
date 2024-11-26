@@ -1,18 +1,20 @@
-import { createRequest } from '../lib/api'
-import { type ResponseMode, VerifyBlock } from './VerifyBlock'
+import { useEffect, useState } from 'react'
+import { createRequest, getX509Certificate } from '../lib/api'
+import { VerifyBlock } from './VerifyBlock'
+
+export type CreateRequestOptions = Parameters<typeof createRequest>[0]
+export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
 
 export function VerifyTab() {
-  const createRequestForVerification = async (options: {
-    presentationDefinitionId: string
-    requestScheme: string
-    responseMode: ResponseMode
-  }) => {
-    return await createRequest({
-      requestScheme: options.requestScheme,
-      presentationDefinitionId: options.presentationDefinitionId,
-      responseMode: options.responseMode,
-    })
-  }
+  const [x509Certificate, setX509Certificate] = useState<string>()
 
-  return <VerifyBlock flowName="Verify" createRequest={createRequestForVerification} />
+  useEffect(() => {
+    getX509Certificate().then(({ certificate }) => setX509Certificate(certificate))
+  }, [])
+
+  return (
+    <>
+      <VerifyBlock flowName="Verify" createRequest={createRequest} x509Certificate={x509Certificate} />
+    </>
+  )
 }

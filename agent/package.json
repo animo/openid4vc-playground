@@ -24,19 +24,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development"
-  },
-  "pnpm": {
-    "overrides": {
-      "@sphereon/did-auth-siop": "https://gitpkg.vercel.app/animo/OID4VC/packages/siop-oid4vp?funke",
-      "@sphereon/jarm": "https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke",
-      "@sphereon/oid4vc-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke",
-      "@credo-ts/askar": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/askar?funke",
-      "@credo-ts/core": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/core?funke",
-      "@credo-ts/node": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/node?funke",
-      "@credo-ts/openid4vc": "https://gitpkg.vercel.app/animo/aries-framework-javascript/packages/openid4vc?funke",
-      "dcql": "0.2.17",
-      "@sphereon/pex-models": "2.3.2"
-    }
+    "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development dotenv_config_path=.env"
   }
 }

@@ -11,7 +11,7 @@ import {
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import express, { type NextFunction, type Request, type Response } from 'express'
+import express, { response, type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
@@ -20,7 +20,7 @@ import { issuers, issuersCredentialsData } from './issuers'
 import { getX509Certificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { getVerifier } from './verifier'
-import { allDefinitions, verifiers } from './verifiers'
+import { allDefinitions, verifierTrustChains, verifiers } from './verifiers'
 
 type CredentialConfigurationId = keyof typeof issuersCredentialsData
 
@@ -214,18 +214,45 @@ apiRouter.get('/verifier', async (_, response: Response) => {
   })
 })
 
+apiRouter.post('/trust-chains', async (request: Request, response: Response) => {
+  const parseResult = await z
+    .object({
+      entityId: z.string(),
+      trustAnchorEntityIds: z.array(z.string()),
+    })
+    .safeParseAsync(request.body)
+
+  if (!parseResult.success) {
+    return response.status(400).json({
+      error: parseResult.error.message,
+      details: parseResult.error.issues,
+    })
+  }
+
+  const { entityId, trustAnchorEntityIds } = parseResult.data
+
+  const chains = await agent.modules.openId4VcHolder.resolveOpenIdFederationChains({
+    entityId,
+    trustAnchorEntityIds: trustAnchorEntityIds as [string, ...string[]],
+  })
+
+  return response.json(chains)
+})
+
 const zCreatePresentationRequestBody = z.object({
+  requestSignerType: z.enum(['x5c', 'openid-federation']),
   presentationDefinitionId: z.string(),
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post']),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
-  const createPresentationRequestBody = zCreatePresentationRequestBody.parse(request.body)
+  const { requestSignerType, presentationDefinitionId, requestScheme, responseMode } =
+    await zCreatePresentationRequestBody.parseAsync(request.body)
 
   const x509Certificate = getX509Certificate()
 
-  const definitionId = createPresentationRequestBody.presentationDefinitionId
+  const definitionId = presentationDefinitionId
   const definition = allDefinitions.find((d) => d.id === definitionId)
   if (!definition) {
     return response.status(404).json({
@@ -248,12 +275,17 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   const { authorizationRequest, verificationSession } =
     await agent.modules.openId4VcVerifier.createAuthorizationRequest({
       verifierId: verifier.verifierId,
-      requestSigner: {
-        method: 'x5c',
-        x5c: [x509Certificate],
-        // FIXME: remove issuer param from credo as we can infer it from the url
-        issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
-      },
+      requestSigner:
+        requestSignerType === 'x5c'
+          ? {
+              method: 'x5c',
+              x5c: [x509Certificate],
+              // FIXME: remove issuer param from credo as we can infer it from the url
+              issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
+            }
+          : {
+              method: 'openid-federation',
+            },
       presentationExchange:
         'input_descriptors' in definition
           ? {
@@ -266,7 +298,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               query: definition,
             }
           : undefined,
-      responseMode: createPresentationRequestBody.responseMode,
+      responseMode,
     })
 
   console.log(authorizationRequest)
@@ -276,7 +308,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   const presentationDefinition = authorizationRequestJwt.payload.additionalClaims.presentation_definition
 
   return response.json({
-    authorizationRequestUri: authorizationRequest.replace('openid4vp://', createPresentationRequestBody.requestScheme),
+    authorizationRequestUri: authorizationRequest.replace('openid4vp://', requestScheme),
     verificationSessionId: verificationSession.id,
     responseStatus: verificationSession.state,
     dcqlQuery: dcqlQuery ? JSON.parse(dcqlQuery as string) : undefined,

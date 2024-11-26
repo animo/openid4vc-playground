@@ -12,11 +12,11 @@ import {
   sdJwtInputDescriptor,
 } from './util'
 
-export const sixtVerifier = {
+export const turboKeysVerifier = {
   verifierId: 'c01ea0f3-34df-41d5-89d1-50ef3d181855',
   clientMetadata: {
-    logo_uri: `${AGENT_HOST}/assets/verifiers/sixt/verifier.png`,
-    client_name: 'Sixt - Rent a Car',
+    logo_uri: `${AGENT_HOST}/assets/verifiers/turbokeys/verifier.png`,
+    client_name: 'TurboKeys - Rent a Car',
   },
   presentationRequests: [
     {
