@@ -3,6 +3,10 @@ import { generateObject } from 'ai'
 import { z } from 'zod'
 
 export const zValidateVerificationRequestSchema = z.object({
+  verifier: z.object({
+    name: z.string(),
+    domain: z.string(),
+  }),
   name: z.string(),
   purpose: z.string(),
   cards: z.array(
@@ -16,10 +20,11 @@ export const zValidateVerificationRequestSchema = z.object({
 
 const zResponseSchema = z.object({
   validRequest: z.enum(['yes', 'no', 'could_not_determine']),
-  reason: z.string(),
+  reason: z.string().max(250),
 })
 
 export const validateVerificationRequest = async ({
+  verifier,
   name,
   purpose,
   cards,
@@ -35,35 +40,50 @@ export const validateVerificationRequest = async ({
   const { object } = await generateObject({
     model: anthropic('claude-3-5-sonnet-20240620'),
     schema: zResponseSchema,
-    prompt: BASE_PROMPT(name, purpose, rc),
+    prompt: BASE_PROMPT(verifier, name, purpose, rc),
   }).catch(() => ({ object: { validRequest: 'could_not_determine', reason: 'AI request failed' } }))
 
   return object
 }
 
-const BASE_PROMPT = (requestName: string, requestPurpose: string, requestedCards: string) => `
+const BASE_PROMPT = (
+  verifier: { name: string; domain: string },
+  requestName: string,
+  requestPurpose: string,
+  requestedCards: string
+) => `
 You are an AI assistant tasked with analyzing data verification requests to identify potential overasking of information. Your goal is to determine if the requested data is appropriate and necessary for the stated purpose of the request.
 
 You will be provided with the following information:
 
-1. Request Name:
+1. Verifier Name:
+<verifier_name>
+${verifier.name}
+</verifier_name>
+
+2. Verifier Domain:
+<verifier_domain>
+${verifier.domain}
+</verifier_domain>
+
+3. Request Name:
 <request_name>
 ${requestName}
 </request_name>
 
-2. Request Purpose:
+4. Request Purpose:
 <request_purpose>
 ${requestPurpose}
 </request_purpose>
 
-3. Requested Cards:
+5. Requested Cards:
 <requested_cards>
 ${requestedCards}
 </requested_cards>
 
 Analyze the request by following these steps:
 
-1. Carefully review the request name and purpose.
+1. Carefully review the verifier and the request name and purpose.
 2. Examine each requested card, including its name, subtitle, and attributes.
 3. For each piece of requested information, consider whether it is necessary and appropriate for the stated purpose.
 4. Identify any instances of overasking, where the requested information exceeds what is reasonably required for the purpose.
