@@ -14,7 +14,7 @@ import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from './issuers/i
 import { getX509Certificate } from './keyMethods'
 import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
-import { animoVerifier } from './verifiers/animo'
+import { bundesregierungVerifier } from './verifiers/bundesregierung'
 import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
@@ -52,7 +52,7 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
   async ({ agentContext, scopes }) => {
-    const verifier = await getVerifier(animoVerifier.verifierId)
+    const verifier = await getVerifier(bundesregierungVerifier.verifierId)
     const x509Certificate = getX509Certificate()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 

@@ -1,14 +1,15 @@
 import { AGENT_HOST } from '../constants'
 import { steuerIdMdoc, steuerIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { mdocDcqlCredential, pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtDcqlCredential } from './util'
+import { mdocDcqlCredential, pidMdocInputDescriptor, sdJwtDcqlCredential } from './util'
+import { pidSdJwtInputDescriptor } from './util'
 
-export const animoVerifier = {
+export const bundesregierungVerifier = {
+  verifierId: '019368ed-3787-7669-b7f4-8c012238e90d',
   clientMetadata: {
-    logo_uri: `${AGENT_HOST}/assets/verifiers/animo/verifier.jpg`,
-    client_name: 'Animo',
+    logo_uri: `${AGENT_HOST}/assets/verifiers/bunde.png`,
+    client_name: 'Die Bundesregierung',
   },
-  verifierId: 'd8662712-ee78-406c-a88c-df4ff1ed9468',
   presentationRequests: [
     {
       id: '4db74328-9e94-49bb-97b7-bbfcb2d11a06',
