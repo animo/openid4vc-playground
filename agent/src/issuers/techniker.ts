@@ -28,7 +28,7 @@ const healthIdDisplay = {
 const healthIdPayload = {
   health_insurance_id: 'A123456780',
   affiliation_country: 'DE',
-  'matching_institution-id': '101575519',
+  matching_institution_id: '101575519',
   matching_registered_family_name: 'Mustermann',
   matching_registered_given_name: 'Erika',
   matching_resident_address: 'Heidestrasse 17, 51147 koln',
