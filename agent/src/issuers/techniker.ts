@@ -119,6 +119,9 @@ export const healthIdSdJwtData = {
 export const technikerIssuer = {
   issuerId: 'a27a9f50-2b4d-4fac-99b6-9fd306641f9d',
   credentialConfigurationsSupported: { [healthIdSdJwt.id]: healthIdSdJwt, [healthIdMdoc.id]: healthIdMdoc },
+  batchCredentialIssuance: {
+    batchSize: 10,
+  },
   display: [
     {
       name: 'Die Techniker',

@@ -125,6 +125,9 @@ export const kolnIssuer = {
     [certificateOfResidenceSdJwt.id]: certificateOfResidenceSdJwt,
     [certificateOfResidenceMdoc.id]: certificateOfResidenceMdoc,
   },
+  batchCredentialIssuance: {
+    batchSize: 10,
+  },
   display: [
     {
       name: 'Bürgeramt Köln',
