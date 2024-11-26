@@ -2,6 +2,7 @@ import { getRequestStatus, getVerifier } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
 import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
+import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
@@ -45,6 +46,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     presentationRequests: Array<{
       id: string
       display: string
+      useCase: string
     }>
   }>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
@@ -60,6 +62,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
+  const [useCase, setUseCase] = useState<string>('')
   useEffect(() => {
     getVerifier().then(setVerifier)
   }, [])
@@ -98,6 +101,8 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     setAuthorizationRequestUri(request.authorizationRequestUri)
   }
 
+  const groupedVerifier = verifier?.presentationRequests ? groupBy(verifier.presentationRequests, (v) => v.useCase) : {}
+
   return (
     <Card className="p-6">
       <Alert variant="default" className="mb-5">
@@ -118,6 +123,26 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       <TypographyH3>{flowName}</TypographyH3>
       <form className="space-y-4 mt-4" onSubmit={onSubmitCreateRequest}>
         <div className="space-y-2">
+          <Label htmlFor="presentation-type">Use Case</Label>
+          <Select
+            name="presentation-definition-id"
+            required
+            value={useCase}
+            onValueChange={(value) => setUseCase(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a use case" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(groupedVerifier).map(([useCase]) => (
+                <SelectItem key={useCase} value={useCase}>
+                  {useCase}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="presentation-type">Presentation Type</Label>
           <Select
             name="presentation-definition-id"
@@ -129,7 +154,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
               <SelectValue placeholder="Select a presentation type" />
             </SelectTrigger>
             <SelectContent>
-              {verifier?.presentationRequests.map((p) => (
+              {groupedVerifier[useCase]?.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.display}
                 </SelectItem>

@@ -7,9 +7,9 @@ import { kvkVerifier } from './kvk'
 import { openHorizonBankVerifier } from './openHorizonBank'
 import { pgeuVerifier } from './pgeu'
 import { redcarePharmacyVerifier } from './redcarePharmacy'
-import { turboKeysVerifier } from './sixt'
 import type { TrustChain } from './trustChains'
 import { trustPilotVerifier } from './trustPilot'
+import { turboKeysVerifier } from './turboKeys'
 
 export const verifiers = [
   turboKeysVerifier,
