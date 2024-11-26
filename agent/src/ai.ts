@@ -19,8 +19,8 @@ export const zValidateVerificationRequestSchema = z.object({
 })
 
 const zResponseSchema = z.object({
+  reason: z.string(),
   validRequest: z.enum(['yes', 'no', 'could_not_determine']),
-  reason: z.string().max(250),
 })
 
 export const validateVerificationRequest = async ({
@@ -97,4 +97,5 @@ Guidelines for identifying overasking:
 
 Briefly summarize whether the request appears appropriate or if there is evidence of overasking. Remember to be thorough in your analysis and provide clear, concise explanations for your assessments. If you find no evidence of overasking, state this clearly and explain why the requested information appears appropriate for the purpose.
 
+Keep your response concise and to the point.
 `
