@@ -123,6 +123,9 @@ export const steuerIdSdJwtData = {
 export const steuernIssuer = {
   issuerId: '197625a0-b797-4559-80cc-bf5463b90dc3',
   credentialConfigurationsSupported: { [steuerIdSdJwt.id]: steuerIdSdJwt, [steuerIdMdoc.id]: steuerIdMdoc },
+  batchCredentialIssuance: {
+    batchSize: 10,
+  },
   display: [
     {
       name: 'Bundeszentralamt fur Steuern',

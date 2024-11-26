@@ -176,6 +176,9 @@ export const infrastrukturIssuer = {
     [mobileDriversLicenseSdJwt.id]: mobileDriversLicenseSdJwt,
     [mobileDriversLicenseMdoc.id]: mobileDriversLicenseMdoc,
   },
+  batchCredentialIssuance: {
+    batchSize: 10,
+  },
   display: [
     {
       name: 'Bundesministerium fur Verkehr und digitale Infrastruktur',
