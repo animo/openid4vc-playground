@@ -31,7 +31,7 @@ export const openHorizonBankVerifier = {
           fields: ['health_insurance_id', 'affiliation_country', 'matching_institution_id'],
         }),
         pidSdJwtInputDescriptor({
-          fields: ['given_name', 'family_name', 'birth_date', 'address.country', 'nationalities'],
+          fields: ['given_name', 'family_name', 'birthdate', 'address.country', 'nationalities'],
         }),
       ],
     },

@@ -33,7 +33,8 @@ export const turboKeysVerifier = {
             'expiry_date',
             'issuing_country',
             'issuing_authority',
-            'driving_priviliges',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
           ],
         }),
         pidSdJwtInputDescriptor({
@@ -79,7 +80,8 @@ export const turboKeysVerifier = {
             'expiry_date',
             'issuing_country',
             'issuing_authority',
-            'driving_priviliges',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
           ],
         }),
         pidSdJwtDcqlCredential({

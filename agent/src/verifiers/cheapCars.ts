@@ -1,9 +1,7 @@
 import { AGENT_HOST } from '../constants'
-import { certificateOfResidenceSdJwt, certificateOfResidenceSdJwtData } from '../issuers/koln'
-import { steuerIdSdJwt, steuerIdSdJwtData } from '../issuers/steuern'
-import { healthIdSdJwt, healthIdSdJwtData } from '../issuers/techniker'
+import { mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
+import { pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
 
 export const cheapCarsVerifier = {
   verifierId: '019368fe-ee82-7990-880c-7f0ceb92b0aa',
@@ -18,19 +16,22 @@ export const cheapCarsVerifier = {
       purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
       input_descriptors: [
         // TODO: Add more fields
-        pidMdocInputDescriptor({
+        sdJwtInputDescriptor({
+          vcts: [mobileDriversLicenseSdJwt.vct],
           fields: [
             'document_number',
+            'portrait',
             'issue_date',
             'expiry_date',
             'issuing_country',
             'issuing_authority',
-            'driving_priviliges',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
           ],
         }),
         // TODO: Add more fields
         pidSdJwtInputDescriptor({
-          fields: ['given_name', 'family_name', 'birth_date', 'address.country', 'nationalities'],
+          fields: ['given_name', 'family_name', 'birthdate', 'address.country', 'nationalities'],
         }),
       ],
     },
