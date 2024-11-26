@@ -14,6 +14,8 @@ import {
 
 export const turboKeysVerifier = {
   verifierId: 'c01ea0f3-34df-41d5-89d1-50ef3d181855',
+  useCase:
+    'Rent a car | Showcases: multi-credentials | mixed-credentials | Query languages | Smart AI warnings | Federation support',
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/turbokeys/verifier.png`,
     client_name: 'TurboKeys - Rent a Car',
