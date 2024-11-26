@@ -13,7 +13,7 @@ export const redcarePharmacyVerifier = {
   presentationRequests: [
     {
       id: '01936901-3823-766e-b771-301158d79a60',
-      name: 'Finalize transaction (vc+sd-jwt)',
+      name: 'Receive your prescription (vc+sd-jwt)',
       purpose: 'To receive your prescription and finalize the transaction, we require the following attributes',
       input_descriptors: [
         sdJwtInputDescriptor({
