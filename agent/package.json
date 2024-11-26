@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development"
+    "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development dotenv_config_path=.env"
   },
   "pnpm": {
     "overrides": {

@@ -87,11 +87,8 @@ export async function receiveOffer(offerUri: string) {
   return response.json()
 }
 
-export async function createRequest({
-  presentationDefinitionId,
-  requestScheme,
-  responseMode,
-}: {
+export async function createRequest(data: {
+  requestSignerType: 'x5c' | 'openid-federation'
   presentationDefinitionId: string
   requestScheme: string
   responseMode: 'direct_post' | 'direct_post.jwt'
@@ -101,11 +98,7 @@ export async function createRequest({
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      presentationDefinitionId,
-      requestScheme,
-      responseMode,
-    }),
+    body: JSON.stringify(data),
   })
 
   if (!response.ok) {
