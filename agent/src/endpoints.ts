@@ -121,7 +121,7 @@ apiRouter.get('/issuer', async (_, response: Response) => {
         const data = issuersCredentialsData[id as keyof typeof issuersCredentialsData]
         const authorizationLabel =
           data.authorization.type === 'pin'
-            ? 'Requires PIN'
+            ? 'Requires transaction code'
             : data.authorization.type === 'browser'
               ? 'Requires Sign In'
               : data.authorization.type === 'presentation'
