@@ -15,7 +15,7 @@ export const bundesregierungVerifier = {
   presentationRequests: [
     {
       id: '4db74328-9e94-49bb-97b7-bbfcb2d11a06',
-      name: 'PID - Name and age verification (vc+sd-jwt)',
+      name: 'PID - Name and age verification (sd-jwt vc)',
       purpose: 'We need to verify your name and age',
       input_descriptors: [
         pidSdJwtInputDescriptor({
@@ -25,7 +25,7 @@ export const bundesregierungVerifier = {
     },
     {
       id: '1e5fe154-183c-4bf5-b2c8-caa2264f1c99',
-      name: 'PID - City verification (vc+sd-jwt)',
+      name: 'PID - City verification (sd-jwt vc)',
       purpose: 'We need to verify your city',
       input_descriptors: [
         pidSdJwtInputDescriptor({
@@ -35,7 +35,7 @@ export const bundesregierungVerifier = {
     },
     {
       id: 'f64dc30a-bcd7-48e8-b065-2bc3c7fc9588',
-      name: 'PID - Age in year and birth family name verification (vc+sd-jwt)',
+      name: 'PID - Age in year and birth family name verification (sd-jwt vc)',
       purpose: 'We need to verify your name and age',
       input_descriptors: [
         pidSdJwtInputDescriptor({
@@ -77,7 +77,7 @@ export const bundesregierungVerifier = {
   dcqlRequests: [
     {
       id: '6a93d69f-b1d5-4f21-b1d4-a2cc102b2341',
-      name: 'Steuer ID two formats (vc+sd-jwt/mso_mdoc)',
+      name: 'Steuer ID two formats (in both sd-jwt vc and mso_mdoc)',
       credential_sets: [
         {
           options: [['01936a55-560e-7aae-9bde-562848e741cf', '01936a54-da89-700c-936d-ad8545379910']],

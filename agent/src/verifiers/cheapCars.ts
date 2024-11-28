@@ -14,7 +14,7 @@ export const cheapCarsVerifier = {
   presentationRequests: [
     {
       id: '019368ff-0ec7-7eec-bdbf-861e512d0924',
-      name: 'PID and MDL - Secure car reservations (vc+sd-jwt) - Not trust anchor - AI over asking',
+      name: 'PID and MDL - Secure car reservations (sd-jwt vc) - Not trust anchor - AI over asking',
       purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
       input_descriptors: [
         // TODO: Add more fields

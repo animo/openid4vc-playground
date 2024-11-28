@@ -4,6 +4,7 @@ import type { PlaygroundVerifierOptions } from '../verifier'
 import {
   mdocDcqlCredential,
   mdocInputDescriptor,
+  pidMdocDcqlCredential,
   pidSdJwtDcqlCredential,
   pidSdJwtInputDescriptor,
   sdJwtDcqlCredential,
@@ -21,7 +22,7 @@ export const turboKeysVerifier = {
   presentationRequests: [
     {
       id: '1ad8ea6e-ec51-4e14-b316-dd76a6275480',
-      name: 'PID and MDL - Rent a Car (vc+sd-jwt)',
+      name: 'PID and MDL - Rent a Car (sd-jwt vc)',
       purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
       input_descriptors: [
         sdJwtInputDescriptor({
@@ -44,7 +45,7 @@ export const turboKeysVerifier = {
     },
     {
       id: '479ada7f-fff1-4f4a-ba0b-f0e7a8dbab04',
-      name: 'PID and MDL - Rent a Car (vc+sd-jwt/mso_mdoc)',
+      name: 'PID (sd-jwt vc) and MDL (mdoc) - Rent a Car',
       purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
       input_descriptors: [
         mdocInputDescriptor({
@@ -69,7 +70,7 @@ export const turboKeysVerifier = {
   dcqlRequests: [
     {
       id: 'dc195d0e-114d-41d1-8803-e1ad08041dca',
-      name: 'PID and MDL - Rent a Car (vc+sd-jwt)',
+      name: 'PID and MDL - Rent a Car (sd-jwt vc)',
       credential_sets: [
         {
           options: [['01936a3d-b6a4-7771-b0a0-979f01a97dda', '01936a3d-5904-766d-b9bb-705040408ea1']],
@@ -99,7 +100,7 @@ export const turboKeysVerifier = {
     },
     {
       id: 'a2a7aa98-5fff-4e6a-abb1-e8aa7c3adf9b',
-      name: 'PID and MDL - Rent a Car (vc+sd-jwt/mso_mdoc)',
+      name: 'PID (sd-jwt vc) and MDL (mso_mdoc) - Rent a Car',
       credentials: [
         mdocDcqlCredential({
           doctype: mobileDriversLicenseMdoc.doctype,
@@ -116,6 +117,108 @@ export const turboKeysVerifier = {
         }),
         pidSdJwtDcqlCredential({
           fields: ['given_name', 'family_name', 'birthdate'],
+        }),
+      ],
+    },
+    {
+      id: '0679b1e0-1e9d-45d1-ab19-ab6954d7e32c',
+      name: 'PID and MDL - Rent a Car (both either sd-jwt vc or mso_mdoc, prefer sd-jwt vc)',
+      credential_sets: [
+        {
+          options: [['pid_sd_jwt'], ['pid_mdoc']],
+        },
+        {
+          options: [['mdl_sd_jwt'], ['mdl_mdoc']],
+        },
+      ],
+      credentials: [
+        mdocDcqlCredential({
+          id: 'mdl_mdoc',
+          doctype: mobileDriversLicenseMdoc.doctype,
+          namespace: 'org.iso.18013.5.1',
+          fields: [
+            'document_number',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            'portrait',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
+          ],
+        }),
+        sdJwtDcqlCredential({
+          id: 'mdl_sd_jwt',
+          vcts: [mobileDriversLicenseSdJwt.vct],
+          fields: [
+            'document_number',
+            'portrait',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
+          ],
+        }),
+        pidSdJwtDcqlCredential({
+          id: 'pid_sd_jwt',
+          fields: ['given_name', 'family_name', 'birthdate'],
+        }),
+        pidMdocDcqlCredential({
+          id: 'pid_mdoc',
+          fields: ['given_name', 'family_name', 'birth_date'],
+        }),
+      ],
+    },
+    {
+      id: 'be06eb91-4d83-496e-9a72-328deb05ae25',
+      name: 'PID and MDL - Rent a Car (both either sd-jwt vc or mso_mdoc, prefer mdoc)',
+      credential_sets: [
+        {
+          options: [['pid_mdoc'], ['pid_sd_jwt']],
+        },
+        {
+          options: [['mdl_mdoc'], ['mdl_sd_jwt']],
+        },
+      ],
+      credentials: [
+        mdocDcqlCredential({
+          id: 'mdl_mdoc',
+          doctype: mobileDriversLicenseMdoc.doctype,
+          namespace: 'org.iso.18013.5.1',
+          fields: [
+            'document_number',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            'portrait',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
+          ],
+        }),
+        sdJwtDcqlCredential({
+          id: 'mdl_sd_jwt',
+          vcts: [mobileDriversLicenseSdJwt.vct],
+          fields: [
+            'document_number',
+            'portrait',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+            // Sphereon library can't parse our maps
+            // 'driving_priviliges',
+          ],
+        }),
+        pidSdJwtDcqlCredential({
+          id: 'pid_sd_jwt',
+          fields: ['given_name', 'family_name', 'birthdate'],
+        }),
+        pidMdocDcqlCredential({
+          id: 'pid_mdoc',
+          fields: ['given_name', 'family_name', 'birth_date'],
         }),
       ],
     },

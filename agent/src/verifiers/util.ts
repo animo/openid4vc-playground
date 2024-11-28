@@ -136,8 +136,9 @@ export function mdocInputDescriptor({
   }
 }
 
-export function pidMdocDcqlCredential({ fields }: { fields: [string, ...string[]] }) {
+export function pidMdocDcqlCredential({ fields, id }: { fields: [string, ...string[]]; id?: string }) {
   return mdocDcqlCredential({
+    id,
     fields,
     doctype: 'eu.europa.ec.eudi.pid.1',
     namespace: 'eu.europa.ec.eudi.pid.1',

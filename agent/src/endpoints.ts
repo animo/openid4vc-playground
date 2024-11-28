@@ -4,6 +4,7 @@ import {
   Jwt,
   MdocDeviceResponse,
   RecordNotFoundError,
+  TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
   X509Certificate,
@@ -372,7 +373,16 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
                     base64Url: doc.base64Url,
                     validityInfo: doc.validityInfo,
                     deviceSignedNamespaces: doc.deviceSignedNamespaces,
-                    issuerSignedNamespaces: doc.issuerSignedNamespaces,
+                    issuerSignedNamespaces: Object.entries(doc.issuerSignedNamespaces).map(
+                      ([nameSpace, nameSpacEntries]) => [
+                        nameSpace,
+                        Object.entries(nameSpacEntries).map(([key, value]) =>
+                          value instanceof Uint8Array
+                            ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
+                            : [key, value]
+                        ),
+                      ]
+                    ),
                   })),
                 }),
                 encoded: presentation.base64Url,
