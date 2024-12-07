@@ -61,6 +61,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
   const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
+  const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [useCase, setUseCase] = useState<string>('')
   useEffect(() => {
@@ -94,6 +95,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       presentationDefinitionId: id,
       requestScheme,
       responseMode,
+      purpose: purpose && purpose !== '' ? purpose : undefined,
       requestSignerType,
     })
     setRequestStatus(request)
@@ -193,6 +195,11 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             value={requestScheme}
             onChange={({ target }) => setRequestScheme(target.value)}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="request-purpose">Purpose</Label>
+          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
+          <Input name="request-purpose" required value={purpose} onChange={({ target }) => setPurpose(target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="response-mode">Response Mode</Label>

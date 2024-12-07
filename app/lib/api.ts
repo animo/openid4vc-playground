@@ -92,6 +92,7 @@ export async function createRequest(data: {
   presentationDefinitionId: string
   requestScheme: string
   responseMode: 'direct_post' | 'direct_post.jwt'
+  purpose?: string
 }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
     method: 'POST',

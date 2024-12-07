@@ -12,7 +12,7 @@ import {
   getJwkFromKey,
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import express, { type NextFunction, type Request, type Response } from 'express'
+import express, { query, type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
 import { validateVerificationRequest, zValidateVerificationRequestSchema } from './ai'
@@ -248,10 +248,11 @@ const zCreatePresentationRequestBody = z.object({
   presentationDefinitionId: z.string(),
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post']),
+  purpose: z.string().optional(),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
-  const { requestSignerType, presentationDefinitionId, requestScheme, responseMode } =
+  const { requestSignerType, presentationDefinitionId, requestScheme, responseMode, purpose } =
     await zCreatePresentationRequestBody.parseAsync(request.body)
 
   const x509Certificate = getX509Certificate()
@@ -293,13 +294,22 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       presentationExchange:
         'input_descriptors' in definition
           ? {
-              definition,
+              definition: {
+                ...definition,
+                purpose: purpose ?? definition.purpose,
+              },
             }
           : undefined,
       dcql:
         'credentials' in definition
           ? {
-              query: definition,
+              query: {
+                ...definition,
+                credential_sets:
+                  purpose && definition.credential_sets
+                    ? definition.credential_sets.map((set) => ({ ...set, purpose }))
+                    : definition.credential_sets,
+              },
             }
           : undefined,
       responseMode,

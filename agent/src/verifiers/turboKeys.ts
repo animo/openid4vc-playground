@@ -125,9 +125,11 @@ export const turboKeysVerifier = {
       name: 'PID and MDL - Rent a Car (both either sd-jwt vc or mso_mdoc, prefer sd-jwt vc)',
       credential_sets: [
         {
+          purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
           options: [['pid_sd_jwt'], ['pid_mdoc']],
         },
         {
+          purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
           options: [['mdl_sd_jwt'], ['mdl_mdoc']],
         },
       ],
@@ -176,9 +178,11 @@ export const turboKeysVerifier = {
       name: 'PID and MDL - Rent a Car (both either sd-jwt vc or mso_mdoc, prefer mdoc)',
       credential_sets: [
         {
+          purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
           options: [['pid_mdoc'], ['pid_sd_jwt']],
         },
         {
+          purpose: 'To secure your car reservations and finalize the transaction, we require the following attributes',
           options: [['mdl_mdoc'], ['mdl_sd_jwt']],
         },
       ],
