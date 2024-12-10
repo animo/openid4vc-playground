@@ -26,15 +26,11 @@ const healthIdDisplay = {
 } satisfies CredentialDisplay
 
 const healthIdPayload = {
-  health_insurance_id: 'A123456780',
+  health_insurance_id: 'A123456780101575519DE',
   affiliation_country: 'DE',
-  matching_institution_id: '101575519',
-  matching_registered_family_name: 'Mustermann',
-  matching_registered_given_name: 'Erika',
-  matching_resident_address: 'Heidestrasse 17, 51147 koln',
-  matching_birth_date: new DateOnly('1964-08-12'),
-  matching_birth_place: 'Berlin',
-  issuance_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
+  wallet_e_prescription_code:
+    '160.000.033.491.352.56&94c75e15e4c4dd6b50e3c18b92b4754e88fec4ab144e86a1b95df1209767978b&medication name',
+  issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
   expiry_date: new DateOnly(new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()),
   issuing_authority: 'DE',
   issuing_country: 'DE',
@@ -64,7 +60,7 @@ export const healthIdMdocData = {
       [healthIdMdoc.doctype]: healthIdPayload,
     },
     validityInfo: {
-      validFrom: healthIdPayload.issuance_date,
+      validFrom: healthIdPayload.issue_date,
       validUntil: healthIdPayload.expiry_date,
     },
   },
@@ -92,24 +88,14 @@ export const healthIdSdJwtData = {
   credential: {
     payload: {
       ...healthIdPayload,
-      matching_birth_date: healthIdPayload.matching_birth_date.toISOString(),
-      nbf: dateToSeconds(healthIdPayload.issuance_date),
+      nbf: dateToSeconds(healthIdPayload.issue_date),
       exp: dateToSeconds(healthIdPayload.expiry_date),
-      issuance_date: healthIdPayload.issuance_date.toISOString(),
+      issue_date: healthIdPayload.issue_date.toISOString(),
       expiry_date: healthIdPayload.expiry_date.toISOString(),
       vct: healthIdSdJwt.vct,
     },
     disclosureFrame: {
-      _sd: [
-        'health_insurance_id',
-        'affiliation_country',
-        'matching_institution_id',
-        'matching_registered_family_name',
-        'matching_registered_given_name',
-        'matching_resident_address',
-        'matching_birth_date',
-        'matching_birth_place',
-      ],
+      _sd: ['health_insurance_id', 'affiliation_country', 'wallet_e_prescription_code'],
     },
   },
   authorization: { type: 'browser' },
