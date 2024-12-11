@@ -79,7 +79,7 @@ Copy the https url from the ngrok command and set that as the `AGENT_HOST`
 
 ```bash
 cd agent
-AGENT_HOST=https://30f9-58-136-114-148.ngrok-free.app pnpm dev
+AGENT_HOST=https://ebcf-161-51-75-237.ngrok-free.app pnpm dev
 ```
 
 ```bash

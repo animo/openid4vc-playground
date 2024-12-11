@@ -203,14 +203,14 @@ apiRouter.get('/verifier', async (_, response: Response) => {
       ...verifier.presentationRequests.map((c) => {
         return {
           useCase: 'useCase' in verifier ? verifier.useCase : undefined,
-          display: `${verifier.clientMetadata.client_name} - ${c.name} - DIF PEX`,
+          display: `${c.name} - DIF PEX`,
           id: c.id,
         }
       }),
       ...verifier.dcqlRequests.map((c) => {
         return {
           useCase: 'useCase' in verifier ? verifier.useCase : undefined,
-          display: `${verifier.clientMetadata.client_name} - ${c.name} - DCQL`,
+          display: `${c.name} - DCQL`,
           id: c.id,
         }
       }),

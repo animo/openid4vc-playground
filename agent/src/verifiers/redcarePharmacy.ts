@@ -5,7 +5,11 @@ import { sdJwtInputDescriptor } from './util'
 
 export const redcarePharmacyVerifier = {
   verifierId: '01936901-2390-722e-b9f1-bf42db4db7ca',
-  useCase: 'Get an ePrescription | Showcases: Federation support | QEAA | DCQL',
+  useCase: {
+    name: 'Get an ePrescription',
+    icon: 'health',
+    features: ['Federation support', 'QEAA', 'DCQL'],
+  },
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/redcare.png`,
     client_name: 'Redcare Pharmacy',
