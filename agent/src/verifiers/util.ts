@@ -158,7 +158,11 @@ export function pidSdJwtDcqlCredential({ fields, id }: { fields: [string, ...str
   return sdJwtDcqlCredential({
     id,
     fields,
-    vcts: ['https://example.bmi.bund.de/credential/pid/1.0', 'urn:eu.europa.ec.eudi:pid:1'],
+    vcts: [
+      'https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0',
+      'https://example.bmi.bund.de/credential/pid/1.0',
+      'urn:eu.europa.ec.eudi:pid:1',
+    ],
     issuers: [
       'https://demo.pid-issuer.bundesdruckerei.de/c',
       'https://demo.pid-issuer.bundesdruckerei.de/c1',
@@ -176,7 +180,11 @@ export function pidSdJwtInputDescriptor({
     id,
     group,
     fields,
-    vcts: ['https://example.bmi.bund.de/credential/pid/1.0', 'urn:eu.europa.ec.eudi:pid:1'],
+    vcts: [
+      'https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0',
+      'https://example.bmi.bund.de/credential/pid/1.0',
+      'urn:eu.europa.ec.eudi:pid:1',
+    ],
     issuers: [
       'https://demo.pid-issuer.bundesdruckerei.de/c',
       'https://demo.pid-issuer.bundesdruckerei.de/c1',

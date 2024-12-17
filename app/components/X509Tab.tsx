@@ -4,8 +4,8 @@ import { Label } from '@/components/ui/label'
 import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { type FormEvent, useState } from 'react'
 import { addX509Certificate } from '../lib/api'
-import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { HighLight } from './highLight'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function X509Tab() {
   const [x509Certificate, setX509Certificate] = useState<string>()
