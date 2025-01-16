@@ -7,8 +7,12 @@ import { pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
 
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
-  useCase:
-    'Open a bank account | Showcases: Federation support |  Smart AI warnings | multi-credentials | mixed-credentials',
+  useCase: {
+    name: 'Open a bank account',
+    icon: 'bank',
+    features: ['Federation support', 'Smart AI warnings', 'multi-credentials', 'mixed-credentials'],
+  },
+
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/openbank.png`,
     client_name: 'Open Horizon Bank',

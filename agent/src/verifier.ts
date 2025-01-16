@@ -13,7 +13,11 @@ export interface PlaygroundVerifierOptions {
   clientMetadata?: OpenId4VcSiopCreateVerifierOptions['clientMetadata']
   presentationRequests: Array<DifPresentationExchangeDefinitionV2>
   dcqlRequests: Array<DcqlQuery & { id: string; name: string }>
-  useCase?: UseCase
+  useCase?: {
+    name: string
+    icon: string
+    features: Array<string>
+  }
 }
 
 export async function createOrUpdateVerifier(options: PlaygroundVerifierOptions) {

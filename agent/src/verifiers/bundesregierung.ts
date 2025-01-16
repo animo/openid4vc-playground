@@ -6,8 +6,12 @@ import { pidSdJwtInputDescriptor } from './util'
 
 export const bundesregierungVerifier = {
   verifierId: '019368ed-3787-7669-b7f4-8c012238e90d',
-  useCase:
-    'Government identification | Showcases: PID | multi-credentials | mixed-credentials | Query languages | Federation support',
+  useCase: {
+    name: 'Government identification',
+    icon: 'government',
+    features: ['PID', 'multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
+  },
+
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/bunde.png`,
     client_name: 'Die Bundesregierung',

@@ -1,11 +1,13 @@
 import { getRequestStatus, getVerifier } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
-import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
+import { cn } from '@/lib/utils'
+import { CheckboxIcon, ChevronUpIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { toast } from 'sonner'
 import { CollapsibleSection } from './CollapsibleSection'
 import type { CreateRequestOptions, CreateRequestResponse } from './VerifyTab'
 import { X509Certificates } from './X509Certificates'
@@ -13,9 +15,12 @@ import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
+import { CardRadioItem, MiniRadioItem, RadioGroup, RadioGroupItem } from './ui/radio'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt'
@@ -46,7 +51,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     presentationRequests: Array<{
       id: string
       display: string
-      useCase: string
+      useCase: { name: string; icon: string; features: Array<string> }
     }>
   }>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
@@ -63,7 +68,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
-  const [useCase, setUseCase] = useState<string>('')
+  const [selectedUseCase, setSelectedUseCase] = useState<string>('')
   useEffect(() => {
     getVerifier().then(setVerifier)
   }, [])
@@ -103,7 +108,18 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     setAuthorizationRequestUri(request.authorizationRequestUri)
   }
 
-  const groupedVerifier = verifier?.presentationRequests ? groupBy(verifier.presentationRequests, (v) => v.useCase) : {}
+  // This is wrong
+  const groupedVerifier = verifier?.presentationRequests
+    ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
+    : {}
+
+  const [isUseCaseOpen, setIsUseCaseOpen] = useState(true)
+
+  useEffect(() => {
+    if (selectedUseCase) {
+      setIsUseCaseOpen(false)
+    }
+  }, [selectedUseCase])
 
   return (
     <Card className="p-6">
@@ -123,27 +139,53 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
         </AlertDescription>
       </Alert>
       <TypographyH3>{flowName}</TypographyH3>
-      <form className="space-y-4 mt-4" onSubmit={onSubmitCreateRequest}>
-        <div className="space-y-2">
-          <Label htmlFor="presentation-type">Use Case</Label>
-          <Select
-            name="presentation-definition-id"
-            required
-            value={useCase}
-            onValueChange={(value) => setUseCase(value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a use case" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(groupedVerifier).map(([useCase]) => (
-                <SelectItem key={useCase} value={useCase}>
-                  {useCase}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
+        <div className="flex flex-col">
+          <Collapsible open={isUseCaseOpen} className="w-full grid">
+            <CollapsibleTrigger
+              className={cn(
+                'flex justify-between items-center w-full py-3 group cursor-pointer',
+                !isUseCaseOpen ? 'border-gray-200' : 'border-transparent'
+              )}
+              onClick={() => {
+                if (selectedUseCase) {
+                  setIsUseCaseOpen(!isUseCaseOpen)
+                } else {
+                  setIsUseCaseOpen(true)
+                  toast.error('Please select a use case first')
+                }
+              }}
+            >
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-accent font-medium text-sm">Use Case</span>
+                <span className="group-active:scale-98 duration-200">{selectedUseCase || 'Select a use case'}</span>
+              </div>
+              <span className={cn('transition-transform duration-200', isUseCaseOpen ? 'rotate-180' : 'rotate-0')}>
+                <ChevronUpIcon className="size-5" />
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <RadioGroup
+                className="grid grid-cols-2 gap-2  py-2 pb-4"
+                defaultValue={selectedUseCase}
+                onValueChange={setSelectedUseCase}
+              >
+                {Object.entries(groupedVerifier).map(([useCase]) => (
+                  <CardRadioItem
+                    key={useCase}
+                    value={useCase}
+                    id={`radio-${useCase}`}
+                    label={useCase}
+                    description={groupedVerifier[useCase][0].useCase.features.join(', ')}
+                    icon={groupedVerifier[useCase][0].useCase.icon}
+                  />
+                ))}
+              </RadioGroup>
+            </CollapsibleContent>
+            <hr />
+          </Collapsible>
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="presentation-type">Presentation Type</Label>
           <Select
@@ -156,7 +198,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
               <SelectValue placeholder="Select a presentation type" />
             </SelectTrigger>
             <SelectContent>
-              {groupedVerifier[useCase]?.map((p) => (
+              {groupedVerifier[selectedUseCase]?.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.display}
                 </SelectItem>
@@ -166,26 +208,17 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
         </div>
         <div className="space-y-2">
           <Label htmlFor="request-signer-type">Request Signer Type</Label>
-          <Select
+
+          <RadioGroup
             name="request-signer-type"
             required
             value={requestSignerType}
             onValueChange={(value) => setRequestSignerType(value as RequestSignerType)}
+            defaultValue="x5c"
           >
-            <SelectTrigger className="w-1/2">
-              <SelectValue placeholder="Select a request signer type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem key="x5c" value="x5c">
-                  <pre>x509 Certificate</pre>
-                </SelectItem>
-                <SelectItem key="openid-federation" value="openid-federation">
-                  <pre>OpenID Federation</pre>
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
+            <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
+          </RadioGroup>
         </div>
         <div className="space-y-2">
           <Label htmlFor="request-scheme">Scheme</Label>
@@ -196,13 +229,24 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
             onChange={({ target }) => setRequestScheme(target.value)}
           />
         </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="response-mode">Use Response Encryption</Label>
+          <Switch
+            id="response-mode"
+            name="response-mode"
+            required
+            checked={responseMode === 'direct_post.jwt'}
+            onCheckedChange={(checked) => setResponseMode(checked ? 'direct_post.jwt' : 'direct_post')}
+          />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="request-purpose">Purpose</Label>
           <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
           <Input name="request-purpose" required value={purpose} onChange={({ target }) => setPurpose(target.value)} />
         </div>
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="response-mode">Response Mode</Label>
+
           <Select
             name="response-mode"
             required
@@ -223,7 +267,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
               </SelectGroup>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
             {authorizationRequestUriHasBeenFetched ? (
