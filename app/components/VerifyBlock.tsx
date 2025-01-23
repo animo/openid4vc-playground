@@ -1,13 +1,11 @@
 import { getRequestStatus, getVerifier } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
-import { cn } from '@/lib/utils'
-import { CheckboxIcon, ChevronUpIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
+import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { toast } from 'sonner'
 import { CollapsibleSection } from './CollapsibleSection'
 import type { CreateRequestOptions, CreateRequestResponse } from './VerifyTab'
 import { X509Certificates } from './X509Certificates'
@@ -15,11 +13,10 @@ import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-import { CardRadioItem, MiniRadioItem, RadioGroup, RadioGroupItem } from './ui/radio'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { CardRadioItem, MiniRadioItem, RadioGroup } from './ui/radio'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
 
@@ -68,9 +65,13 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
-  const [selectedUseCase, setSelectedUseCase] = useState<string>('')
+  const [selectedUseCase, setSelectedUseCase] = useState<string>()
+
   useEffect(() => {
-    getVerifier().then(setVerifier)
+    getVerifier().then((v: NonNullable<typeof verifier>) => {
+      setVerifier(v)
+      setSelectedUseCase(Object.keys(groupBy(v.presentationRequests, (vv) => vv.useCase.name))[0])
+    })
   }, [])
 
   useInterval({
@@ -113,14 +114,6 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
     : {}
 
-  const [isUseCaseOpen, setIsUseCaseOpen] = useState(true)
-
-  useEffect(() => {
-    if (selectedUseCase) {
-      setIsUseCaseOpen(false)
-    }
-  }, [selectedUseCase])
-
   return (
     <Card className="p-6">
       <Alert variant="default" className="mb-5">
@@ -141,49 +134,25 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
       <TypographyH3>{flowName}</TypographyH3>
       <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
         <div className="flex flex-col">
-          <Collapsible open={isUseCaseOpen} className="w-full grid">
-            <CollapsibleTrigger
-              className={cn(
-                'flex justify-between items-center w-full py-3 group cursor-pointer',
-                !isUseCaseOpen ? 'border-gray-200' : 'border-transparent'
-              )}
-              onClick={() => {
-                if (selectedUseCase) {
-                  setIsUseCaseOpen(!isUseCaseOpen)
-                } else {
-                  setIsUseCaseOpen(true)
-                  toast.error('Please select a use case first')
-                }
-              }}
-            >
-              <div className="flex flex-col items-start gap-2">
-                <span className="text-accent font-medium text-sm">Use Case</span>
-                <span className="group-active:scale-98 duration-200">{selectedUseCase || 'Select a use case'}</span>
-              </div>
-              <span className={cn('transition-transform duration-200', isUseCaseOpen ? 'rotate-180' : 'rotate-0')}>
-                <ChevronUpIcon className="size-5" />
-              </span>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <RadioGroup
-                className="grid grid-cols-2 gap-2  py-2 pb-4"
-                defaultValue={selectedUseCase}
-                onValueChange={setSelectedUseCase}
-              >
-                {Object.entries(groupedVerifier).map(([useCase]) => (
-                  <CardRadioItem
-                    key={useCase}
-                    value={useCase}
-                    id={`radio-${useCase}`}
-                    label={useCase}
-                    description={groupedVerifier[useCase][0].useCase.features.join(', ')}
-                    icon={groupedVerifier[useCase][0].useCase.icon}
-                  />
-                ))}
-              </RadioGroup>
-            </CollapsibleContent>
-            <hr />
-          </Collapsible>
+          <div className="flex flex-col items-start gap-2">
+            <span className="text-accent font-medium text-sm">Use Case</span>
+          </div>
+          <RadioGroup
+            className="grid grid-cols-2 gap-2 py-2 pb-4"
+            value={selectedUseCase}
+            onValueChange={setSelectedUseCase}
+          >
+            {Object.entries(groupedVerifier).map(([useCase]) => (
+              <CardRadioItem
+                key={useCase}
+                value={useCase}
+                id={`radio-${useCase}`}
+                label={useCase}
+                description={groupedVerifier[useCase][0].useCase.features.join(', ')}
+                icon={groupedVerifier[useCase][0].useCase.icon}
+              />
+            ))}
+          </RadioGroup>
         </div>
 
         <div className="space-y-2">

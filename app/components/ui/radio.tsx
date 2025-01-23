@@ -5,13 +5,12 @@ import { Circle } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import { Label } from './label'
 
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  return <RadioGroupPrimitive.Root className={cn('grid gap-2', className)} {...props} ref={ref} />
+  return <RadioGroupPrimitive.Root className={cn('flex flex-wrap gap-4', className)} {...props} ref={ref} />
 })
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
@@ -45,13 +44,12 @@ const CardRadioItem = React.forwardRef<
   }
 >(({ label, description, className, icon = 'default', ...props }, ref) => {
   return (
-    <div className="group">
+    <div className="group flex-1">
       <label
         htmlFor={props.id}
         className={cn(
-          'flex flex-col border-1 border-transparent cursor-pointer hover:bg-gray-100 active:scale-98 duration-200 hover:shadow-sm gap-2 border border-gray-200 p-4 rounded-lg data-[state=checked]:border-accent',
+          'flex flex-col h-[100%] cursor-pointer hover:bg-gray-100 active:scale-98 duration-200 hover:shadow-sm gap-2 border border-gray-200 p-4 rounded-lg data-[state=checked]:border-accent',
           'group-has-[[data-state=checked]]:border-accent group-has-[[data-state=checked]]:bg-accent/5',
-
           className
         )}
       >
@@ -64,7 +62,7 @@ const CardRadioItem = React.forwardRef<
         <div className="flex justify-between w-full items-center space-x-2">
           <span className="font-medium">{label}</span>
         </div>
-        <span className="text-xs text-gray-500 line-clamp-1">{description}</span>
+        <span className="text-xs text-gray-500">{description}</span>
       </label>
     </div>
   )
