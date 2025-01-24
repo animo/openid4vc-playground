@@ -1,7 +1,7 @@
 import { AGENT_HOST } from '../constants'
 import { healthIdSdJwt } from '../issuers/krankenkasse'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { sdJwtInputDescriptor } from './util'
+import { pidSdJwtDcqlCredential, sdJwtDcqlCredential, sdJwtInputDescriptor } from './util'
 
 export const redcarePharmacyVerifier = {
   verifierId: '01936901-2390-722e-b9f1-bf42db4db7ca',
@@ -27,5 +27,27 @@ export const redcarePharmacyVerifier = {
       ],
     },
   ],
-  dcqlRequests: [],
+  dcqlRequests: [
+    {
+      id: '208f84b4-76b4-4786-bbef-f4e483e5bed0',
+      name: 'PID and Health-ID (sd-jwt vc)',
+      credential_sets: [
+        {
+          purpose: 'To give your medicine we need to verify your identity and prescription.',
+          options: [['pid_sd_jwt', 'health_id_sd_jwt']],
+        },
+      ],
+      credentials: [
+        pidSdJwtDcqlCredential({
+          fields: ['given_name', 'family_name', 'birthdate'],
+          id: 'pid_sd_jwt',
+        }),
+        sdJwtDcqlCredential({
+          id: 'health_id_sd_jwt',
+          vcts: [healthIdSdJwt.vct],
+          fields: ['health_insurance_id', 'wallet_e_prescription_code'],
+        }),
+      ],
+    },
+  ],
 } as const satisfies PlaygroundVerifierOptions

@@ -32,7 +32,7 @@ const healthIdPayload = {
   affiliation_country: 'DE',
   wallet_e_prescription_code:
     '160.000.033.491.352.56&94c75e15e4c4dd6b50e3c18b92b4754e88fec4ab144e86a1b95df1209767978b&medication name',
-  issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
+  issuance_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
   expiry_date: new DateOnly(new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()),
   issuing_authority: 'DE',
   issuing_country: 'DE',
@@ -61,7 +61,7 @@ export const healthIdMdocData = {
       [healthIdMdoc.doctype]: healthIdPayload,
     },
     validityInfo: {
-      validFrom: healthIdPayload.issue_date,
+      validFrom: healthIdPayload.issuance_date,
       validUntil: healthIdPayload.expiry_date,
     },
   },
@@ -87,9 +87,9 @@ export const healthIdSdJwtData = {
   credential: {
     payload: {
       ...healthIdPayload,
-      nbf: dateToSeconds(healthIdPayload.issue_date),
+      nbf: dateToSeconds(healthIdPayload.issuance_date),
       exp: dateToSeconds(healthIdPayload.expiry_date),
-      issue_date: healthIdPayload.issue_date.toISOString(),
+      issuance_date: healthIdPayload.issuance_date.toISOString(),
       expiry_date: healthIdPayload.expiry_date.toISOString(),
       vct: healthIdSdJwt.vct,
     },
