@@ -167,11 +167,12 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
               <SelectValue placeholder="Select a presentation type" />
             </SelectTrigger>
             <SelectContent>
-              {groupedVerifier[selectedUseCase]?.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.display}
-                </SelectItem>
-              ))}
+              {selectedUseCase &&
+                groupedVerifier[selectedUseCase]?.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.display}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
