@@ -4,7 +4,9 @@ import { issuers as _issuers } from '../issuers'
 
 const issuers = _issuers.map((issuer) => ({
   ...issuer,
-  scopes: Object.values(issuer.credentialConfigurationsSupported).map((s) => s.scope as string),
+  scopes: Object.values(issuer.credentialConfigurationsSupported).flatMap((s) =>
+    Object.values(s).map((c) => c.configuration.scope as string)
+  ),
   issuerUrl: `${AGENT_HOST}/oid4vci/${issuer.issuerId}`,
 }))
 

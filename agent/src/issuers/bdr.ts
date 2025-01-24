@@ -1,12 +1,14 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
-import {
-  type OpenId4VciCreateIssuerOptions,
-  type OpenId4VciCredentialConfigurationSupportedWithFormats,
-  OpenId4VciCredentialFormatProfile,
-} from '@credo-ts/openid4vc'
+import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
-import type { CredentialDisplay, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
+import type {
+  CredentialConfigurationDisplay,
+  MdocConfiguration,
+  PlaygroundIssuerOptions,
+  SdJwtConfiguration,
+} from '../issuer'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
   DateOnly,
   dateToSeconds,
@@ -20,14 +22,14 @@ const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../assets/erika.jpeg`)
 
 const mobileDriversLicenseDisplay = {
   locale: 'en',
-  name: 'Führerschein',
+  name: 'Drivers Licence',
   text_color: '#6F5C77',
   background_color: '#E6E2E7',
   background_image: {
-    url: `${AGENT_HOST}/assets/issuers/infrastruktur/credential.png`,
-    uri: `${AGENT_HOST}/assets/issuers/infrastruktur/credential.png`,
+    url: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
+    uri: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
   },
-} satisfies CredentialDisplay
+} satisfies CredentialConfigurationDisplay
 
 const mobileDriversLicensePayload = {
   given_name: 'Erika',
@@ -39,6 +41,7 @@ const mobileDriversLicensePayload = {
   issuing_authority: 'Bundesrepublik Deutschland',
   issue_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
   expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
+  // Must be same as C= in x509 cert (currently set to NL)
   issuing_country: 'NL',
   driving_priviliges: [
     {
@@ -73,7 +76,6 @@ export const mobileDriversLicenseMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
-  id: 'mobile-drivers-license-mdoc',
   scope: 'mobile-drivers-license-mdoc',
   doctype: 'org.iso.18013.5.1.mDL',
   display: [mobileDriversLicenseDisplay],
@@ -82,10 +84,10 @@ export const mobileDriversLicenseMdoc = {
       proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
     },
   },
-} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
+} as const satisfies MdocConfiguration
 
 export const mobileDriversLicenseMdocData = {
-  credentialConfigurationId: mobileDriversLicenseMdoc.id,
+  credentialConfigurationId: 'mobile-drivers-license-mdoc',
   format: ClaimFormat.MsoMdoc,
   credential: {
     docType: mobileDriversLicenseMdoc.doctype,
@@ -106,14 +108,12 @@ export const mobileDriversLicenseMdocData = {
       signed: mobileDriversLicensePayload.issue_date,
     },
   },
-  authorization: { type: 'presentation' },
 } satisfies StaticMdocSignInput
 
 export const mobileDriversLicenseSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
-  id: 'mobile-drivers-license-sd-jwt',
   scope: 'mobile-drivers-license-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/mdl/1',
   display: [mobileDriversLicenseDisplay],
@@ -122,10 +122,10 @@ export const mobileDriversLicenseSdJwt = {
       proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
     },
   },
-} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
+} as const satisfies SdJwtConfiguration
 
 export const mobileDriversLicenseSdJwtData = {
-  credentialConfigurationId: mobileDriversLicenseSdJwt.id,
+  credentialConfigurationId: 'mobile-drivers-license-sd-jwt',
   format: ClaimFormat.SdJwtVc,
   credential: {
     payload: {
@@ -166,31 +166,39 @@ export const mobileDriversLicenseSdJwtData = {
       // })),
     },
   },
-  authorization: { type: 'presentation' },
 } satisfies StaticSdJwtSignInput
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
-export const infrastrukturIssuer = {
+export const bdrIssuer = {
+  tags: [mobileDriversLicenseDisplay.name],
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
-  credentialConfigurationsSupported: {
-    [mobileDriversLicenseSdJwt.id]: mobileDriversLicenseSdJwt,
-    [mobileDriversLicenseMdoc.id]: mobileDriversLicenseMdoc,
-  },
+  credentialConfigurationsSupported: [
+    {
+      'vc+sd-jwt': {
+        configuration: mobileDriversLicenseSdJwt,
+        data: mobileDriversLicenseSdJwtData,
+      },
+      mso_mdoc: {
+        configuration: mobileDriversLicenseMdoc,
+        data: mobileDriversLicenseMdocData,
+      },
+    },
+  ],
   batchCredentialIssuance: {
     batchSize: 10,
   },
   display: [
     {
-      name: 'Bundesministerium fur Verkehr und digitale Infrastruktur',
+      name: 'Bundesdruckerei',
       logo: {
-        url: `${AGENT_HOST}/assets/issuers/infrastruktur/issuer.png`,
-        uri: `${AGENT_HOST}/assets/issuers/infrastruktur/issuer.png`,
+        url: `${AGENT_HOST}/assets/issuers/bdr/issuer.png`,
+        uri: `${AGENT_HOST}/assets/issuers/bdr/issuer.png`,
       },
     },
   ],
-} satisfies OpenId4VciCreateIssuerOptions
+} satisfies PlaygroundIssuerOptions
 
-export const infrastrukturCredentialsData = {
+export const bdrCredentialsData = {
   [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
 }

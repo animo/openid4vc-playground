@@ -1,12 +1,13 @@
 import { NEXT_PUBLIC_API_URL } from './constants'
 
+export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { userPin?: string } }
 export async function createOffer({
   credentialSupportedId,
-  issuerId,
+  authorization,
 }: {
   credentialSupportedId: string
-  issuerId: string
-}) {
+  authorization: string
+}): Promise<CreateOfferReturn> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/create`, {
     method: 'POST',
     headers: {
@@ -14,7 +15,7 @@ export async function createOffer({
     },
     body: JSON.stringify({
       credentialSupportedIds: [credentialSupportedId],
-      issuerId,
+      authorization,
     }),
   })
 
@@ -22,7 +23,7 @@ export async function createOffer({
     throw new Error('Failed to create offer')
   }
 
-  return (await response.json()) as { credentialOffer: string; issuanceSession: { userPin?: string } }
+  return await response.json()
 }
 
 export async function getVerifier() {
@@ -35,11 +36,29 @@ export async function getVerifier() {
   return response.json()
 }
 
-export async function getIssuer() {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/issuer`)
+export type Issuers = Array<{
+  id: string
+  name: string
+  description: string
+  logo: string
+  tags: string[]
+  credentials: Array<{
+    display: {
+      name: string
+      background_image: {
+        uri: string
+      }
+      background_color: string
+      text_color: string
+    }
+    formats: Record<string, string>
+  }>
+}>
+export async function getIssuers(): Promise<Issuers> {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/issuers`)
 
   if (!response.ok) {
-    throw new Error('Failed to get issuer')
+    throw new Error('Failed to get issuers')
   }
 
   return response.json()

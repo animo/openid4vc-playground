@@ -10,7 +10,7 @@ export interface PlaygroundVerifierOptions {
   useCase?: {
     name: string
     icon: string
-    features: Array<string>
+    tags: Array<string>
   }
 }
 

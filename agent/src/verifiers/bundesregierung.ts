@@ -1,5 +1,5 @@
 import { AGENT_HOST } from '../constants'
-import { steuerIdMdoc, steuerIdSdJwt } from '../issuers/steuern'
+import { taxIdMdoc, taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { mdocDcqlCredential, pidMdocInputDescriptor, sdJwtDcqlCredential } from './util'
 import { pidSdJwtInputDescriptor } from './util'
@@ -9,7 +9,7 @@ export const bundesregierungVerifier = {
   useCase: {
     name: 'Government identification',
     icon: 'government',
-    features: ['PID', 'multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
+    tags: ['PID', 'Present Multiple Credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
   },
 
   clientMetadata: {
@@ -81,7 +81,7 @@ export const bundesregierungVerifier = {
   dcqlRequests: [
     {
       id: '6a93d69f-b1d5-4f21-b1d4-a2cc102b2341',
-      name: 'Steuer ID two formats (in both sd-jwt vc and mso_mdoc)',
+      name: 'Tax-ID two formats (in both sd-jwt vc and mso_mdoc)',
       credential_sets: [
         {
           options: [['01936a55-560e-7aae-9bde-562848e741cf', '01936a54-da89-700c-936d-ad8545379910']],
@@ -91,13 +91,13 @@ export const bundesregierungVerifier = {
       credentials: [
         mdocDcqlCredential({
           id: '01936a55-560e-7aae-9bde-562848e741cf',
-          doctype: steuerIdMdoc.doctype,
-          namespace: 'eu.europa.ec.eudi.hiid.1',
+          doctype: taxIdMdoc.doctype,
+          namespace: taxIdMdoc.doctype,
           fields: ['resident_address', 'issuance_date'],
         }),
         sdJwtDcqlCredential({
           id: '01936a54-da89-700c-936d-ad8545379910',
-          vcts: [steuerIdSdJwt.vct],
+          vcts: [taxIdSdJwt.vct],
           fields: ['credential_type', 'resident_address', 'birth_date'],
         }),
       ],

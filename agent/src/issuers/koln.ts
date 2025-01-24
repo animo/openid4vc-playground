@@ -1,12 +1,14 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
-import {
-  type OpenId4VciCreateIssuerOptions,
-  type OpenId4VciCredentialConfigurationSupportedWithFormats,
-  OpenId4VciCredentialFormatProfile,
-} from '@credo-ts/openid4vc'
+import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
-import type { CredentialDisplay, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
+import type {
+  CredentialConfigurationDisplay,
+  MdocConfiguration,
+  PlaygroundIssuerOptions,
+  SdJwtConfiguration,
+} from '../issuer'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
   DateOnly,
   dateToSeconds,
@@ -17,14 +19,14 @@ import {
 
 const certificateOfResidenceDisplay = {
   locale: 'en',
-  name: 'Meldebestätigung',
+  name: 'Certificate of Residence',
   text_color: '#525C75',
   background_color: '#E4DEDD',
   background_image: {
     url: `${AGENT_HOST}/assets/issuers/koln/credential.png`,
     uri: `${AGENT_HOST}/assets/issuers/koln/credential.png`,
   },
-} satisfies CredentialDisplay
+} satisfies CredentialConfigurationDisplay
 
 const certificateOfResidencePayload = {
   family_name: 'Mustermann',
@@ -32,7 +34,7 @@ const certificateOfResidencePayload = {
   birth_date: new DateOnly('1964-08-12'),
   resident_address: 'Heidestrasse 17, 51147 Koln',
   gender: 2,
-  birth_place: 'koln',
+  birth_place: 'Köln',
   arrival_date: new DateOnly('2024-03-01'),
   nationality: 'DE',
   issuance_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
@@ -44,7 +46,6 @@ export const certificateOfResidenceMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
-  id: 'certificate-of-residence-mdoc',
   scope: 'certificate-of-residence-mdoc',
   doctype: 'eu.europa.ec.eudi.cor.1',
   display: [certificateOfResidenceDisplay],
@@ -53,10 +54,10 @@ export const certificateOfResidenceMdoc = {
       proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
     },
   },
-} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
+} as const satisfies MdocConfiguration
 
 export const certificateOfResidenceMdocData = {
-  credentialConfigurationId: certificateOfResidenceMdoc.id,
+  credentialConfigurationId: 'certificate-of-residence-mdoc',
   format: ClaimFormat.MsoMdoc,
   credential: {
     docType: certificateOfResidenceMdoc.doctype,
@@ -68,15 +69,12 @@ export const certificateOfResidenceMdocData = {
       validUntil: certificateOfResidencePayload.expiry_date,
     },
   },
-
-  authorization: { type: 'pin' },
 } satisfies StaticMdocSignInput
 
 export const certificateOfResidenceSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
-  id: 'certificate-of-residence-sd-jwt',
   scope: 'certificate-of-residence-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/cor/1',
   display: [certificateOfResidenceDisplay],
@@ -85,10 +83,10 @@ export const certificateOfResidenceSdJwt = {
       proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
     },
   },
-} as const satisfies OpenId4VciCredentialConfigurationSupportedWithFormats
+} as const satisfies SdJwtConfiguration
 
 export const certificateOfResidenceSdJwtData = {
-  credentialConfigurationId: certificateOfResidenceSdJwt.id,
+  credentialConfigurationId: 'certificate-of-residence-sd-jwt',
   format: ClaimFormat.SdJwtVc,
   credential: {
     payload: {
@@ -114,17 +112,24 @@ export const certificateOfResidenceSdJwtData = {
       ],
     },
   },
-
-  authorization: { type: 'pin' },
 } satisfies StaticSdJwtSignInput
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const kolnIssuer = {
+  tags: [certificateOfResidenceDisplay.name],
   issuerId: '832f1c72-817d-4a54-b0fc-9994ecaba291',
-  credentialConfigurationsSupported: {
-    [certificateOfResidenceSdJwt.id]: certificateOfResidenceSdJwt,
-    [certificateOfResidenceMdoc.id]: certificateOfResidenceMdoc,
-  },
+  credentialConfigurationsSupported: [
+    {
+      'vc+sd-jwt': {
+        configuration: certificateOfResidenceSdJwt,
+        data: certificateOfResidenceSdJwtData,
+      },
+      mso_mdoc: {
+        configuration: certificateOfResidenceMdoc,
+        data: certificateOfResidenceMdocData,
+      },
+    },
+  ],
   batchCredentialIssuance: {
     batchSize: 10,
   },
@@ -137,7 +142,7 @@ export const kolnIssuer = {
       },
     },
   ],
-} satisfies OpenId4VciCreateIssuerOptions
+} satisfies PlaygroundIssuerOptions
 
 export const kolnCredentialsData = {
   [certificateOfResidenceSdJwtData.credentialConfigurationId]: certificateOfResidenceSdJwtData,

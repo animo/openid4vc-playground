@@ -4,7 +4,7 @@ import express from 'express'
 import { agent, openId4VciRouter, openId4VpRouter } from './agent'
 import { AGENT_HOST } from './constants'
 import { apiRouter } from './endpoints'
-import { createOrUpdateIssuer } from './issuer'
+import { type PlaygroundIssuerOptions, createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
 import { setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
@@ -14,9 +14,15 @@ import { verifiers } from './verifiers'
 async function run() {
   await agent.initialize()
 
-  for (const issuer of issuers) {
+  for (const issuer of issuers as PlaygroundIssuerOptions[]) {
+    const { tags, credentialConfigurationsSupported, ...restIssuer } = issuer
     await createOrUpdateIssuer({
-      ...issuer,
+      ...restIssuer,
+      credentialConfigurationsSupported: Object.fromEntries(
+        credentialConfigurationsSupported.flatMap((item) =>
+          Object.values(item).map((itemitem) => [itemitem.data.credentialConfigurationId, itemitem.configuration])
+        )
+      ),
       authorizationServerConfigs: [
         {
           issuer: oidcUrl,

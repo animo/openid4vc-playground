@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function X509Tab() {
   const [x509Certificate, setX509Certificate] = useState<string>()
-  const [response, setResponse] = useState<{ success: true; body: string } | { success: false; error: any }>()
+  const [response, setResponse] = useState<{ success: true; body: string } | { success: false; error: unknown }>()
 
   async function onSubmitX509Certificate(e: FormEvent) {
     e.preventDefault()

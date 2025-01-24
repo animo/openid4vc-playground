@@ -1,5 +1,5 @@
 import { AGENT_HOST } from '../constants'
-import { mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
+import { mobileDriversLicenseSdJwt } from '../issuers/bdr'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
 
@@ -8,7 +8,7 @@ export const cheapCarsVerifier = {
   useCase: {
     name: 'Rent a car',
     icon: 'car-rental',
-    features: ['multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
+    tags: ['multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
   },
 
   clientMetadata: {

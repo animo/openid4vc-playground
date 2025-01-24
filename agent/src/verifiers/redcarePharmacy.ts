@@ -1,5 +1,5 @@
 import { AGENT_HOST } from '../constants'
-import { healthIdSdJwt } from '../issuers/techniker'
+import { healthIdSdJwt } from '../issuers/krankenkasse'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { sdJwtInputDescriptor } from './util'
 
@@ -8,7 +8,7 @@ export const redcarePharmacyVerifier = {
   useCase: {
     name: 'Get an ePrescription',
     icon: 'health',
-    features: ['Federation support', 'QEAA', 'DCQL'],
+    tags: ['Federation support', 'QEAA', 'DCQL'],
   },
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/redcare.png`,

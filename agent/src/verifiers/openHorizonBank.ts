@@ -1,7 +1,7 @@
 import { AGENT_HOST } from '../constants'
 import { certificateOfResidenceSdJwt } from '../issuers/koln'
-import { steuerIdSdJwt } from '../issuers/steuern'
-import { healthIdSdJwt } from '../issuers/techniker'
+import { healthIdSdJwt } from '../issuers/krankenkasse'
+import { taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './util'
 
@@ -10,7 +10,7 @@ export const openHorizonBankVerifier = {
   useCase: {
     name: 'Open a bank account',
     icon: 'bank',
-    features: ['Federation support', 'Smart AI warnings', 'multi-credentials', 'mixed-credentials'],
+    tags: ['Federation support', 'Smart AI warnings', 'multi-credentials', 'mixed-credentials'],
   },
 
   clientMetadata: {
@@ -25,7 +25,7 @@ export const openHorizonBankVerifier = {
         'To open an Open Horizon Bank account, we need to verify your name, date of birth, country of residence and nationality',
       input_descriptors: [
         sdJwtInputDescriptor({
-          vcts: [steuerIdSdJwt.vct],
+          vcts: [taxIdSdJwt.vct],
           fields: ['tax_number', 'affiliation_country'],
         }),
         sdJwtInputDescriptor({

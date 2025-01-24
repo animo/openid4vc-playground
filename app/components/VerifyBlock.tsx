@@ -48,7 +48,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
     presentationRequests: Array<{
       id: string
       display: string
-      useCase: { name: string; icon: string; features: Array<string> }
+      useCase: { name: string; icon: string; tags: Array<string> }
     }>
   }>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
@@ -148,7 +148,7 @@ export const VerifyBlock: React.FC<VerifyBlockProps> = ({ createRequest, flowNam
                 value={useCase}
                 id={`radio-${useCase}`}
                 label={useCase}
-                description={groupedVerifier[useCase][0].useCase.features.join(', ')}
+                description={Array.from(new Set(groupedVerifier[useCase].flatMap((u) => u.useCase.tags))).join(', ')}
                 icon={groupedVerifier[useCase][0].useCase.icon}
               />
             ))}

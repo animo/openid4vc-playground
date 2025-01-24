@@ -1,5 +1,5 @@
 import { AGENT_HOST } from '../constants'
-import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/infrastruktur'
+import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from '../issuers/bdr'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import {
   mdocDcqlCredential,
@@ -16,7 +16,7 @@ export const turboKeysVerifier = {
   useCase: {
     name: 'Rent a car',
     icon: 'car-rental',
-    features: ['multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
+    tags: ['multi-credentials', 'mixed-credentials', 'Query languages', 'Federation support'],
   },
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/turbokeys/verifier.png`,

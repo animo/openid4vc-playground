@@ -1,13 +1,22 @@
-import { infrastrukturCredentialsData, infrastrukturIssuer } from './infrastruktur'
+import type { PlaygroundIssuerOptions } from '../issuer'
+import { bdrCredentialsData, bdrIssuer } from './bdr'
 import { kolnCredentialsData, kolnIssuer } from './koln'
+import { krankenkasseCredentialsData, krankenkasseIssuer } from './krankenkasse'
 import { steuernCredentialsData, steuernIssuer } from './steuern'
-import { technikerCredentialsData, technikerIssuer } from './techniker'
+import { telOrgCredentialsData, telOrgIssuer } from './telOrg'
 
-export const issuers = [infrastrukturIssuer, kolnIssuer, steuernIssuer, technikerIssuer]
+export const issuers: PlaygroundIssuerOptions[] = [
+  bdrIssuer,
+  kolnIssuer,
+  steuernIssuer,
+  krankenkasseIssuer,
+  telOrgIssuer,
+]
 
 export const issuersCredentialsData = {
-  ...infrastrukturCredentialsData,
+  ...bdrCredentialsData,
   ...kolnCredentialsData,
   ...steuernCredentialsData,
-  ...technikerCredentialsData,
+  ...krankenkasseCredentialsData,
+  ...telOrgCredentialsData,
 }

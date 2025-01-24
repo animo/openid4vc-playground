@@ -1,7 +1,9 @@
-import { ClaimFormat, X509Certificate } from '@credo-ts/core'
+import { ClaimFormat } from '@credo-ts/core'
 import {
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
+  type OpenId4VciCredentialConfigurationSupportedWithFormats,
+  type OpenId4VciCredentialIssuerMetadataDisplay,
   type OpenId4VciCredentialRequestToCredentialMapper,
   type OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization,
   type OpenId4VciSignMdocCredentials,
@@ -10,12 +12,51 @@ import {
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { issuers, issuersCredentialsData } from './issuers'
-import { mobileDriversLicenseMdoc, mobileDriversLicenseSdJwt } from './issuers/infrastruktur'
+import { bdrIssuer } from './issuers/bdr'
+import { kolnIssuer } from './issuers/koln'
+import { krankenkasseIssuer } from './issuers/krankenkasse'
+import { steuernIssuer } from './issuers/steuern'
 import { getX509Certificate } from './keyMethods'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
 import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
+import { telOrgIssuer } from './issuers/telOrg'
+
+export type CredentialConfigurationDisplay = NonNullable<
+  OpenId4VciCredentialConfigurationSupportedWithFormats['display']
+>[number]
+
+type IssuerDisplay = OpenId4VciCredentialIssuerMetadataDisplay & {
+  logo: NonNullable<OpenId4VciCredentialIssuerMetadataDisplay['logo']> & { uri: string }
+}
+
+export type MdocConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
+  format: 'mso_mdoc'
+  display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+}
+export type SdJwtConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
+  format: 'vc+sd-jwt'
+  display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+}
+
+export interface PlaygroundIssuerOptions
+  extends Omit<OpenId4VciCreateIssuerOptions, 'credentialConfigurationsSupported'> {
+  tags: string[]
+  issuerId: string
+  display: [IssuerDisplay, ...IssuerDisplay[]]
+  credentialConfigurationsSupported: Array<{
+    mso_mdoc?: {
+      configuration: MdocConfiguration
+      data: StaticMdocSignInput
+    }
+    'vc+sd-jwt'?: {
+      configuration: SdJwtConfiguration
+      data: StaticSdJwtSignInput
+    }
+  }>
+}
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
@@ -40,7 +81,9 @@ export async function getIssuer(issuerId: string) {
 
 export function getIssuerIdForCredentialConfigurationId(credentialConfigurationId: string) {
   const issuer = issuers.find(({ credentialConfigurationsSupported }) =>
-    Object.keys(credentialConfigurationsSupported).includes(credentialConfigurationId)
+    Object.values(credentialConfigurationsSupported)
+      .flatMap((a) => Object.values(a).map((b) => b.data.credentialConfigurationId))
+      .includes(credentialConfigurationId)
   )
 
   if (!issuer) {
@@ -51,10 +94,12 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 }
 
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
-  async ({ agentContext, scopes }) => {
+  async ({ agentContext, scopes, requestedCredentialConfigurations }) => {
     const verifier = await getVerifier(bundesregierungVerifier.verifierId)
     const x509Certificate = getX509Certificate()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
+
+    const credentialName = Object.values(requestedCredentialConfigurations)[0].display?.[0]?.name ?? 'card'
 
     const authorizationRequest = await verifierApi.createAuthorizationRequest({
       verifierId: verifier.verifierId,
@@ -68,15 +113,35 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         definition: {
           id: '479ada7f-fff1-4f4a-ba0b-f0e7a8dbab04',
           name: 'Identity card',
-          purpose: 'To issue your drivers license we need to verify your identity card',
+          purpose: `To issue your ${credentialName} we need to verify your identity card`,
           input_descriptors: [
             pidSdJwtInputDescriptor({
               id: 'pid-sd-jwt-issuance',
-              fields: ['given_name', 'family_name', 'birthdate'],
+              fields: [
+                'given_name',
+                'family_name',
+                'birthdate',
+                'issuing_authority',
+                'issuing_country',
+                'address',
+                'place_of_birth',
+                'nationalities',
+              ],
               group: 'PID',
             }),
             pidMdocInputDescriptor({
-              fields: ['given_name', 'family_name', 'birth_date', 'issuing_country', 'issuing_authority'],
+              fields: [
+                'given_name',
+                'family_name',
+                'birth_date',
+                'issuing_country',
+                'issuing_authority',
+                'resident_street',
+                'resident_postal_code',
+                'resident_city',
+                'birth_place',
+                'nationality',
+              ],
               group: 'PID',
             }),
           ],
@@ -104,6 +169,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   holderBindings,
   credentialConfigurationIds,
   verification,
+  issuanceSession,
 }): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials> => {
   const credentialConfigurationId = credentialConfigurationIds[0]
 
@@ -113,18 +179,15 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
   }
 
-  if (
-    credentialData.authorization.type === 'presentation' &&
-    (credentialData.credentialConfigurationId === mobileDriversLicenseMdoc.id ||
-      credentialData.credentialConfigurationId === mobileDriversLicenseSdJwt.id)
-  ) {
+  if (issuanceSession.presentation?.required) {
     const descriptor = verification?.presentationExchange?.descriptors.find(
-      (descriptor) => descriptor.descriptor.id === 'pid-sd-jwt-issuance'
+      (descriptor) =>
+        descriptor.descriptor.id === 'pid-sd-jwt-issuance' || descriptor.descriptor.id === 'eu.europa.ec.eudi.pid.1'
     )
 
     // We allow receiving the PID in both SD-JWT and mdoc when issuing in sd-jwt or mdoc format
     if (descriptor?.format === ClaimFormat.SdJwtVc || descriptor?.format === ClaimFormat.MsoMdoc) {
-      const formatSpecificClaims =
+      const driversLicenseClaims =
         descriptor.format === ClaimFormat.SdJwtVc
           ? {
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -132,7 +195,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               birth_date: descriptor.credential.prettyClaims.birthdate,
 
               issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
-              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+
+              // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
+              // We can request PID SD-JWT and issue mDOC drivers license, so to make it easier we
+              // always set it
+              issuing_country: 'NL',
+              // issuing_country: descriptor.credential.prettyClaims.issuing_country,
             }
           : {
               given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
@@ -141,11 +209,94 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
               issuing_authority:
                 descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
+
+              // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
+              issuing_country: 'NL',
+              // issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+            }
+
+      const taxIdClaims =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              registered_given_name: descriptor.credential.prettyClaims.given_name,
+              registered_family_name: descriptor.credential.prettyClaims.family_name,
+              resident_address: `${(descriptor.credential.prettyClaims.address as Record<string, string>).street_address}, ${(descriptor.credential.prettyClaims.address as Record<string, string>).postal_code} ${(descriptor.credential.prettyClaims.address as Record<string, string>).locality}`,
+              birth_date: descriptor.credential.prettyClaims.birthdate,
+
+              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+            }
+          : {
+              registered_given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              registered_family_name:
+                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              resident_address: `${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
+              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+              issuing_authority:
+                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
               issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
+      const certificateOfResidenceClaims =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              family_name: descriptor.credential.prettyClaims.family_name,
+              given_name: descriptor.credential.prettyClaims.given_name,
+              resident_address: `${(descriptor.credential.prettyClaims.address as Record<string, string>).street_address}, ${(descriptor.credential.prettyClaims.address as Record<string, string>).postal_code} ${(descriptor.credential.prettyClaims.address as Record<string, string>).locality}`,
+              birth_date: descriptor.credential.prettyClaims.birthdate,
+              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
+              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+            }
+          : {
+              given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              family_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              resident_address: `${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
+              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+              birth_place: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_place,
+              nationality: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].nationality,
+              issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+            }
+
+      const healthIdClaims = descriptor.format === ClaimFormat.SdJwtVc ? {} : {}
+
+      const msisdnClaimsData =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              registered_given_name: descriptor.credential.prettyClaims.given_name,
+              registered_family_name: descriptor.credential.prettyClaims.family_name,
+            }
+          : {
+              registered_given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              registered_family_name:
+                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+            }
+
+      const formatSpecificClaims = {
+        [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          driversLicenseClaims,
+        [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: driversLicenseClaims,
+
+        [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          healthIdClaims,
+        [krankenkasseIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+          healthIdClaims,
+
+        [steuernIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]: taxIdClaims,
+        [steuernIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: taxIdClaims,
+
+        [kolnIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          certificateOfResidenceClaims,
+        [kolnIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+          certificateOfResidenceClaims,
+
+        [telOrgIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          msisdnClaimsData,
+        [telOrgIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: msisdnClaimsData,
+      }
+
       if (credentialData.format === ClaimFormat.SdJwtVc) {
-        const { authorization, credential, ...restCredentialData } = credentialData
+        const { credential, ...restCredentialData } = credentialData
 
         return {
           ...restCredentialData,
@@ -153,11 +304,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             ...credential,
             payload: {
               ...credential.payload,
-              ...formatSpecificClaims,
-              issue_date: new DateOnly(new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()),
-              expiry_date: new DateOnly(
-                new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()
-              ),
+              ...formatSpecificClaims[credentialConfigurationId],
             },
             holder: holderBinding,
             issuer: {
@@ -170,26 +317,32 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       }
 
       if (credentialData.format === ClaimFormat.MsoMdoc) {
-        const { authorization, credential, ...restCredentialData } = credentialData
+        const { credential, ...restCredentialData } = credentialData
 
+        const [namespace, values] = Object.entries(credential.namespaces)[0]
+        console.log({
+          ...restCredentialData,
+          credentials: holderBindings.map((holderBinding) => ({
+            ...credential,
+            namespaces: {
+              [namespace]: {
+                ...values,
+                ...formatSpecificClaims[credentialConfigurationId],
+              },
+            },
+
+            holderKey: holderBinding.key,
+            issuerCertificate: x509Certificate,
+          })),
+        })
         return {
           ...restCredentialData,
           credentials: holderBindings.map((holderBinding) => ({
             ...credential,
             namespaces: {
-              'org.iso.18013.5.1': {
-                ...credential.namespaces['org.iso.18013.5.1'],
-                ...formatSpecificClaims,
-
-                // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
-                issuing_country: 'NL',
-
-                issue_date: new DateOnly(
-                  new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds).toISOString()
-                ),
-                expiry_date: new DateOnly(
-                  new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds).toISOString()
-                ),
+              [namespace]: {
+                ...values,
+                ...formatSpecificClaims[credentialConfigurationId],
               },
             },
 
@@ -202,7 +355,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   if (credentialData.format === ClaimFormat.SdJwtVc) {
-    const { authorization, credential, ...restCredentialData } = credentialData
+    const { credential, ...restCredentialData } = credentialData
     return {
       ...restCredentialData,
       credentials: holderBindings.map((holderBinding) => ({
@@ -218,7 +371,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   if (credentialData.format === ClaimFormat.MsoMdoc) {
-    const { authorization, credential, ...restCredentialData } = credentialData
+    const { credential, ...restCredentialData } = credentialData
     return {
       ...restCredentialData,
       credentials: holderBindings.map((holderBinding) => ({
