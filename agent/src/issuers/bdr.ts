@@ -168,9 +168,112 @@ export const mobileDriversLicenseSdJwtData = {
   },
 } satisfies StaticSdJwtSignInput
 
+const arfCompliantPidDisplay = {
+  locale: 'en',
+  name: 'Personalausweis (ARF)',
+  text_color: '#2F3544',
+  background_color: '#F1F2F0',
+  background_image: {
+    url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+    uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+  },
+} satisfies CredentialConfigurationDisplay
+
+export const arfCompliantPidSdJwt = {
+  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  cryptographic_binding_methods_supported: ['jwk'],
+  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  scope: 'arf-pid-sd-jwt',
+  vct: 'eu.europa.ec.eudi.pid.1',
+  display: [arfCompliantPidDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
+} satisfies SdJwtConfiguration
+
+const arfCompliantPidData = {
+  // Mandatory
+  family_name: 'Mustermann',
+  given_name: 'Erika',
+  birth_date: new DateOnly('1964-08-12'),
+  age_over_18: true,
+
+  // Mandatory metadata
+  issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
+  expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
+  issuing_country: 'DE',
+  issuing_authority: 'DE',
+
+  // Optional:
+  age_over_12: true,
+  age_over_14: true,
+  age_over_16: true,
+  age_over_21: true,
+  age_over_65: false,
+  age_in_years: 40,
+  age_birth_year: 1984,
+  family_name_birth: 'GABLER',
+  birth_city: 'BERLIN',
+  resident_country: 'DE',
+  resident_city: 'KÖLN',
+  resident_postal_code: '51147',
+  resident_street: 'HEIDESTRASSE 17',
+  nationality: 'DE',
+}
+
+export const arfCompliantPidSdJwtData = {
+  credentialConfigurationId: 'arf-pid-sd-jwt',
+  format: ClaimFormat.SdJwtVc,
+  credential: {
+    payload: {
+      ...arfCompliantPidData,
+      vct: arfCompliantPidSdJwt.vct,
+
+      issuance_date: arfCompliantPidData.issuance_date.toISOString(),
+      expiry_date: arfCompliantPidData.expiry_date.toISOString(),
+
+      nbf: dateToSeconds(arfCompliantPidData.issuance_date),
+      exp: dateToSeconds(arfCompliantPidData.expiry_date),
+    },
+    disclosureFrame: {
+      _sd: [
+        // Mandatory
+        'family_name',
+        'given_name',
+        'birth_date',
+        'age_over_18',
+
+        // Mandatory metadata
+        'issuance_date',
+        'expiry_date',
+        'issuing_country',
+        'issuing_authority',
+
+        // Optional
+        'age_over_12',
+        'age_over_14',
+        'age_over_16',
+        'age_over_21',
+        'age_over_65',
+        'age_in_years',
+        'age_birth_year',
+        'family_name_birth',
+        'birth_city',
+        'resident_country',
+        'resident_city',
+        'resident_postal_code',
+        'resident_street',
+        'nationality',
+      ],
+    },
+  },
+} satisfies StaticSdJwtSignInput
+
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const bdrIssuer = {
-  tags: [mobileDriversLicenseDisplay.name],
+  tags: [mobileDriversLicenseDisplay.name, arfCompliantPidDisplay.name],
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
   credentialConfigurationsSupported: [
     {
@@ -183,7 +286,13 @@ export const bdrIssuer = {
         data: mobileDriversLicenseMdocData,
       },
     },
-  ],
+    {
+      'vc+sd-jwt': {
+        configuration: arfCompliantPidSdJwt,
+        data: arfCompliantPidSdJwtData,
+      },
+    },
+  ] as const,
   batchCredentialIssuance: {
     batchSize: 10,
   },
@@ -201,4 +310,5 @@ export const bdrIssuer = {
 export const bdrCredentialsData = {
   [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
+  [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
 }

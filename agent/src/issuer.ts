@@ -12,7 +12,7 @@ import {
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { issuers, issuersCredentialsData } from './issuers'
-import { bdrIssuer } from './issuers/bdr'
+import { arfCompliantPidSdJwtData, bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
 import { steuernIssuer } from './issuers/steuern'
@@ -21,7 +21,7 @@ import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
-import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
+import { pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './verifiers/util'
 import { telOrgIssuer } from './issuers/telOrg'
 
 export type CredentialConfigurationDisplay = NonNullable<
@@ -99,7 +99,9 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
     const x509Certificate = getX509Certificate()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
-    const credentialName = Object.values(requestedCredentialConfigurations)[0].display?.[0]?.name ?? 'card'
+    const [credentialConfigurationId, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
+
+    const credentialName = credentialConfiguration.display?.[0]?.name ?? 'card'
 
     const authorizationRequest = await verifierApi.createAuthorizationRequest({
       verifierId: verifier.verifierId,
@@ -109,51 +111,86 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         // FIXME: remove issuer param from credo as we can infer it from the url
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
-      presentationExchange: {
-        definition: {
-          id: '479ada7f-fff1-4f4a-ba0b-f0e7a8dbab04',
-          name: 'Identity card',
-          purpose: `To issue your ${credentialName} we need to verify your identity card`,
-          input_descriptors: [
-            pidSdJwtInputDescriptor({
-              id: 'pid-sd-jwt-issuance',
-              fields: [
-                'given_name',
-                'family_name',
-                'birthdate',
-                'issuing_authority',
-                'issuing_country',
-                'address',
-                'place_of_birth',
-                'nationalities',
-              ],
-              group: 'PID',
-            }),
-            pidMdocInputDescriptor({
-              fields: [
-                'given_name',
-                'family_name',
-                'birth_date',
-                'issuing_country',
-                'issuing_authority',
-                'resident_street',
-                'resident_postal_code',
-                'resident_city',
-                'birth_place',
-                'nationality',
-              ],
-              group: 'PID',
-            }),
-          ],
-          submission_requirements: [
-            {
-              rule: 'pick',
-              count: 1,
-              from: 'PID',
+      presentationExchange:
+        credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId
+          ? {
+              definition: {
+                id: '8cdf9c05-b2b7-453d-9dd1-516965891194',
+                name: 'Identity card',
+                purpose: 'To issue your ARF compliant PID we need to verify your german PID',
+                input_descriptors: [
+                  pidSdJwtInputDescriptor({
+                    fields: [
+                      'issuing_country',
+                      'issuing_authority',
+                      'family_name',
+                      'birthdate',
+                      'age_birth_year',
+                      'age_in_years',
+                      'given_name',
+                      'birth_family_name',
+                      'place_of_birth.locality',
+                      'address.country',
+                      'address.postal_code',
+                      'address.locality',
+                      'address.street_address',
+                      'age_equal_or_over.12',
+                      'age_equal_or_over.14',
+                      'age_equal_or_over.16',
+                      'age_equal_or_over.18',
+                      'age_equal_or_over.21',
+                      'age_equal_or_over.65',
+                      'nationalities',
+                    ],
+                  }),
+                ],
+              },
+            }
+          : {
+              definition: {
+                id: '479ada7f-fff1-4f4a-ba0b-f0e7a8dbab04',
+                name: 'Identity card',
+                purpose: `To issue your ${credentialName} we need to verify your identity card`,
+                input_descriptors: [
+                  pidSdJwtInputDescriptor({
+                    id: 'pid-sd-jwt-issuance',
+                    fields: [
+                      'given_name',
+                      'family_name',
+                      'birthdate',
+                      'issuing_authority',
+                      'issuing_country',
+                      'address',
+                      'place_of_birth',
+                      'nationalities',
+                    ],
+                    group: 'PID',
+                  }),
+                  pidMdocInputDescriptor({
+                    fields: [
+                      'given_name',
+                      'family_name',
+                      'birth_date',
+                      'issuing_country',
+                      'issuing_authority',
+                      'resident_street',
+                      'resident_postal_code',
+                      'resident_city',
+                      'birth_place',
+                      'nationality',
+                    ],
+                    group: 'PID',
+                  }),
+                ],
+                submission_requirements: [
+                  {
+                    rule: 'pick',
+                    count: 1,
+                    from: 'PID',
+                  },
+                ],
+              },
             },
-          ],
-        },
-      },
       responseMode: 'direct_post.jwt',
     })
 
@@ -272,10 +309,47 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
                 descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
             }
 
+      const arfCompliantPidData =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              family_name: descriptor.credential.prettyClaims.family_name,
+              given_name: descriptor.credential.prettyClaims.given_name,
+              birth_date: descriptor.credential.prettyClaims.birthdate,
+              age_over_18: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
+
+              // Mandatory metadata
+              issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
+              expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
+              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+
+              // Optional:
+              age_over_12: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
+              age_over_14: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
+              age_over_16: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
+              age_over_21: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
+              age_over_65: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
+              age_in_years: descriptor.credential.prettyClaims.age_in_years,
+              age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
+              family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
+
+              birth_city: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+
+              resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
+              resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
+              resident_postal_code: (descriptor.credential.prettyClaims.address as Record<string, string>).postal_code,
+              resident_street: (descriptor.credential.prettyClaims.address as Record<string, string>).street_address,
+              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
+            }
+          : {}
+
       const formatSpecificClaims = {
         [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
           driversLicenseClaims,
         [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: driversLicenseClaims,
+
+        [bdrIssuer.credentialConfigurationsSupported[1]['vc+sd-jwt'].data.credentialConfigurationId]:
+          arfCompliantPidData,
 
         [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
           healthIdClaims,

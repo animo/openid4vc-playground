@@ -125,7 +125,7 @@ const CredentialCardRadioItem = React.forwardRef<React.ElementRef<typeof RadioGr
         >
           <div className="p-5 flex flex-col">
             <div className="flex justify-between gap-3 mb-4">
-              <h3 className="font-medium text-md">{credential.name.toUpperCase()}</h3>
+              <h3 className="font-medium text-sm">{credential.name.toUpperCase()}</h3>
               <div className="size-10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={issuer.logo} alt={`${issuer.name} logo`} className="w-full h-full object-contain" />

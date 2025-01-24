@@ -1,7 +1,8 @@
 import { AGENT_HOST } from '../constants'
+import { arfCompliantPidSdJwt } from '../issuers/bdr'
 import { taxIdMdoc, taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { mdocDcqlCredential, pidMdocInputDescriptor, sdJwtDcqlCredential } from './util'
+import { mdocDcqlCredential, pidMdocInputDescriptor, sdJwtDcqlCredential, sdJwtInputDescriptor } from './util'
 import { pidSdJwtInputDescriptor } from './util'
 
 export const bundesregierungVerifier = {
@@ -77,6 +78,45 @@ export const bundesregierungVerifier = {
         }),
       ],
     },
+    {
+      id: '9318a8c9-0dc3-4240-9c99-4f94380e6715',
+      name: 'ARF compliant PID (sd-jwt vc)',
+      purpose: 'To grant you access we need to verify your ARF compliant PID',
+      input_descriptors: [
+        sdJwtInputDescriptor({
+          vcts: [arfCompliantPidSdJwt.vct],
+          fields: [
+            // Mandatory
+            'family_name',
+            'given_name',
+            'birth_date',
+            'age_over_18',
+
+            // Mandatory metadata
+            'issuance_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+
+            // Optional
+            'age_over_12',
+            'age_over_14',
+            'age_over_16',
+            'age_over_21',
+            'age_over_65',
+            'age_in_years',
+            'age_birth_year',
+            'family_name_birth',
+            'birth_city',
+            'resident_country',
+            'resident_city',
+            'resident_postal_code',
+            'resident_street',
+            'nationality',
+          ],
+        }),
+      ],
+    },
   ],
   dcqlRequests: [
     {
@@ -99,6 +139,51 @@ export const bundesregierungVerifier = {
           id: '01936a54-da89-700c-936d-ad8545379910',
           vcts: [taxIdSdJwt.vct],
           fields: ['credential_type', 'resident_address', 'birth_date'],
+        }),
+      ],
+    },
+    {
+      id: 'ffc717a3-abaf-4ec3-9c55-a9b8e998874c',
+      name: 'ARF compliant PID (sd-jwt vc)',
+      credential_sets: [
+        {
+          options: [['b917e4ec-768c-4b1d-b716-8a83cf646ffb']],
+          purpose: 'To grant you access we need to verify your ARF compliant PID',
+        },
+      ],
+      credentials: [
+        sdJwtDcqlCredential({
+          id: 'b917e4ec-768c-4b1d-b716-8a83cf646ffb',
+          vcts: [arfCompliantPidSdJwt.vct],
+          fields: [
+            // Mandatory
+            'family_name',
+            'given_name',
+            'birth_date',
+            'age_over_18',
+
+            // Mandatory metadata
+            'issuance_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+
+            // Optional
+            'age_over_12',
+            'age_over_14',
+            'age_over_16',
+            'age_over_21',
+            'age_over_65',
+            'age_in_years',
+            'age_birth_year',
+            'family_name_birth',
+            'birth_city',
+            'resident_country',
+            'resident_city',
+            'resident_postal_code',
+            'resident_street',
+            'nationality',
+          ],
         }),
       ],
     },
