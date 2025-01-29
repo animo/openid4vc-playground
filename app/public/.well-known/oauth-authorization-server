@@ -1,4 +1,5 @@
 {
+  "issuer": "https://funke.animo.id",
   "vp_formats_supported": {
     "vc+sd-jwt": {
       "sd-jwt_alg_values": [
