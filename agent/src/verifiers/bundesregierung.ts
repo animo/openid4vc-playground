@@ -1,8 +1,14 @@
 import { AGENT_HOST } from '../constants'
-import { arfCompliantPidSdJwt } from '../issuers/bdr'
+import { arfCompliantPidSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
 import { taxIdMdoc, taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { mdocDcqlCredential, pidMdocInputDescriptor, sdJwtDcqlCredential, sdJwtInputDescriptor } from './util'
+import {
+  mdocDcqlCredential,
+  mdocInputDescriptor,
+  pidMdocInputDescriptor,
+  sdJwtDcqlCredential,
+  sdJwtInputDescriptor,
+} from './util'
 import { pidSdJwtInputDescriptor } from './util'
 
 export const bundesregierungVerifier = {
@@ -25,6 +31,27 @@ export const bundesregierungVerifier = {
       input_descriptors: [
         pidSdJwtInputDescriptor({
           fields: ['given_name', 'family_name', 'age_equal_or_over.21'],
+        }),
+      ],
+    },
+    {
+      id: 'd7ab9246-d5f2-466c-ac09-4738adf496ca',
+      name: 'MDL (mdoc)',
+      purpose: 'Authorize to the government using your mobile drivers license',
+      input_descriptors: [
+        mdocInputDescriptor({
+          doctype: mobileDriversLicenseMdoc.doctype,
+          namespace: 'org.iso.18013.5.1',
+          fields: [
+            'given_name',
+            'family_name',
+            'birth_date',
+            'document_number',
+            'issue_date',
+            'expiry_date',
+            'issuing_country',
+            'issuing_authority',
+          ],
         }),
       ],
     },

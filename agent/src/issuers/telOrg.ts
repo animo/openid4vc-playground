@@ -85,7 +85,7 @@ export const msisdnSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   scope: 'msisdn-sd-jwt',
-  vct: 'https://example.eudi.ec.europa.eu/mdl/1',
+  vct: 'eu.europa.ec.eudi.msisdn.1',
   display: [msisdnDisplay],
   proof_types_supported: {
     jwt: {
