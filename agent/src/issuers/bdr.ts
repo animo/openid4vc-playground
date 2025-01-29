@@ -45,7 +45,7 @@ const mobileDriversLicensePayload = {
   expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
   // Must be same as C= in x509 cert (currently set to NL)
   issuing_country: 'NL',
-  driving_priviliges: [
+  driving_privileges: [
     {
       vehicle_category_code: 'B',
       issue_date: new DateOnly('2024-01-15'),
@@ -140,11 +140,11 @@ export const mobileDriversLicenseSdJwtData = {
       vct: mobileDriversLicenseSdJwt.vct,
       portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
       signature_usual_mark: `data:image/jpeg;base64,${erikaSignature.toString('base64')}`,
-      driving_priviliges: [
+      driving_privileges: [
         {
-          ...mobileDriversLicensePayload.driving_priviliges[0],
-          issue_date: mobileDriversLicensePayload.driving_priviliges[0].issue_date.toISOString(),
-          expiry_date: mobileDriversLicensePayload.driving_priviliges[0].expiry_date.toISOString(),
+          ...mobileDriversLicensePayload.driving_privileges[0],
+          issue_date: mobileDriversLicensePayload.driving_privileges[0].issue_date.toISOString(),
+          expiry_date: mobileDriversLicensePayload.driving_privileges[0].expiry_date.toISOString(),
         },
       ],
     },
@@ -160,12 +160,12 @@ export const mobileDriversLicenseSdJwtData = {
         'issue_date',
         'expiry_date',
         'issuing_country',
-        'driving_priviliges',
+        'driving_privileges',
         'signature_usual_mark',
       ],
       // TODO: fix array disclosures?
       // @ts-ignore
-      // driving_priviliges: mobileDriversLicensePayload.driving_priviliges.map((d) => ({
+      // driving_privileges: mobileDriversLicensePayload.driving_privileges.map((d) => ({
       //   _sd: ['vehicle_category_code', 'issue_date', 'expiry_date', 'codes'],
       // })),
     },

@@ -32,7 +32,7 @@ export const cheapCarsVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         // TODO: Add more fields
