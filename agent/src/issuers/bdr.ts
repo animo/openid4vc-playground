@@ -19,6 +19,7 @@ import {
 import { loadJPEGBufferSync } from '../utils/image'
 
 const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../assets/erika.jpeg`)
+const erikaSignature = loadJPEGBufferSync(`${__dirname}/../../assets/signature.jpeg`)
 
 const mobileDriversLicenseDisplay = {
   locale: 'en',
@@ -37,6 +38,7 @@ const mobileDriversLicensePayload = {
   birth_date: new DateOnly('1964-08-12'),
   document_number: 'Z021AB37X13',
   portrait: new Uint8Array(erikaPortrait),
+  signature_usual_mark: new Uint8Array(erikaSignature),
   un_distinguishing_sign: 'D',
   issuing_authority: 'Bundesrepublik Deutschland',
   issue_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
@@ -137,6 +139,7 @@ export const mobileDriversLicenseSdJwtData = {
       expiry_date: mobileDriversLicensePayload.expiry_date.toISOString(),
       vct: mobileDriversLicenseSdJwt.vct,
       portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
+      signature_usual_mark: `data:image/jpeg;base64,${erikaSignature.toString('base64')}`,
       driving_priviliges: [
         {
           ...mobileDriversLicensePayload.driving_priviliges[0],
@@ -158,6 +161,7 @@ export const mobileDriversLicenseSdJwtData = {
         'expiry_date',
         'issuing_country',
         'driving_priviliges',
+        'signature_usual_mark',
       ],
       // TODO: fix array disclosures?
       // @ts-ignore
