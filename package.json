@@ -12,12 +12,13 @@
       "@sphereon/did-auth-siop": "https://gitpkg.vercel.app/animo/OID4VC/packages/siop-oid4vp?funke",
       "@sphereon/jarm": "https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke",
       "@sphereon/oid4vc-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250204035157",
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250204035157",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250204035157",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250204035157",
+      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250204074333",
+      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250204074333",
+      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250204074333",
+      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250204074333",
       "dcql": "0.2.17",
       "@sphereon/pex-models": "2.3.2"
     }
-  }
+  },
+  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a"
 }
