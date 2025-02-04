@@ -1,4 +1,4 @@
-import { WalletKeyExistsError, X509Api, X509Service } from '@credo-ts/core'
+import { WalletKeyExistsError, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
 import { X509_CERTIFICATE } from '../constants'
 import { createKeys } from './createKeys'
@@ -18,7 +18,7 @@ export async function setupX509Certificate() {
 
       if (
         parsedCertificate.publicKey.keyType !== key.keyType ||
-        !parsedCertificate.publicKey.publicKey.equals(key.publicKey)
+        !Buffer.from(parsedCertificate.publicKey.publicKey).equals(Buffer.from(key.publicKey))
       ) {
         throw new Error('Key in provided X509_CERTIFICATE env variable does not match the key from the P256_SEED')
       }
