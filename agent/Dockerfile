@@ -32,4 +32,4 @@ COPY --from=build /app/dist /app/dist
 COPY assets /app/assets
 
 EXPOSE 3000
-CMD [ "pnpm", "start" ]
+CMD [ "node", "dist/server.js" ]
