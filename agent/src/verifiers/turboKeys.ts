@@ -38,7 +38,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtInputDescriptor({
@@ -61,7 +61,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtInputDescriptor({
@@ -92,7 +92,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtDcqlCredential({
@@ -115,7 +115,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtDcqlCredential({
@@ -149,7 +149,7 @@ export const turboKeysVerifier = {
             'issuing_authority',
             'portrait',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         sdJwtDcqlCredential({
@@ -163,7 +163,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtDcqlCredential({
@@ -202,7 +202,7 @@ export const turboKeysVerifier = {
             'issuing_authority',
             'portrait',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         sdJwtDcqlCredential({
@@ -216,7 +216,7 @@ export const turboKeysVerifier = {
             'issuing_country',
             'issuing_authority',
             // Sphereon library can't parse our maps
-            // 'driving_priviliges',
+            // 'driving_privileges',
           ],
         }),
         pidSdJwtDcqlCredential({

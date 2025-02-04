@@ -183,6 +183,17 @@ const arfCompliantPidDisplay = {
   },
 } satisfies CredentialConfigurationDisplay
 
+const arfCompliantPidUrnVctDisplay = {
+  locale: 'en',
+  name: 'Personalausweis (ARF, urn: vct)',
+  text_color: '#2F3544',
+  background_color: '#F1F2F0',
+  background_image: {
+    url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+    uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+  },
+} satisfies CredentialConfigurationDisplay
+
 export const arfCompliantPidSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
@@ -190,6 +201,20 @@ export const arfCompliantPidSdJwt = {
   scope: 'arf-pid-sd-jwt',
   vct: 'eu.europa.ec.eudi.pid.1',
   display: [arfCompliantPidDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+    },
+  },
+} satisfies SdJwtConfiguration
+
+export const arfCompliantPidUrnVctSdJwt = {
+  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  cryptographic_binding_methods_supported: ['jwk'],
+  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  scope: 'arf-pid-sd-jwt-urn-vct',
+  vct: 'urn:eu.europa.ec.eudi:pid:1',
+  display: [arfCompliantPidUrnVctDisplay],
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
@@ -275,6 +300,18 @@ export const arfCompliantPidSdJwtData = {
   },
 } satisfies StaticSdJwtSignInput
 
+export const arfCompliantPidUrnVctSdJwtData = {
+  ...arfCompliantPidSdJwtData,
+  credentialConfigurationId: 'arf-pid-sd-jwt-urn-vct',
+  credential: {
+    ...arfCompliantPidSdJwtData.credential,
+    payload: {
+      ...arfCompliantPidSdJwtData.credential.payload,
+      vct: arfCompliantPidUrnVctSdJwt.vct,
+    },
+  },
+} satisfies StaticSdJwtSignInput
+
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const bdrIssuer = {
   tags: [mobileDriversLicenseDisplay.name, arfCompliantPidDisplay.name],
@@ -296,6 +333,12 @@ export const bdrIssuer = {
         data: arfCompliantPidSdJwtData,
       },
     },
+    {
+      'vc+sd-jwt': {
+        configuration: arfCompliantPidUrnVctSdJwt,
+        data: arfCompliantPidUrnVctSdJwtData,
+      },
+    },
   ] as const,
   batchCredentialIssuance: {
     batchSize: 10,
@@ -315,4 +358,5 @@ export const bdrCredentialsData = {
   [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
   [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
+  [arfCompliantPidUrnVctSdJwtData.credentialConfigurationId]: arfCompliantPidUrnVctSdJwtData,
 }

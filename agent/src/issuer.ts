@@ -12,7 +12,7 @@ import {
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { issuers, issuersCredentialsData } from './issuers'
-import { arfCompliantPidSdJwtData, bdrIssuer } from './issuers/bdr'
+import { arfCompliantPidSdJwtData, arfCompliantPidUrnVctSdJwtData, bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
 import { steuernIssuer } from './issuers/steuern'
@@ -112,7 +112,8 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
       presentationExchange:
-        credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId
+        credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
+        credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId
           ? {
               definition: {
                 id: '8cdf9c05-b2b7-453d-9dd1-516965891194',
@@ -349,6 +350,9 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: driversLicenseClaims,
 
         [bdrIssuer.credentialConfigurationsSupported[1]['vc+sd-jwt'].data.credentialConfigurationId]:
+          arfCompliantPidData,
+
+        [bdrIssuer.credentialConfigurationsSupported[2]['vc+sd-jwt'].data.credentialConfigurationId]:
           arfCompliantPidData,
 
         [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
