@@ -36,6 +36,7 @@ const mobileDriversLicensePayload = {
   given_name: 'Erika',
   family_name: 'Mustermann',
   birth_date: new DateOnly('1964-08-12'),
+  age_over_18: true,
   document_number: 'Z021AB37X13',
   portrait: new Uint8Array(erikaPortrait),
   signature_usual_mark: new Uint8Array(erikaSignature),
@@ -162,6 +163,7 @@ export const mobileDriversLicenseSdJwtData = {
         'issuing_country',
         'driving_privileges',
         'signature_usual_mark',
+        'age_over_18',
       ],
       // TODO: fix array disclosures?
       // @ts-ignore
