@@ -176,7 +176,7 @@ export const mobileDriversLicenseSdJwtData = {
 
 const arfCompliantPidDisplay = {
   locale: 'en',
-  name: 'Personalausweis (ARF)',
+  name: 'PID (ARF)',
   text_color: '#2F3544',
   background_color: '#F1F2F0',
   background_image: {
@@ -187,7 +187,7 @@ const arfCompliantPidDisplay = {
 
 const arfCompliantPidUrnVctDisplay = {
   locale: 'en',
-  name: 'Personalausweis (ARF, urn: vct)',
+  name: 'PID (ARF, urn: vct)',
   text_color: '#2F3544',
   background_color: '#F1F2F0',
   background_image: {
