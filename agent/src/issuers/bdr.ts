@@ -1,14 +1,15 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, JwaSignatureAlgorithm, W3cCredential } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
 import type {
   CredentialConfigurationDisplay,
+  LdpVcConfiguration,
   MdocConfiguration,
   PlaygroundIssuerOptions,
   SdJwtConfiguration,
 } from '../issuer'
-import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
+import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
   DateOnly,
   dateToSeconds,
@@ -88,6 +89,76 @@ export const mobileDriversLicenseMdoc = {
     },
   },
 } as const satisfies MdocConfiguration
+
+export const mobileDriversLicenseLdpVc = {
+  format: OpenId4VciCredentialFormatProfile.LdpVc,
+  cryptographic_binding_methods_supported: ['did:jwk'],
+  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  scope: 'mobile-drivers-license-ldp-vc',
+  credential_definition: {
+    '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vdl/v2'],
+    type: ['VerifiableCredential', 'Iso18013DriversLicenseCredential'],
+  },
+  display: [mobileDriversLicenseDisplay],
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.EdDSA, 'Ed25519Signature2020'],
+    },
+  },
+} as const satisfies LdpVcConfiguration
+
+export const mobileDriversLicenseLdpVcData = {
+  credentialConfigurationId: 'mobile-drivers-license-ldp-vc',
+  format: ClaimFormat.LdpVc,
+  credential: {
+    credential: W3cCredential.fromJson({
+      '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vdl/v2'],
+      type: ['VerifiableCredential', 'Iso18013DriversLicenseCredential'],
+      issuer: {
+        id: 'did:key:z6MkjxvA4FNrQUhr8f7xhdQuP1VPzErkcnfxsRaU5oFgy2E5',
+        name: 'Bundesdruckerei',
+        image: `${AGENT_HOST}/assets/issuers/bdr/issuer.png`,
+      },
+      issuanceDate: '2023-11-15T10:00:00-07:00',
+      expirationDate: '2028-11-15T12:00:00-06:00',
+      name: "Utopia Driver's License",
+      image: 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUg...kSuQmCC',
+      description: 'A license granting driving privileges in Utopia.',
+      credentialSubject: {
+        id: 'did:example:12347abcd',
+        type: 'LicensedDriver',
+        driversLicense: {
+          type: 'Iso18013DriversLicense',
+          document_number: '542426814',
+          family_name: 'TURNER',
+          given_name: 'SUSAN',
+          portrait: 'data:image/jpeg;base64,/9j/4AAQSkZJR...RSClooooP/2Q==',
+          birth_date: '1998-08-28',
+          issue_date: '2023-01-15T10:00:00-07:00',
+          expiry_date: '2028-08-27T12:00:00-06:00',
+          issuing_country: 'NL',
+          issuing_authority: 'NL',
+          driving_privileges: [
+            {
+              codes: [{ code: 'D' }],
+              vehicle_category_code: 'D',
+              issue_date: '2019-01-01',
+              expiry_date: '2027-01-01',
+            },
+            {
+              codes: [{ code: 'C' }],
+              vehicle_category_code: 'C',
+              issue_date: '2019-01-01',
+              expiry_date: '2017-01-01',
+            },
+          ],
+          un_distinguishing_sign: 'UTA',
+          sex: 2,
+        },
+      },
+    }),
+  },
+} satisfies StaticLdpVcSignInput
 
 export const mobileDriversLicenseMdocData = {
   credentialConfigurationId: 'mobile-drivers-license-mdoc',
@@ -328,6 +399,10 @@ export const bdrIssuer = {
         configuration: mobileDriversLicenseMdoc,
         data: mobileDriversLicenseMdocData,
       },
+      ldp_vc: {
+        configuration: mobileDriversLicenseLdpVc,
+        data: mobileDriversLicenseLdpVcData,
+      },
     },
     {
       'vc+sd-jwt': {
@@ -359,6 +434,7 @@ export const bdrIssuer = {
 export const bdrCredentialsData = {
   [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
+  [mobileDriversLicenseLdpVcData.credentialConfigurationId]: mobileDriversLicenseLdpVcData,
   [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
   [arfCompliantPidUrnVctSdJwtData.credentialConfigurationId]: arfCompliantPidUrnVctSdJwtData,
 }

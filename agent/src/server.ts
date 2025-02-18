@@ -10,7 +10,9 @@ import { setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createOrUpdateVerifier } from './verifier'
 import { verifiers } from './verifiers'
-
+import { createDidWeb, getWebDidDocument } from './didWeb'
+import type { Response } from 'express'
+import { KeyType } from '@credo-ts/core'
 async function run() {
   await agent.initialize()
 
@@ -40,6 +42,12 @@ async function run() {
   }
 
   await setupX509Certificate()
+  await getWebDidDocument().catch(async () => {
+    const key = await agent.wallet.createKey({
+      keyType: KeyType.Ed25519,
+    })
+    await createDidWeb(key)
+  })
 
   const app = express()
   app.use(cors({ origin: '*' }))
@@ -61,6 +69,10 @@ async function run() {
       request.body.client_secret = 'wallet'
     }
     next()
+  })
+  app.use('/.well-known/did.json', async (_, response: Response) => {
+    const didWeb = await getWebDidDocument()
+    return response.json(didWeb.toJSON())
   })
   const oidc = await getProvider()
   app.use(oidcRouterPath, oidc.callback())

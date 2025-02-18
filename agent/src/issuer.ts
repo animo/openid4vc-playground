@@ -1,5 +1,6 @@
-import { ClaimFormat } from '@credo-ts/core'
+import { ClaimFormat, JsonTransformer, parseDid, W3cCredential } from '@credo-ts/core'
 import {
+  type OpenId4VciSignW3cCredentials,
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
@@ -17,12 +18,13 @@ import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
 import { steuernIssuer } from './issuers/steuern'
 import { getX509Certificate } from './keyMethods'
-import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
-import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
+import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from './types'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
 import { pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './verifiers/util'
 import { telOrgIssuer } from './issuers/telOrg'
+import { getWebDidDocument } from './didWeb'
 
 export type CredentialConfigurationDisplay = NonNullable<
   OpenId4VciCredentialConfigurationSupportedWithFormats['display']
@@ -36,6 +38,11 @@ export type MdocConfiguration = OpenId4VciCredentialConfigurationSupportedWithFo
   format: 'mso_mdoc'
   display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
 }
+export type LdpVcConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
+  format: 'ldp_vc'
+  display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+}
+
 export type SdJwtConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
   format: 'vc+sd-jwt'
   display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
@@ -54,6 +61,10 @@ export interface PlaygroundIssuerOptions
     'vc+sd-jwt'?: {
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
+    }
+    ldp_vc?: {
+      configuration: LdpVcConfiguration
+      data: StaticLdpVcSignInput
     }
   }>
 }
@@ -100,6 +111,10 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
     const [credentialConfigurationId, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
+
+    if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'vc+sd-jwt') {
+      throw new Error('Presentation during issuance is only supported for mso_mdoc and vc+sd-jwt')
+    }
 
     const credentialName = credentialConfiguration.display?.[0]?.name ?? 'card'
 
@@ -208,7 +223,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   credentialConfigurationIds,
   verification,
   issuanceSession,
-}): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials> => {
+}): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials | OpenId4VciSignW3cCredentials> => {
   const credentialConfigurationId = credentialConfigurationIds[0]
 
   const x509Certificate = getX509Certificate()
@@ -458,6 +473,29 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         issuerCertificate: x509Certificate,
       })),
     } satisfies OpenId4VciSignMdocCredentials
+  }
+
+  if (credentialData.format === ClaimFormat.LdpVc) {
+    const { credential, ...restCredentialData } = credentialData
+
+    const didWeb = await getWebDidDocument()
+    return {
+      ...restCredentialData,
+      credentials: holderBindings.map((holderBinding) => {
+        if (holderBinding.method !== 'did') {
+          throw new Error("Only 'did' holder binding supported for ldp vc")
+        }
+
+        const json = JsonTransformer.toJSON(credential.credential)
+        json.credentialSubject.id = parseDid(holderBinding.didUrl).did
+        json.issuer.id = didWeb.id
+
+        return {
+          verificationMethod: `${didWeb.id}#key-1`,
+          credential: W3cCredential.fromJson(json),
+        }
+      }),
+    } satisfies OpenId4VciSignW3cCredentials
   }
 
   throw new Error(`Unsupported credential ${credentialConfigurationId}`)

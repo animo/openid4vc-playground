@@ -11,7 +11,7 @@ services:
       labels:
         traefik.enable: "true"
 
-        traefik.http.routers.openid4vc-server.rule: Host(`funke.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/provider`))
+        traefik.http.routers.openid4vc-server.rule: Host(`funke.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/provider`) || PathPrefix(`.well-known`))
         traefik.http.routers.openid4vc-server.entrypoints: web-secure
         traefik.http.routers.openid4vc-server.tls.certresolver: zerossl
         traefik.http.routers.openid4vc-server.service: openid4vc-server-service

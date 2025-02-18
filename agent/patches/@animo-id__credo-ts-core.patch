@@ -1,0 +1,31 @@
+diff --git a/build/modules/vc/W3cCredentialsModule.js b/build/modules/vc/W3cCredentialsModule.js
+index 355945b9f5e4a1ec1cca43dcdeb122891c060c98..9642bc83b257a0b2db00b56640c165063cc93967 100644
+--- a/build/modules/vc/W3cCredentialsModule.js
++++ b/build/modules/vc/W3cCredentialsModule.js
+@@ -27,16 +27,16 @@ class W3cCredentialsModule {
+         dependencyManager.registerSingleton(SignatureSuiteRegistry_1.SignatureSuiteRegistry);
+         // Register the config
+         dependencyManager.registerInstance(W3cCredentialsModuleConfig_1.W3cCredentialsModuleConfig, this.config);
+-        // Always register ed25519 signature suite
+-        dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
+-            suiteClass: signature_suites_1.Ed25519Signature2018,
+-            proofType: 'Ed25519Signature2018',
+-            verificationMethodTypes: [
+-                dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2018,
+-                dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2020,
+-            ],
+-            keyTypes: [crypto_1.KeyType.Ed25519],
+-        });
++        // // Always register ed25519 signature suite
++        // dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
++        //     suiteClass: signature_suites_1.Ed25519Signature2018,
++        //     proofType: 'Ed25519Signature2018',
++        //     verificationMethodTypes: [
++        //         dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2018,
++        //         dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2020,
++        //     ],
++        //     keyTypes: [crypto_1.KeyType.Ed25519],
++        // });
+         dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
+             suiteClass: signature_suites_1.Ed25519Signature2020,
+             proofType: 'Ed25519Signature2020',

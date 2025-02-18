@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { InfoCircledIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
@@ -17,6 +16,7 @@ import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radi
 const credentialFormatMap = {
   'vc+sd-jwt': 'SD-JWT VC',
   mso_mdoc: 'mDOC',
+  ldp_vc: 'W3C 1.1 JSON-LD',
 }
 
 export function IssueTab({ disabled = false }: { disabled?: boolean }) {
