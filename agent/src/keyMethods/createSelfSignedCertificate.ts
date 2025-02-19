@@ -1,15 +1,84 @@
-import { type Key, X509Service } from '@credo-ts/core'
+import { type Key, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
-import { AGENT_DNS } from '../constants'
+import { AGENT_DNS, AGENT_HOST } from '../constants'
 
-export const createSelfSignedCertificate = async (key: Key) =>
-  (
-    await X509Service.createSelfSignedCertificate(agent.context, {
-      key,
-      extensions: [[{ type: 'dns', value: AGENT_DNS }]],
-      name: 'C=NL,CN=Animo',
-      notBefore: new Date(0), // Thu Jan 01 1970 01:00:00 GMT+0100 (Central European Standard Time)
-      notAfter: new Date(1763799732333), // Sat Nov 22 2025 09:22:12 GMT+0100 (Central European Standard Time)
-      includeAuthorityKeyIdentifier: true,
-    })
-  ).toString('base64')
+export const createRootCertificate = async (key: Key) => {
+  const lastYear = new Date()
+  const nextYear = new Date()
+  nextYear.setFullYear(nextYear.getFullYear() + 3)
+  lastYear.setFullYear(lastYear.getFullYear() - 1)
+
+  return X509Service.createCertificate(agent.context, {
+    authorityKey: key,
+    issuer: { countryName: 'NL', commonName: 'Animo' },
+    validity: {
+      notBefore: lastYear,
+      notAfter: nextYear,
+    },
+    extensions: {
+      subjectKeyIdentifier: {
+        include: true,
+      },
+      keyUsage: {
+        usages: [X509KeyUsage.KeyCertSign, X509KeyUsage.CrlSign],
+        markAsCritical: true,
+      },
+      issuerAlternativeName: {
+        name: [{ type: 'url', value: AGENT_HOST }],
+      },
+      basicConstraints: {
+        ca: true,
+        pathLenConstraint: 0,
+        markAsCritical: true,
+      },
+      crlDistributionPoints: {
+        urls: ['https://animo.id'],
+      },
+    },
+  })
+}
+
+export const createDocumentSignerCertificate = async (
+  authorityKey: Key,
+  subjectKey: Key,
+  rootCertificate: X509Certificate
+) => {
+  const lastYear = new Date()
+  const nextYear = new Date()
+  nextYear.setFullYear(nextYear.getFullYear() + 3)
+  lastYear.setFullYear(lastYear.getFullYear() - 1)
+
+  return X509Service.createCertificate(agent.context, {
+    authorityKey,
+    subjectPublicKey: subjectKey,
+    issuer: rootCertificate.issuer,
+    subject: { commonName: 'credo dcs', countryName: 'NL' },
+    validity: {
+      notBefore: lastYear,
+      notAfter: nextYear,
+    },
+    extensions: {
+      authorityKeyIdentifier: {
+        include: true,
+      },
+      subjectKeyIdentifier: {
+        include: true,
+      },
+      keyUsage: {
+        usages: [X509KeyUsage.DigitalSignature],
+        markAsCritical: true,
+      },
+      subjectAlternativeName: {
+        name: [{ type: 'dns', value: AGENT_DNS }],
+      },
+      issuerAlternativeName: {
+        // biome-ignore lint/style/noNonNullAssertion:
+        name: rootCertificate.issuerAlternativeNames!,
+      },
+      extendedKeyUsage: {
+        usages: [X509ExtendedKeyUsage.MdlDs],
+        markAsCritical: true,
+      },
+    },
+  })
+}

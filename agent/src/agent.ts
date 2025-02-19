@@ -2,7 +2,7 @@ import { AskarModule } from '@credo-ts/askar'
 import { Agent, ConsoleLogger, LogLevel, X509Module, joinUriParts } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule } from '@credo-ts/openid4vc'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { askar } from '@openwallet-foundation/askar-nodejs'
 import { Router } from 'express'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
 import { credentialRequestToCredentialMapper, getVerificationSessionForIssuanceSession } from './issuer'
@@ -48,7 +48,7 @@ export const agent = new Agent({
   },
   modules: {
     askar: new AskarModule({
-      ariesAskar,
+      askar,
     }),
     openId4VcIssuer: new OpenId4VcIssuerModule({
       baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),

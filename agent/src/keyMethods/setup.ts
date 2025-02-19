@@ -1,63 +1,101 @@
 import { WalletKeyExistsError, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
-import { X509_CERTIFICATE } from '../constants'
+import { X509_DCS_CERTIFICATE, X509_ROOT_CERTIFICATE } from '../constants'
 import { createKeys } from './createKeys'
-import { createSelfSignedCertificate } from './createSelfSignedCertificate'
+import { createDocumentSignerCertificate, createRootCertificate } from './createSelfSignedCertificate'
 
-let x509Certificate: string | undefined = undefined
+let x509RootCertificate: string | undefined = undefined
+let x509DcsCertificate: string | undefined = undefined
 
 export async function setupX509Certificate() {
-  const x509Record = await agent.genericRecords.findById('X509_CERTIFICATE')
+  const x509RootRecord = await agent.genericRecords.findById('X509_ROOT_CERTIFICATE')
 
   try {
-    const key = await createKeys()
+    const { documentSignerKey, authorityKey } = await createKeys()
 
-    if (X509_CERTIFICATE) {
-      const parsedCertificate = X509Service.parseCertificate(agent.context, { encodedCertificate: X509_CERTIFICATE })
-      x509Certificate = parsedCertificate.toString('base64')
+    if (X509_ROOT_CERTIFICATE) {
+      const parsedCertificate = X509Service.parseCertificate(agent.context, {
+        encodedCertificate: X509_ROOT_CERTIFICATE,
+      })
+      x509RootCertificate = parsedCertificate.toString('base64')
 
       if (
-        parsedCertificate.publicKey.keyType !== key.keyType ||
-        !Buffer.from(parsedCertificate.publicKey.publicKey).equals(Buffer.from(key.publicKey))
+        parsedCertificate.publicKey.keyType !== authorityKey.keyType ||
+        !Buffer.from(parsedCertificate.publicKey.publicKey).equals(Buffer.from(authorityKey.publicKey))
       ) {
-        throw new Error('Key in provided X509_CERTIFICATE env variable does not match the key from the P256_SEED')
+        throw new Error(
+          'Key in provided X509_ROOT_CERTIFICATE env variable does not match the key from the ROOT_P256_SEED'
+        )
+      }
+      if (X509_DCS_CERTIFICATE) {
+        const parsedCertificate = X509Service.parseCertificate(agent.context, {
+          encodedCertificate: X509_DCS_CERTIFICATE,
+        })
+        x509DcsCertificate = parsedCertificate.toString('base64')
+
+        if (
+          parsedCertificate.publicKey.keyType !== documentSignerKey.keyType ||
+          !Buffer.from(parsedCertificate.publicKey.publicKey).equals(Buffer.from(documentSignerKey.publicKey))
+        ) {
+          throw new Error(
+            'Key in provided X509_DCS_CERTIFICATE env variable does not match the key from the DCS_P256_SEED'
+          )
+        }
       }
     } else {
-      x509Certificate = await createSelfSignedCertificate(key)
+      const rootCertificate = await createRootCertificate(authorityKey)
+      const dcsCertificate = await createDocumentSignerCertificate(authorityKey, documentSignerKey, rootCertificate)
+      x509RootCertificate = rootCertificate.toString('base64')
+      x509DcsCertificate = dcsCertificate.toString('base64')
     }
 
-    if (x509Record) {
-      x509Record.content = { certificate: x509Certificate }
-      await agent.genericRecords.update(x509Record)
+    if (x509RootRecord) {
+      x509RootRecord.content = { certificate: x509RootCertificate }
+      await agent.genericRecords.update(x509RootRecord)
     } else {
       await agent.genericRecords.save({
-        id: 'X509_CERTIFICATE',
+        id: 'X509_ROOT_CERTIFICATE',
         content: {
-          certificate: x509Certificate,
+          certificate: x509RootCertificate,
         },
       })
     }
   } catch (error) {
     // If the key already exists, we assume the self-signed certificate is already created
     if (error instanceof WalletKeyExistsError) {
-      if (!x509Record) {
+      if (!x509RootRecord) {
         throw new Error('No available key method record found')
       }
-      x509Certificate = x509Record.content.certificate as string
+      x509RootCertificate = x509RootRecord.content.certificate as string
     } else {
       throw error
     }
   }
 
-  console.log('======= X.509 Certificate ===========')
-  console.log(x509Certificate)
+  console.log('======= X.509 IACA ROOT Certificate ===========')
+  console.log(x509RootCertificate)
 
-  agent.x509.addTrustedCertificate(x509Certificate)
+  console.log('======= X.509 IACA DCS  Certificate ===========')
+  console.log(x509DcsCertificate)
+
+  agent.x509.addTrustedCertificate(x509RootCertificate)
+  agent.x509.addTrustedCertificate(x509RootCertificate)
 }
 
-export function getX509Certificate() {
-  if (!x509Certificate) {
-    throw new Error('X509 certificate is not setup properly')
+export function getX509RootCertificate() {
+  if (!x509RootCertificate) {
+    throw new Error('X509 root certificate is not setup properly')
   }
-  return x509Certificate
+  return x509RootCertificate
+}
+
+export function getX509DcsCertificate() {
+  if (!x509DcsCertificate) {
+    throw new Error('X509 dcs certificate is not setup properly')
+  }
+  return x509DcsCertificate
+}
+
+export function getX509Certificates() {
+  return [getX509DcsCertificate(), getX509RootCertificate()]
 }

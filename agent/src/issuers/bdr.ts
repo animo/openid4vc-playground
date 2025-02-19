@@ -166,11 +166,7 @@ export const mobileDriversLicenseMdocData = {
   credential: {
     docType: mobileDriversLicenseMdoc.doctype,
     namespaces: {
-      'org.iso.18013.5.1': {
-        ...mobileDriversLicensePayload,
-        // Causes issue in google identity credential if not string
-        birth_date: mobileDriversLicensePayload.birth_date.toISOString(),
-      },
+      'org.iso.18013.5.1': mobileDriversLicensePayload,
     },
     validityInfo: {
       validFrom: mobileDriversLicensePayload.issue_date,

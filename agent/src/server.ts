@@ -1,8 +1,11 @@
 import path from 'path'
+import { KeyType } from '@credo-ts/core'
 import cors from 'cors'
 import express from 'express'
+import type { Response } from 'express'
 import { agent, openId4VciRouter, openId4VpRouter } from './agent'
 import { AGENT_HOST } from './constants'
+import { createDidWeb, getWebDidDocument } from './didWeb'
 import { apiRouter } from './endpoints'
 import { type PlaygroundIssuerOptions, createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
@@ -10,9 +13,6 @@ import { setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createOrUpdateVerifier } from './verifier'
 import { verifiers } from './verifiers'
-import { createDidWeb, getWebDidDocument } from './didWeb'
-import type { Response } from 'express'
-import { KeyType } from '@credo-ts/core'
 async function run() {
   await agent.initialize()
 

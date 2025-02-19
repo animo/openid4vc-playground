@@ -1,6 +1,5 @@
-import { ClaimFormat, JsonTransformer, parseDid, W3cCredential } from '@credo-ts/core'
+import { ClaimFormat, JsonTransformer, W3cCredential, parseDid } from '@credo-ts/core'
 import {
-  type OpenId4VciSignW3cCredentials,
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
@@ -9,22 +8,23 @@ import {
   type OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization,
   type OpenId4VciSignMdocCredentials,
   type OpenId4VciSignSdJwtCredentials,
+  type OpenId4VciSignW3cCredentials,
 } from '@credo-ts/openid4vc'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
+import { getWebDidDocument } from './didWeb'
 import { issuers, issuersCredentialsData } from './issuers'
 import { arfCompliantPidSdJwtData, arfCompliantPidUrnVctSdJwtData, bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
 import { steuernIssuer } from './issuers/steuern'
-import { getX509Certificate } from './keyMethods'
+import { telOrgIssuer } from './issuers/telOrg'
+import { getX509Certificates, getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
-import { pidMdocInputDescriptor, pidSdJwtInputDescriptor, sdJwtInputDescriptor } from './verifiers/util'
-import { telOrgIssuer } from './issuers/telOrg'
-import { getWebDidDocument } from './didWeb'
+import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
 
 export type CredentialConfigurationDisplay = NonNullable<
   OpenId4VciCredentialConfigurationSupportedWithFormats['display']
@@ -107,7 +107,7 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
   async ({ agentContext, scopes, requestedCredentialConfigurations }) => {
     const verifier = await getVerifier(bundesregierungVerifier.verifierId)
-    const x509Certificate = getX509Certificate()
+    const certificates = getX509Certificates()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
     const [credentialConfigurationId, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
@@ -122,7 +122,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       verifierId: verifier.verifierId,
       requestSigner: {
         method: 'x5c',
-        x5c: [x509Certificate],
+        x5c: certificates,
         // FIXME: remove issuer param from credo as we can infer it from the url
         issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
@@ -226,7 +226,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 }): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials | OpenId4VciSignW3cCredentials> => {
   const credentialConfigurationId = credentialConfigurationIds[0]
 
-  const x509Certificate = getX509Certificate()
+  const certificates = getX509Certificates()
   const credentialData = issuersCredentialsData[credentialConfigurationId as keyof typeof issuersCredentialsData]
   if (!credentialData) {
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
@@ -402,7 +402,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             holder: holderBinding,
             issuer: {
               method: 'x5c',
-              x5c: [x509Certificate],
+              x5c: certificates,
               issuer: AGENT_HOST,
             },
           })),
@@ -425,7 +425,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             },
 
             holderKey: holderBinding.key,
-            issuerCertificate: x509Certificate,
+            issuerCertificate: getX509DcsCertificate(),
           })),
         })
         return {
@@ -440,7 +440,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             },
 
             holderKey: holderBinding.key,
-            issuerCertificate: x509Certificate,
+            issuerCertificate: getX509DcsCertificate(),
           })),
         } satisfies OpenId4VciSignMdocCredentials
       }
@@ -456,7 +456,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         holder: holderBinding,
         issuer: {
           method: 'x5c',
-          x5c: [x509Certificate],
+          x5c: certificates,
           issuer: AGENT_HOST,
         },
       })),
@@ -470,7 +470,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       credentials: holderBindings.map((holderBinding) => ({
         ...credential,
         holderKey: holderBinding.key,
-        issuerCertificate: x509Certificate,
+        issuerCertificate: getX509DcsCertificate(),
       })),
     } satisfies OpenId4VciSignMdocCredentials
   }

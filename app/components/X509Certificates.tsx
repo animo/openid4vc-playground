@@ -9,7 +9,6 @@ export function X509Certificates() {
     getX509Certificate().then(setX509Certificate)
   }, [])
 
-  console.log(x509Certificate?.pem)
   return (
     <div className="flex flex-col bg-gray-200 w-full rounded-md p-7">
       <CollapsibleSection title="X509 Certificate Base64" titleSmall="click content to copy">

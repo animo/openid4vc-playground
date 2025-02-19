@@ -18,7 +18,7 @@ import { validateVerificationRequest, zValidateVerificationRequestSchema } from 
 import { AGENT_HOST } from './constants'
 import { getIssuerIdForCredentialConfigurationId } from './issuer'
 import { issuers } from './issuers'
-import { getX509Certificate } from './keyMethods'
+import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { getVerifier } from './verifier'
 import { allDefinitions, verifiers } from './verifiers'
@@ -75,7 +75,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
 })
 
 apiRouter.get('/x509', async (_, response: Response) => {
-  const certificate = getX509Certificate()
+  const certificate = getX509RootCertificate()
   const instance = X509Certificate.fromEncodedCertificate(certificate)
   return response.json({
     base64: instance.toString('base64'),
@@ -93,7 +93,7 @@ apiRouter.post('/x509', async (request: Request, response: Response) => {
     const base64 = instance.toString('base64')
 
     if (!trustedCertificates?.includes(base64)) {
-      await agent.x509.addTrustedCertificate(base64)
+      agent.x509.addTrustedCertificate(base64)
     }
 
     return response.send(instance.toString('text'))
@@ -190,7 +190,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   const { requestSignerType, presentationDefinitionId, requestScheme, responseMode, purpose } =
     await zCreatePresentationRequestBody.parseAsync(request.body)
 
-  const x509Certificate = getX509Certificate()
+  const x509RootCertificate = getX509RootCertificate()
+  const x509DcsCertificate = getX509DcsCertificate()
 
   const definitionId = presentationDefinitionId
   const definition = allDefinitions.find((d) => d.id === definitionId)
@@ -219,7 +220,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         requestSignerType === 'x5c'
           ? {
               method: 'x5c',
-              x5c: [x509Certificate],
+              x5c: [x509DcsCertificate, x509RootCertificate],
               // FIXME: remove issuer param from credo as we can infer it from the url
               issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
             }
