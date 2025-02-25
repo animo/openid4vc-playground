@@ -17,6 +17,7 @@ import { issuers, issuersCredentialsData } from './issuers'
 import { arfCompliantPidSdJwtData, arfCompliantPidUrnVctSdJwtData, bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
+import { eudiPidSdJwtData, nederlandenIssuer } from './issuers/nederlanden'
 import { steuernIssuer } from './issuers/steuern'
 import { telOrgIssuer } from './issuers/telOrg'
 import { getX509Certificates, getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
@@ -128,7 +129,8 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       },
       presentationExchange:
         credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId
+        credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId ||
+        credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId
           ? {
               definition: {
                 id: '8cdf9c05-b2b7-453d-9dd1-516965891194',
@@ -359,6 +361,42 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
           : {}
 
+      const nederlandenPidData =
+        descriptor.format === ClaimFormat.SdJwtVc
+          ? {
+              family_name: descriptor.credential.prettyClaims.family_name,
+              given_name: descriptor.credential.prettyClaims.given_name,
+              birth_date: descriptor.credential.prettyClaims.birthdate,
+              age_over_18: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
+
+              // Mandatory metadata
+              issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
+              expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
+              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+
+              sex: descriptor.credential.prettyClaims.sex,
+
+              // Optional:
+              age_over_12: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
+              age_over_14: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
+              age_over_16: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
+              age_over_21: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
+              age_over_65: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
+              age_in_years: descriptor.credential.prettyClaims.age_in_years,
+              age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
+              family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
+
+              birth_city: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+
+              resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
+              resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
+              resident_postal_code: (descriptor.credential.prettyClaims.address as Record<string, string>).postal_code,
+              resident_street: (descriptor.credential.prettyClaims.address as Record<string, string>).street_address,
+              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
+            }
+          : {}
+
       const formatSpecificClaims = {
         [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
           driversLicenseClaims,
@@ -369,6 +407,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
         [bdrIssuer.credentialConfigurationsSupported[2]['vc+sd-jwt'].data.credentialConfigurationId]:
           arfCompliantPidData,
+
+        [nederlandenIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+          nederlandenPidData,
+        // @ts-expect-error Can be undefined because other configuration does not have vc+sd-jwt
+        [nederlandenIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          nederlandenPidData,
 
         [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
           healthIdClaims,

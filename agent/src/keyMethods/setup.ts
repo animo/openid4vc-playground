@@ -8,7 +8,10 @@ let x509RootCertificate: string | undefined = undefined
 let x509DcsCertificate: string | undefined = undefined
 
 export async function setupX509Certificate() {
+  // const x509RootRecord = await agent.genericRecords.findById('X509_ROOT_CERTIFICATE')
   const x509RootRecord = await agent.genericRecords.findById('X509_ROOT_CERTIFICATE')
+
+  //   console.log(await agent.genericRecords.getAll())
 
   try {
     const { documentSignerKey, authorityKey } = await createKeys()
