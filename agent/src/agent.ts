@@ -9,6 +9,8 @@ import { credentialRequestToCredentialMapper, getVerificationSessionForIssuanceS
 import { verifierTrustChains } from './verifiers'
 import { getAuthorityHints, isSubordinateTo } from './verifiers/trustChains'
 
+import * as certs from './iaca-x509-certs'
+
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)
 })
@@ -72,7 +74,53 @@ export const agent = new Agent({
       },
     }),
     x509: new X509Module({
-      trustedCertificates: [x509PidIssuerCertificate, x509BdrMdlIssuerCertificate, x509PidIssuerRootCertificate],
+      trustedCertificates: [
+        x509PidIssuerCertificate,
+        x509BdrMdlIssuerCertificate,
+        x509PidIssuerRootCertificate,
+        certs.IACA_RDW_EU_PID,
+        certs.IACA_Bosa,
+        certs.IACA_Luxembourg_TST,
+        certs.IACA_Clear,
+        certs.IACA_COI_Poland,
+        certs.IACA_Google,
+        // secp521r1 is not supported
+        //  certs.IACA_Google_mDL,
+        certs.IACA_Luxembourg_QUA,
+        certs.IACA_Panasonic,
+        certs.Intermediate_IACA_Luxembourg_QUA,
+        certs.IACA_Toppan_mDL,
+        certs.IACA_IPZS,
+        certs.IACA_Procivis,
+        certs.IACA_Veridos,
+        certs.IACA_OGCIO,
+        certs.IACA_Credence_ID,
+        certs.IACA_Zetes,
+        certs.IACA_OIDF,
+        certs.Intermediate_IACA_Luxembourg_TST,
+        certs.IACA_Nortal,
+        certs.IACA_SpruceID,
+        certs.IACA_SICPA,
+        certs.IACA_Idakto,
+        certs.IACA_RDW_mDL,
+        certs.IACA_Explicit_Selection,
+        certs.IACA_GRNET,
+        certs.IACA_Idemia,
+        certs.IACA_Apple,
+        certs.IACA_FeliCA,
+        certs.IACA_HID,
+        certs.IACA_Scytales,
+        certs.IACA_Bundesdruckerei,
+        certs.IACA_Animo_EU_PID,
+        certs.IACA_CLR_Labs_0,
+        certs.IACA_Animo_mDL,
+        certs.IACA_CLR_Labs_1,
+        certs.IACA_Reaktor,
+        certs.IACA_AMA,
+        certs.IACA_Samsung,
+        certs.IACA_France_Identite_Test,
+        certs.IACA_CLR_Labs_2,
+      ],
     }),
   },
 })
