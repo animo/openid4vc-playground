@@ -14,6 +14,7 @@ overrides:
   '@credo-ts/openid4vc': npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806
   dcql: 0.2.17
   '@sphereon/pex-models': 2.3.2
+  '@animo-id/mdoc': 0.4.2-alpha-20250225155732
 
 patchedDependencies:
   '@animo-id/credo-ts-core':
@@ -34,8 +35,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2(zod@3.23.8)
       '@animo-id/mdoc':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: 0.4.2-alpha-20250225155732
+        version: 0.4.2-alpha-20250225155732
       '@credo-ts/askar':
         specifier: npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250224091806
         version: '@animo-id/credo-ts-askar@0.5.14-alpha-20250224091806(@openwallet-foundation/askar-shared@0.3.1)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
@@ -262,8 +263,8 @@ packages:
   '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806':
     resolution: {integrity: sha512-eo1D8PKBjo3m5o01akgkBYwXSPwl7UGZS099HBVExkAiClT3FmsAnL+cHzqszVt0nslYZAO2HBvmNEmeXSKN6Q==}
 
-  '@animo-id/mdoc@0.4.0':
-    resolution: {integrity: sha512-ziuaAn4MnocSwoGZzKbgDB3g5ohfl79USR8Ly/uGImPRdZ6qxaB/cqO3dP0162PhKFbWsywgsgpghCiOeYoVBA==}
+  '@animo-id/mdoc@0.4.2-alpha-20250225155732':
+    resolution: {integrity: sha512-5F2qf/c8YUfZ5NNEQcLDhFmXZfTjX4bcsw/U3pwlxnRKk23jO6d+dqti49meqr9ybCIolErjcj6T6di7U8ULRg==}
 
   '@animo-id/oauth2-utils@0.1.4':
     resolution: {integrity: sha512-JUIshkNCiX7myPwdiE+Da/g77OjsxZreezmfXWBSWOgCOZrnQX+t5vkhpe6Jc6DRh40Y8r9Fa1AesV0vtVpUMg==}
@@ -2213,6 +2214,7 @@ packages:
 
   '@sphereon/kmp-mdl-mdoc@0.2.0-SNAPSHOT.22':
     resolution: {integrity: sha512-uAZZExVy+ug9JLircejWa5eLtAZ7bnBP6xb7DO2+86LRsHNLh2k2jMWJYxp+iWtGHTsh6RYsZl14ScQLvjiQ/A==}
+    bundledDependencies: []
 
   '@sphereon/oid4vc-common@https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke':
     resolution: {tarball: https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke}
@@ -6557,7 +6559,7 @@ snapshots:
 
   '@animo-id/credo-ts-core@0.5.14-alpha-20250224091806(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
-      '@animo-id/mdoc': 0.4.0
+      '@animo-id/mdoc': 0.4.2-alpha-20250225155732
       '@animo-id/pex': 4.1.1-alpha.1
       '@astronautlabs/jsonpath': 1.1.2
       '@digitalcredentials/jsonld': 6.0.0(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(web-streams-polyfill@3.3.3)
@@ -6665,7 +6667,7 @@ snapshots:
       - typescript
       - web-streams-polyfill
 
-  '@animo-id/mdoc@0.4.0':
+  '@animo-id/mdoc@0.4.2-alpha-20250225155732':
     dependencies:
       compare-versions: 6.1.1
 
