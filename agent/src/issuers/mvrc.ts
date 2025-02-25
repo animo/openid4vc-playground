@@ -1,15 +1,10 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
-import type {
-  CredentialConfigurationDisplay,
-  MdocConfiguration,
-  PlaygroundIssuerOptions,
-  SdJwtConfiguration,
-} from '../issuer'
-import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
-import { DateOnly, dateToSeconds, oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../utils/date'
+import type { CredentialConfigurationDisplay, MdocConfiguration, PlaygroundIssuerOptions } from '../issuer'
+import type { StaticMdocSignInput } from '../types'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../utils/date'
 
 const mvrcDisplay = {
   locale: 'en',
@@ -110,13 +105,13 @@ export const mvrcMdocData = {
       },
     },
     validityInfo: {
-      validFrom: mvrcPayload.issue_date,
-      validUntil: mvrcPayload.expiry_date,
+      validFrom: new Date(mvrcPayload.issue_date.toISOString()),
+      validUntil: new Date(mvrcPayload.expiry_date.toISOString()),
 
       // Causes issue in google identity credential if not present
       // Update half year before expiry
       expectedUpdate: new Date(serverStartupTimeInMilliseconds + Math.floor(oneYearInMilliseconds / 2)),
-      signed: mvrcPayload.issue_date,
+      signed: new Date(mvrcPayload.issue_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput

@@ -1,10 +1,10 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
 import type { CredentialConfigurationDisplay, MdocConfiguration, PlaygroundIssuerOptions } from '../issuer'
 import type { StaticMdocSignInput } from '../types'
-import { DateOnly, oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../utils/date'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../utils/date'
 
 const eHealthDisplay = {
   locale: 'en',

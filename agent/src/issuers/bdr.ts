@@ -1,4 +1,4 @@
-import { ClaimFormat, JwaSignatureAlgorithm, W3cCredential } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, JwaSignatureAlgorithm, W3cCredential } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -11,7 +11,6 @@ import type {
 } from '../issuer'
 import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
-  DateOnly,
   dateToSeconds,
   oneYearInMilliseconds,
   serverStartupTimeInMilliseconds,

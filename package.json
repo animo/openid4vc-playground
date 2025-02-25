@@ -18,7 +18,7 @@
       "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806",
       "dcql": "0.2.17",
       "@sphereon/pex-models": "2.3.2",
-      "@animo-id/mdoc": "0.4.2-alpha-20250225155732"
+      "@animo-id/mdoc": "0.5.0-alpha-20250225231643"
     },
     "patchedDependencies": {
       "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"

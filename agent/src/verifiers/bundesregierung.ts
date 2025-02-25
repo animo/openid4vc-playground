@@ -51,6 +51,7 @@ export const bundesregierungVerifier = {
             'expiry_date',
             'issuing_country',
             'issuing_authority',
+            'driving_privileges',
           ],
         }),
       ],

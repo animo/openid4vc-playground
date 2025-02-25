@@ -1,4 +1,4 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -9,7 +9,7 @@ import type {
   SdJwtConfiguration,
 } from '../issuer'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
-import { DateOnly, dateToSeconds, oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../utils/date'
+import { dateToSeconds, oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../utils/date'
 
 import { loadJPEGBufferSync } from '../utils/image'
 
@@ -105,13 +105,13 @@ export const photoIdMdocData = {
       },
     },
     validityInfo: {
-      validFrom: photoIdPayload.issue_date,
-      validUntil: photoIdPayload.expiry_date,
+      validFrom: new Date(photoIdPayload.issue_date.toISOString()),
+      validUntil: new Date(photoIdPayload.expiry_date.toISOString()),
 
       // Causes issue in google identity credential if not present
       // Update half year before expiry
       expectedUpdate: new Date(serverStartupTimeInMilliseconds + Math.floor(oneYearInMilliseconds / 2)),
-      signed: photoIdPayload.issue_date,
+      signed: new Date(photoIdPayload.issue_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput
@@ -184,13 +184,13 @@ export const eudiPidMdocData = {
       },
     },
     validityInfo: {
-      validFrom: eudiPidPayload.issuance_date,
-      validUntil: eudiPidPayload.expiry_date,
+      validFrom: new Date(eudiPidPayload.issuance_date.toISOString()),
+      validUntil: new Date(eudiPidPayload.expiry_date.toISOString()),
 
       // Causes issue in google identity credential if not present
       // Update half year before expiry
       expectedUpdate: new Date(serverStartupTimeInMilliseconds + Math.floor(oneYearInMilliseconds / 2)),
-      signed: eudiPidPayload.issuance_date,
+      signed: new Date(eudiPidPayload.issuance_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput

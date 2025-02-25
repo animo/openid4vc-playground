@@ -1,4 +1,4 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants'
 import type {
@@ -9,7 +9,6 @@ import type {
 } from '../issuer'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
-  DateOnly,
   dateToSeconds,
   oneYearInMilliseconds,
   serverStartupTimeInMilliseconds,
@@ -69,8 +68,8 @@ export const taxIdMdocData = {
       [taxIdMdoc.doctype]: taxIdPayload,
     },
     validityInfo: {
-      validFrom: taxIdPayload.issuance_date,
-      validUntil: taxIdPayload.expiry_date,
+      validFrom: new Date(taxIdPayload.issuance_date.toISOString()),
+      validUntil: new Date(taxIdPayload.expiry_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput
