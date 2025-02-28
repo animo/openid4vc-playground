@@ -84,6 +84,7 @@ export const agent = new Agent({
         certs.IACA_Clear,
         certs.IACA_COI_Poland,
         certs.IACA_Google,
+        certs.IACA_LT,
         // secp521r1 is not supported
         //  certs.IACA_Google_mDL,
         certs.IACA_Luxembourg_QUA,
