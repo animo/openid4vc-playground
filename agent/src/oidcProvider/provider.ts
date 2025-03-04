@@ -28,7 +28,7 @@ async function getProvider() {
         client_secret: 'wallet',
         grant_types: ['authorization_code'],
         id_token_signed_response_alg: 'ES256',
-        redirect_uris: [],
+        redirect_uris: ['io.mosip.residentapp.inji://oauthredirect'],
         application_type: 'native',
       },
       {
@@ -74,7 +74,7 @@ async function getProvider() {
       dPoP: { enabled: true },
       pushedAuthorizationRequests: {
         enabled: true,
-        requirePushedAuthorizationRequests: true,
+        requirePushedAuthorizationRequests: false,
         allowUnregisteredRedirectUris: true,
       },
       introspection: {
