@@ -37,14 +37,16 @@ export const validateVerificationRequest = async ({
     .join('\n')
 
   const prompt = BASE_PROMPT(verifier, name, purpose, rc)
-  console.log('Prompt:::', prompt)
 
   // Can be improved by adding a reasoning step, but that makes it quite slow
   const { object } = await generateObject({
-    model: anthropic('claude-3-5-sonnet-20240620'),
+    model: anthropic('claude-3-7-sonnet-20250219'),
     schema: zResponseSchema,
     prompt,
-  }).catch(() => ({ object: { validRequest: 'could_not_determine', reason: 'AI request failed' } }))
+  }).catch((e) => {
+    console.error(e)
+    return { object: { validRequest: 'could_not_determine', reason: 'AI request failed' } }
+  })
 
   console.log('AI:::', JSON.stringify(object, null, 2))
 
@@ -103,9 +105,10 @@ Analyze the request by following these steps:
 4. Identify any instances of overasking of personal information, where the requested information exceeds what is reasonably required for the purpose.
 
 Guidelines for identifying overasking:
-- Consider only if overasking of personal information is the case. Overasking of metadata related to the card is not a reason to reject the request.
-- Assess if the quantity of requested personal information is excessive for the stated purpose.
-- Determine if the information request aligns with common practices for similar purposes.
+- Consider only if overasking of sensitive personal information is the case. Overasking of common info such as the name or portrait of the person, or metadata related to the card such as date of issuance or expiration should not be a reason to reject the request.
+- Asking the same information from different cards should not be considered overasking.
+- Assess if the requested information is excessive for the stated purpose.
+- Determine if the information request aligns with common practices for similar purposes in the real world.
 - If you cannot determine whether the request is overasking, respond with "could_not_determine".
 
 Briefly summarize whether the request appears appropriate or if there is evidence of overasking. Remember to be thorough in your analysis and provide clear, concise explanations for your assessments. If you find no evidence of overasking, state this clearly and explain why the requested information appears appropriate for the purpose.
