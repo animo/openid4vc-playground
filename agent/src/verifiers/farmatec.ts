@@ -7,6 +7,5 @@ export const farmatecVerifier = {
     logo_uri: `${AGENT_HOST}/assets/verifiers/farmatec.png`,
     client_name: 'Farmatec',
   },
-  presentationRequests: [],
-  dcqlRequests: [],
+  requests: [],
 } as const satisfies PlaygroundVerifierOptions

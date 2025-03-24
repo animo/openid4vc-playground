@@ -7,6 +7,5 @@ export const trustPilotVerifier = {
     logo_uri: `${AGENT_HOST}/assets/verifiers/trustpilot/verifier.webp`,
     client_name: 'TrustPilot',
   },
-  presentationRequests: [],
-  dcqlRequests: [],
+  requests: [],
 } as const satisfies PlaygroundVerifierOptions

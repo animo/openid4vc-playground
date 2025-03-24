@@ -2,12 +2,7 @@ name: Continuous Deployment
 
 on:
   workflow_dispatch:
-    inputs:
-      build:
-        default: true
-        type: boolean
-        required: false
-        description: Build the website before deploying
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -17,7 +12,7 @@ env:
 jobs:
   build-and-push-image-agent:
     runs-on: ubuntu-latest
-    if: inputs.build == true && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -60,7 +55,7 @@ jobs:
 
   build-and-push-image-app:
     runs-on: ubuntu-latest
-    if: inputs.build == true && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -100,39 +95,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  deploy:
-    # Only run on main branch
-    runs-on: ubuntu-latest
-    needs: [build-and-push-image-agent, build-and-push-image-app]
-    if: |
-      always() &&
-      (needs.build-and-push-image-agent.result == 'success' || needs.build-and-push-image-agent.result == 'skipped') &&
-      (needs.build-and-push-image-app.result == 'success' || needs.build-and-push-image-app.result == 'skipped') &&
-      github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Copy stack file to remote
-        uses: garygrossgarten/github-action-scp@v0.7.3
-        with:
-          local: docker-compose.yml
-          remote: openid4vc-playground-funke/docker-compose.yml
-          host: dashboard.dev.animo.id
-          username: root
-          privateKey: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-
-      - name: Deploy to Docker Swarm via SSH action
-        uses: appleboy/ssh-action@v0.1.4
-        env:
-          AGENT_WALLET_KEY: ${{ secrets.AGENT_WALLET_KEY }}
-          P256_SEED: ${{ secrets.P256_SEED }}
-          X509_CERTIFICATE: ${{ secrets.X509_CERTIFICATE }}
-        with:
-          host: dashboard.dev.animo.id
-          username: root
-          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          envs: P256_SEED,AGENT_WALLET_KEY,X509_CERTIFICATE
-          script: |
-            P256_SEED=${P256_SEED} X509_CERTIFICATE=${X509_CERTIFICATE} AGENT_WALLET_KEY=${AGENT_WALLET_KEY} docker stack deploy --compose-file openid4vc-playground-funke/docker-compose.yml openid4vc-playground-funke --with-registry-auth

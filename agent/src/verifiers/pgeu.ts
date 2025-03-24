@@ -7,6 +7,5 @@ export const pgeuVerifier = {
     logo_uri: `${AGENT_HOST}/assets/verifiers/pgeu.png`,
     client_name: 'The Pharmaceutical Group of the European Union',
   },
-  presentationRequests: [],
-  dcqlRequests: [],
+  requests: [],
 } as const satisfies PlaygroundVerifierOptions

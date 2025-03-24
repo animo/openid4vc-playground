@@ -61,7 +61,7 @@ async function run() {
   }
 
   app.use('/oid4vci', openId4VciRouter)
-  app.use('/siop', openId4VpRouter)
+  app.use('/oid4vp', openId4VpRouter)
   app.use('/api', apiRouter)
   app.use((request, _, next) => {
     if (request.path === '/provider/request' || request.path === '/provider/token') {

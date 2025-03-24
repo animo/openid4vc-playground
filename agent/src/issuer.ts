@@ -20,12 +20,12 @@ import { krankenkasseIssuer } from './issuers/krankenkasse'
 import { eudiPidSdJwtData, nederlandenIssuer } from './issuers/nederlanden'
 import { steuernIssuer } from './issuers/steuern'
 import { telOrgIssuer } from './issuers/telOrg'
-import { getX509Certificates, getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
+import { getX509Certificates, getX509DcsCertificate } from './keyMethods'
 import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
-import { pidMdocInputDescriptor, pidSdJwtInputDescriptor } from './verifiers/util'
+import { pidMdocCredential, pidSdJwtCredential, presentationDefinitionFromRequest } from './verifiers/util'
 
 export type CredentialConfigurationDisplay = NonNullable<
   OpenId4VciCredentialConfigurationSupportedWithFormats['display']
@@ -124,20 +124,17 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       requestSigner: {
         method: 'x5c',
         x5c: certificates,
-        // FIXME: remove issuer param from credo as we can infer it from the url
-        issuer: `${AGENT_HOST}/siop/${verifier.verifierId}/authorize`,
       },
       presentationExchange:
         credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
         credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId ||
         credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId
           ? {
-              definition: {
-                id: '8cdf9c05-b2b7-453d-9dd1-516965891194',
+              definition: presentationDefinitionFromRequest({
                 name: 'Identity card',
                 purpose: 'To issue your ARF compliant PID we need to verify your german PID',
-                input_descriptors: [
-                  pidSdJwtInputDescriptor({
+                credentials: [
+                  pidSdJwtCredential({
                     fields: [
                       'issuing_country',
                       'issuing_authority',
@@ -162,16 +159,14 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
                     ],
                   }),
                 ],
-              },
+              }),
             }
           : {
-              definition: {
-                id: '479ada7f-fff1-4f4a-ba0b-f0e7a8dbab04',
+              definition: presentationDefinitionFromRequest({
                 name: 'Identity card',
                 purpose: `To issue your ${credentialName} we need to verify your identity card`,
-                input_descriptors: [
-                  pidSdJwtInputDescriptor({
-                    id: 'pid-sd-jwt-issuance',
+                credentials: [
+                  pidSdJwtCredential({
                     fields: [
                       'given_name',
                       'family_name',
@@ -182,9 +177,8 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
                       'place_of_birth',
                       'nationalities',
                     ],
-                    group: 'PID',
                   }),
-                  pidMdocInputDescriptor({
+                  pidMdocCredential({
                     fields: [
                       'given_name',
                       'family_name',
@@ -197,17 +191,10 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
                       'birth_place',
                       'nationality',
                     ],
-                    group: 'PID',
                   }),
                 ],
-                submission_requirements: [
-                  {
-                    rule: 'pick',
-                    count: 1,
-                    from: 'PID',
-                  },
-                ],
-              },
+                credential_sets: [[0, 1]],
+              }),
             },
       responseMode: 'direct_post.jwt',
     })
@@ -235,15 +222,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   if (issuanceSession.presentation?.required) {
-    const descriptor = verification?.presentationExchange?.descriptors.find(
-      (descriptor) =>
-        descriptor.descriptor.id === 'pid-sd-jwt-issuance' || descriptor.descriptor.id === 'eu.europa.ec.eudi.pid.1'
-    )
+    const descriptor = verification?.presentationExchange?.descriptors[0]
 
     // We allow receiving the PID in both SD-JWT and mdoc when issuing in sd-jwt or mdoc format
-    if (descriptor?.format === ClaimFormat.SdJwtVc || descriptor?.format === ClaimFormat.MsoMdoc) {
+    if (descriptor?.claimFormat === ClaimFormat.SdJwtVc || descriptor?.claimFormat === ClaimFormat.MsoMdoc) {
       const driversLicenseClaims =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               given_name: descriptor.credential.prettyClaims.given_name,
               family_name: descriptor.credential.prettyClaims.family_name,
@@ -271,7 +255,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const taxIdClaims =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               registered_given_name: descriptor.credential.prettyClaims.given_name,
               registered_family_name: descriptor.credential.prettyClaims.family_name,
@@ -293,7 +277,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const certificateOfResidenceClaims =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -313,10 +297,10 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
-      const healthIdClaims = descriptor.format === ClaimFormat.SdJwtVc ? {} : {}
+      const healthIdClaims = descriptor.claimFormat === ClaimFormat.SdJwtVc ? {} : {}
 
       const msisdnClaimsData =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               registered_given_name: descriptor.credential.prettyClaims.given_name,
               registered_family_name: descriptor.credential.prettyClaims.family_name,
@@ -328,7 +312,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const arfCompliantPidData =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -362,7 +346,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           : {}
 
       const nederlandenPidData =
-        descriptor.format === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtVc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,

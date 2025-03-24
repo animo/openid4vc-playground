@@ -1,3 +1,4 @@
+import type { ResponseMode } from '../components/VerifyBlock'
 import { NEXT_PUBLIC_API_URL } from './constants'
 
 export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { userPin?: string } }
@@ -107,11 +108,14 @@ export async function receiveOffer(offerUri: string) {
 }
 
 export async function createRequest(data: {
-  requestSignerType: 'x5c' | 'openid-federation'
+  requestSignerType: 'x5c' | 'openid-federation' | 'none'
   presentationDefinitionId: string
   requestScheme: string
-  responseMode: 'direct_post' | 'direct_post.jwt'
+  responseMode: ResponseMode
   purpose?: string
+  transactionAuthorizationType: 'none' | 'qes'
+  version: 'v1.draft21' | 'v1.draft24'
+  queryLanguage: 'pex' | 'dcql'
 }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
     method: 'POST',
@@ -122,7 +126,39 @@ export async function createRequest(data: {
   })
 
   if (!response.ok) {
-    throw new Error('Failed to create request')
+    throw new Error(
+      await response
+        .json()
+        .then(({ message }) => message)
+        .catch(() => 'Failed to create request')
+    )
+  }
+
+  return response.json()
+}
+
+export async function verifyResponseDc(data: {
+  verificationSessionId: string
+  data: string | Record<string, unknown>
+}) {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/verify-dc`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to verify response.  
+        ${JSON.stringify(
+          await response
+            .json()
+            .then((a) => ('error' in a ? a.error : JSON.stringify(a, null, 2)))
+            .catch((e) => response.clone().text())
+        )}`
+    )
   }
 
   return response.json()

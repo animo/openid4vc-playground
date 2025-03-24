@@ -9,16 +9,10 @@
   },
   "pnpm": {
     "overrides": {
-      "@sphereon/did-auth-siop": "https://gitpkg.vercel.app/animo/OID4VC/packages/siop-oid4vp?funke",
-      "@sphereon/jarm": "https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke",
-      "@sphereon/oid4vc-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250224091806",
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250224091806",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250224091806",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806",
-      "dcql": "0.2.17",
-      "@sphereon/pex-models": "2.3.2",
-      "@animo-id/mdoc": "0.5.0-alpha-20250225231643"
+      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250324190316",
+      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250324190316",
+      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316",
+      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316"
     },
     "patchedDependencies": {
       "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"

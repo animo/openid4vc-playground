@@ -3,12 +3,12 @@
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.14",
-    "@animo-id/mdoc": "0.5.0-alpha-20250225231643",
-    "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250224091806",
-    "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250224091806",
-    "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250224091806",
-    "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806",
-    "@openwallet-foundation/askar-nodejs": "^0.3.0",
+    "@credo-ts/askar": "0.6.0-alpha-20250324131619",
+    "@credo-ts/core": "0.6.0-alpha-20250324131619",
+    "@credo-ts/node": "0.6.0-alpha-20250324131619",
+    "@credo-ts/openid4vc": "0.6.0-alpha-20250324131619",
+    "@openwallet-foundation/askar-nodejs": "^0.3.2",
+    "@openwallet-foundation/askar-shared": "^0.3.2",
     "ai": "^4.1.51",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -31,19 +31,13 @@
   },
   "pnpm": {
     "overrides": {
-      "@sphereon/did-auth-siop": "https://gitpkg.vercel.app/animo/OID4VC/packages/siop-oid4vp?funke",
-      "@sphereon/jarm": "https://gitpkg.vercel.app/animo/OID4VC/packages/jarm?funke",
-      "@sphereon/oid4vc-common": "https://gitpkg.vercel.app/animo/OID4VC/packages/common?funke",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250224091806",
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250224091806",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250224091806",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250224091806",
-      "dcql": "0.2.17",
-      "@sphereon/pex-models": "2.3.2",
-      "@animo/mdoc": "0.5.0-alpha-20250225231643"
+      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250324190316",
+      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250324190316",
+      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316",
+      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316"
     },
     "patchedDependencies": {
-      "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"
+      "@credo-ts/core": "patches/@animo-id__credo-ts-core.patch"
     }
   }
 }

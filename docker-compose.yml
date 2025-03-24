@@ -11,7 +11,7 @@ services:
       labels:
         traefik.enable: "true"
 
-        traefik.http.routers.openid4vc-server.rule: Host(`funke.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/siop`) || PathPrefix(`/provider`) || PathPrefix(`.well-known`))
+        traefik.http.routers.openid4vc-server.rule: Host(`funke.animo.id`) && (PathPrefix(`/api`) || PathPrefix(`/oid4vci`) || PathPrefix(`/oid4vp`) || PathPrefix(`/provider`) || PathPrefix(`.well-known`))
         traefik.http.routers.openid4vc-server.entrypoints: web-secure
         traefik.http.routers.openid4vc-server.tls.certresolver: zerossl
         traefik.http.routers.openid4vc-server.service: openid4vc-server-service
@@ -39,7 +39,7 @@ services:
           - node.labels.type == community
       labels:
         traefik.enable: "true"
-        traefik.http.routers.openid4vc-app.rule: Host(`funke.animo.id`) && !PathPrefix(`/oid4vci`) && !PathPrefix(`/siop`) && !PathPrefix(`/api`) && !PathPrefix(`/provider`)
+        traefik.http.routers.openid4vc-app.rule: Host(`funke.animo.id`) && !PathPrefix(`/oid4vci`) && !PathPrefix(`/oid4vp`) && !PathPrefix(`/api`) && !PathPrefix(`/provider`)
         traefik.http.routers.openid4vc-app.entrypoints: web-secure
         traefik.http.routers.openid4vc-app.tls.certresolver: zerossl
         traefik.http.routers.openid4vc-app.service: openid4vc-app-service

@@ -1,0 +1,9 @@
+version: 2
+
+tunnels:
+  agent:
+    proto: http
+    addr: 3001
+  app:
+    proto: http
+    addr: 3000

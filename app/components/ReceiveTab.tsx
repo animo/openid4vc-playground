@@ -41,7 +41,7 @@ export function ReceiveTab({ disabled = false }: { disabled?: boolean }) {
       </Alert>
       <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitReceiveOffer}>
         <div className="space-y-2">
-          <Label htmlFor="credential-offer-uri">Credential Offer or SIOP URI</Label>
+          <Label htmlFor="credential-offer-uri">Credential Offer or OpenID4VP URI</Label>
           <textarea
             disabled={disabled}
             className="w-full h-20 p-2 rounded-md bg-white border border-gray-300"

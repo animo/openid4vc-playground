@@ -8,10 +8,7 @@ let x509RootCertificate: string | undefined = undefined
 let x509DcsCertificate: string | undefined = undefined
 
 export async function setupX509Certificate() {
-  // const x509RootRecord = await agent.genericRecords.findById('X509_ROOT_CERTIFICATE')
-  const x509RootRecord = await agent.genericRecords.findById('X509_ROOT_CERTIFICATE')
-
-  //   console.log(await agent.genericRecords.getAll())
+  const x509Record = await agent.genericRecords.findById('X509_CERTIFICATE')
 
   try {
     const { documentSignerKey, authorityKey } = await createKeys()
@@ -44,6 +41,9 @@ export async function setupX509Certificate() {
             'Key in provided X509_DCS_CERTIFICATE env variable does not match the key from the DCS_P256_SEED'
           )
         }
+      } else {
+        const dcsCertificate = await createDocumentSignerCertificate(authorityKey, documentSignerKey, parsedCertificate)
+        x509DcsCertificate = dcsCertificate.toString('base64')
       }
     } else {
       const rootCertificate = await createRootCertificate(authorityKey)
@@ -52,24 +52,24 @@ export async function setupX509Certificate() {
       x509DcsCertificate = dcsCertificate.toString('base64')
     }
 
-    if (x509RootRecord) {
-      x509RootRecord.content = { certificate: x509RootCertificate }
-      await agent.genericRecords.update(x509RootRecord)
+    if (x509Record) {
+      x509Record.content = { root: x509RootCertificate, dcs: x509DcsCertificate }
+      await agent.genericRecords.update(x509Record)
     } else {
       await agent.genericRecords.save({
-        id: 'X509_ROOT_CERTIFICATE',
-        content: {
-          certificate: x509RootCertificate,
-        },
+        id: 'X509_CERTIFICATE',
+        content: { root: x509RootCertificate, dcs: x509DcsCertificate },
       })
     }
+    console.log(x509DcsCertificate, x509RootCertificate)
   } catch (error) {
     // If the key already exists, we assume the self-signed certificate is already created
     if (error instanceof WalletKeyExistsError) {
-      if (!x509RootRecord) {
+      if (!x509Record) {
         throw new Error('No available key method record found')
       }
-      x509RootCertificate = x509RootRecord.content.certificate as string
+      x509RootCertificate = x509Record.content.root as string
+      x509DcsCertificate = x509Record.content.dcs as string
     } else {
       throw error
     }
@@ -80,6 +80,10 @@ export async function setupX509Certificate() {
 
   console.log('======= X.509 IACA DCS  Certificate ===========')
   console.log(x509DcsCertificate)
+
+  if (!x509RootCertificate || !x509DcsCertificate) {
+    throw new Error('Error setting up certificates')
+  }
 
   agent.x509.addTrustedCertificate(x509RootCertificate)
   agent.x509.addTrustedCertificate(x509RootCertificate)

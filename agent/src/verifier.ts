@@ -1,12 +1,17 @@
-import type { DcqlQuery, DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
-import type { OpenId4VcSiopCreateVerifierOptions } from '@credo-ts/openid4vc'
+import type { OpenId4VpCreateVerifierOptions } from '@credo-ts/openid4vc'
 import { agent } from './agent'
+import type { MdocCredential, SdJwtCredential } from './verifiers/util'
 
 export interface PlaygroundVerifierOptions {
   verifierId: string
-  clientMetadata?: OpenId4VcSiopCreateVerifierOptions['clientMetadata']
-  presentationRequests: Array<DifPresentationExchangeDefinitionV2>
-  dcqlRequests: Array<DcqlQuery & { id: string; name: string }>
+  clientMetadata?: OpenId4VpCreateVerifierOptions['clientMetadata']
+  requests: Array<{
+    name: string
+    purpose: string
+    credentials: Array<SdJwtCredential | MdocCredential>
+    // Indexes
+    credential_sets?: Array<number[]>
+  }>
   useCase?: {
     name: string
     icon: string

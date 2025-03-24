@@ -23,13 +23,7 @@ export const verifiers = [
   pgeuVerifier,
   europeanUnionVerifier,
 ]
-export const allDefinitions = verifiers.flatMap(
-  (
-    v
-  ): Array<
-    PlaygroundVerifierOptions['presentationRequests'][number] | PlaygroundVerifierOptions['dcqlRequests'][number]
-  > => [...v.presentationRequests, ...v.dcqlRequests]
-)
+export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 
 export const verifierTrustChains = [
   // --- Turbo keys ---

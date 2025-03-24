@@ -3,8 +3,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import Image from 'next/image'
+
 import { IssueTab } from './IssueTab'
-import { VerifyTab } from './VerifyTab'
+import { VerifyBlock } from './VerifyBlock'
 import { X509Tab } from './X509Tab'
 
 export function Main() {
@@ -31,7 +32,7 @@ export function Main() {
               <TabsTrigger value="x509">Manage Certificates</TabsTrigger>
             </TabsList>
             <TabsContent value="verify">
-              <VerifyTab />
+              <VerifyBlock />
             </TabsContent>
             <TabsContent value="issue">
               <IssueTab />
