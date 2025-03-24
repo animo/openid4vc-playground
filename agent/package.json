@@ -37,7 +37,7 @@
       "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316"
     },
     "patchedDependencies": {
-      "@credo-ts/core": "patches/@animo-id__credo-ts-core.patch"
+      "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"
     }
   }
 }
