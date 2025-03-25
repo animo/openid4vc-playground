@@ -2,16 +2,18 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { CheckIcon, CopyIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { type Issuers, createOffer, getIssuers } from '../lib/api'
 import { X509Certificates } from './X509Certificates'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
+import { TypographyH3 } from './ui/typography'
 
 const credentialFormatMap = {
   'vc+sd-jwt': 'SD-JWT VC',
@@ -30,15 +32,46 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [userPin, setUserPin] = useState<string>()
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
+  const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
 
   useEffect(() => {
+    if (issuers) return
+
+    const query = Object.fromEntries(searchParams.entries())
+    console.log(query)
+
     getIssuers().then((i) => {
       setIssuers(i)
-      setSelectedIssuerId(i[0].id)
-      setCredentialType(0)
-      setSelectedFormat(Object.keys(i[0].credentials[0]?.formats ?? {})[0])
+
+      const issuerId = query.issuerId ?? i[0].id
+      const credentialType = query.issuerId && query.credentialType ? Number(query.credentialType) : 0
+
+      setSelectedIssuerId(issuerId)
+      setCredentialType(credentialType)
+      setSelectedFormat(
+        query.format ?? Object.keys(i.find((i) => i.id === issuerId)?.credentials[credentialType]?.formats ?? {})[0]
+      )
+      if (query.authorization) setSelectedAuthorization(query.authorization)
     })
-  }, [])
+  }, [issuers, searchParams])
+
+  // Update URL when state changes
+  useEffect(() => {
+    if (!issuers) return
+    const params = new URLSearchParams()
+    console.log('set')
+
+    params.set('tab', 'issue')
+    if (selectedIssuerId) params.set('issuerId', selectedIssuerId)
+    if (selectedFormat) params.set('format', selectedFormat)
+    if (selectedAuthorization) params.set('authorization', selectedAuthorization)
+    if (credentialType !== undefined) params.set('credentialType', `${credentialType}`)
+
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [issuers, selectedIssuerId, selectedFormat, selectedAuthorization, credentialType, router])
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
@@ -55,6 +88,17 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     })
     setCredentialOfferUri(offer.credentialOffer)
     setUserPin(offer.issuanceSession.userPin)
+  }
+
+  const copyConfiguration = async () => {
+    if (isCopyingTimeout) {
+      clearTimeout(isCopyingTimeout)
+    }
+    const currentUrl = window.location.href
+    await navigator.clipboard.writeText(currentUrl)
+
+    const timeout = setTimeout(() => setIsCopyingTimeout(undefined), 3000)
+    setIsCopyingTimeout(timeout)
   }
 
   return (
@@ -74,6 +118,14 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
           .
         </AlertDescription>
       </Alert>
+      <div className="flex justify-between items-center mb-4">
+        <TypographyH3>Issue</TypographyH3>
+        <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
+          {isCopyingTimeout ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+          {copyConfigurationText}
+        </Button>
+      </div>
+
       <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitIssueCredential}>
         <div className="flex flex-col">
           <div className="flex flex-col items-start gap-2">

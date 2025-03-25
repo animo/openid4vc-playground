@@ -1,9 +1,10 @@
 import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
-import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
+import { CheckIcon, CheckboxIcon, CopyIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { CollapsibleSection } from './CollapsibleSection'
@@ -27,6 +28,13 @@ export type TransactionAuthorizationType = 'none' | 'qes'
 type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type RequestSignerType = CreateRequestOptions['requestSignerType']
+type Verifier = {
+  presentationRequests: Array<{
+    id: string
+    display: string
+    useCase: { name: string; icon: string; tags: Array<string> }
+  }>
+}
 
 export const VerifyBlock: React.FC = () => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
@@ -44,13 +52,7 @@ export const VerifyBlock: React.FC = () => {
     dcqlSubmission?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
   }>()
-  const [verifier, setVerifier] = useState<{
-    presentationRequests: Array<{
-      id: string
-      display: string
-      useCase: { name: string; icon: string; tags: Array<string> }
-    }>
-  }>()
+  const [verifier, setVerifier] = useState<Verifier>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
   const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
 
@@ -66,17 +68,65 @@ export const VerifyBlock: React.FC = () => {
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
-  const [selectedUseCase, setSelectedUseCase] = useState<string>()
   const [requestError, setRequestError] = useState<string>()
   const [requestVersion, setRequestVersion] = useState<'v1.draft21' | 'v1.draft24'>('v1.draft24')
   const [queryLanguage, setQueryLanguage] = useState<'dcql' | 'pex'>('dcql')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
+  const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
+
+  // Update URL when state changes
+  useEffect(() => {
+    if (!verifier) return
+    const params = new URLSearchParams()
+
+    params.set('tab', 'verify')
+    if (responseMode) params.set('responseMode', responseMode)
+    if (transactionAuthorizationType) params.set('transactionAuthorizationType', transactionAuthorizationType)
+    if (presentationDefinitionId) params.set('presentationDefinitionId', presentationDefinitionId)
+    if (requestScheme) params.set('requestScheme', requestScheme)
+    if (purpose) params.set('purpose', purpose)
+    if (requestSignerType) params.set('requestSignerType', requestSignerType)
+    if (requestVersion) params.set('requestVersion', requestVersion)
+    if (queryLanguage) params.set('queryLanguage', queryLanguage)
+
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [
+    verifier,
+    responseMode,
+    transactionAuthorizationType,
+    presentationDefinitionId,
+    requestScheme,
+    purpose,
+    requestSignerType,
+    requestVersion,
+    queryLanguage,
+    router,
+  ])
 
   useEffect(() => {
-    getVerifier().then((v: NonNullable<typeof verifier>) => {
+    if (verifier) return
+    const query = Object.fromEntries(searchParams.entries())
+
+    getVerifier().then((v: Verifier) => {
       setVerifier(v)
-      setSelectedUseCase(Object.keys(groupBy(v.presentationRequests, (vv) => vv.useCase.name))[0])
+
+      if (query.responseMode) setResponseMode(query.responseMode as ResponseMode)
+      if (query.transactionAuthorizationType)
+        setTransactionAuthorizationType(query.transactionAuthorizationType as TransactionAuthorizationType)
+
+      setPresentationDefinitionId(
+        query.presentationDefinitionId ?? Object.values(groupBy(v.presentationRequests, (v) => v.useCase.name))[0][0].id
+      )
+      if (query.requestScheme) setRequestScheme(query.requestScheme as string)
+      if (query.purpose) setPurpose(query.purpose as string)
+      if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
+      if (query.requestVersion) setRequestVersion(query.requestVersion as 'v1.draft21' | 'v1.draft24')
+      if (query.queryLanguage) setQueryLanguage(query.queryLanguage as 'dcql' | 'pex')
     })
-  }, [])
+  }, [searchParams, verifier])
 
   useInterval({
     callback: async () => {
@@ -189,10 +239,28 @@ export const VerifyBlock: React.FC = () => {
     }
   }
 
+  const copyConfiguration = async () => {
+    if (isCopyingTimeout) {
+      clearTimeout(isCopyingTimeout)
+    }
+    const currentUrl = window.location.href
+    await navigator.clipboard.writeText(currentUrl)
+
+    const timeout = setTimeout(() => setIsCopyingTimeout(undefined), 3000)
+    setIsCopyingTimeout(timeout)
+  }
+
   // This is wrong
   const groupedVerifier = verifier?.presentationRequests
     ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
     : {}
+
+  const selectedUseCase =
+    Object.entries(groupedVerifier).find(([, requests]) =>
+      requests.find((r) => r.id === presentationDefinitionId)
+    )?.[0] ?? Object.keys(groupedVerifier)[0]
+
+  console.log(presentationDefinitionId)
 
   return (
     <Card className="p-6">
@@ -211,7 +279,13 @@ export const VerifyBlock: React.FC = () => {
           .
         </AlertDescription>
       </Alert>
-      <TypographyH3>Verify</TypographyH3>
+      <div className="flex justify-between items-center mb-4">
+        <TypographyH3>Verify</TypographyH3>
+        <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
+          {isCopyingTimeout ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+          {copyConfigurationText}
+        </Button>
+      </div>
       <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
         <div className="flex flex-col">
           <div className="flex flex-col items-start gap-2">
@@ -220,7 +294,7 @@ export const VerifyBlock: React.FC = () => {
           <RadioGroup
             className="grid grid-cols-2 gap-2 py-2 pb-4"
             value={selectedUseCase}
-            onValueChange={setSelectedUseCase}
+            onValueChange={(useCase) => setPresentationDefinitionId(groupedVerifier[useCase][0].id)}
           >
             {Object.entries(groupedVerifier).map(([useCase]) => (
               <CardRadioItem
@@ -241,7 +315,11 @@ export const VerifyBlock: React.FC = () => {
             name="presentation-definition-id"
             required
             value={presentationDefinitionId}
-            onValueChange={(value) => setPresentationDefinitionId(value)}
+            onValueChange={(value) => {
+              if (value !== '') {
+                setPresentationDefinitionId(value)
+              }
+            }}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a presentation type" />
@@ -384,7 +462,7 @@ export const VerifyBlock: React.FC = () => {
         <div className="space-y-2">
           <Label htmlFor="request-purpose">Purpose</Label>
           <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-          <Input name="request-purpose" required value={purpose} onChange={({ target }) => setPurpose(target.value)} />
+          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
         </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">

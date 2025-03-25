@@ -4,11 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import Image from 'next/image'
 
+import { useSearchParams } from 'next/navigation'
 import { IssueTab } from './IssueTab'
 import { VerifyBlock } from './VerifyBlock'
 import { X509Tab } from './X509Tab'
 
 export function Main() {
+  const searchParams = useSearchParams()
   return (
     <>
       <main key="1" className="flex flex-col gap-2 min-h-screen bg-gray-100">
@@ -25,7 +27,7 @@ export function Main() {
           </div>
         </div>
         <div className="flex w-full items-center justify-center">
-          <Tabs className="w-full max-w-5xl px-6" defaultValue="verify">
+          <Tabs className="w-full max-w-5xl px-6" defaultValue={searchParams.get('tab') ?? 'verify'}>
             <TabsList className="grid w-full grid-cols-3 gap-2">
               <TabsTrigger value="verify">Verify</TabsTrigger>
               <TabsTrigger value="issue">Issue</TabsTrigger>
