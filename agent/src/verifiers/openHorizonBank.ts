@@ -19,7 +19,7 @@ export const openHorizonBankVerifier = {
   },
   requests: [
     {
-      name: 'PID and MDL - Open an Open Horizon Bank account (sd-jwt vc)',
+      name: 'PID and MDL (sd-jwt vc)',
       purpose:
         'To open an Open Horizon Bank account, we need to verify your name, date of birth, country of residence and nationality',
       credentials: [
