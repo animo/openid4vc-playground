@@ -102,7 +102,7 @@ export function presentationDefinitionFromRequest(
         ],
       },
     })),
-    submission_requirements: request.credential_sets?.map((index) => ({
+    submission_requirements: request.credential_sets?.map((_, index) => ({
       rule: 'pick',
       count: 1,
       from: `${index}`,
