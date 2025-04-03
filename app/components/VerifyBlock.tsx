@@ -92,6 +92,14 @@ export const VerifyBlock: React.FC = () => {
     if (requestVersion) params.set('requestVersion', requestVersion)
     if (queryLanguage) params.set('queryLanguage', queryLanguage)
 
+    const existingSearchParams = new URLSearchParams(searchParams.toString())
+
+    // Sort both for comparison
+    existingSearchParams.sort()
+    params.sort()
+
+    if (existingSearchParams.toString() === params.toString()) return
+
     router.replace(`?${params.toString()}`, { scroll: false })
   }, [
     verifier,
@@ -104,6 +112,7 @@ export const VerifyBlock: React.FC = () => {
     requestVersion,
     queryLanguage,
     router,
+    searchParams,
   ])
 
   useEffect(() => {
@@ -259,8 +268,6 @@ export const VerifyBlock: React.FC = () => {
     Object.entries(groupedVerifier).find(([, requests]) =>
       requests.find((r) => r.id === presentationDefinitionId)
     )?.[0] ?? Object.keys(groupedVerifier)[0]
-
-  console.log(presentationDefinitionId)
 
   return (
     <Card className="p-6">

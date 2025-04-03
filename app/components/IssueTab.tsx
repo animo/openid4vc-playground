@@ -41,7 +41,6 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     if (issuers) return
 
     const query = Object.fromEntries(searchParams.entries())
-    console.log(query)
 
     getIssuers().then((i) => {
       setIssuers(i)
@@ -62,7 +61,6 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   useEffect(() => {
     if (!issuers) return
     const params = new URLSearchParams()
-    console.log('set')
 
     params.set('tab', 'issue')
     if (selectedIssuerId) params.set('issuerId', selectedIssuerId)
@@ -70,8 +68,16 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     if (selectedAuthorization) params.set('authorization', selectedAuthorization)
     if (credentialType !== undefined) params.set('credentialType', `${credentialType}`)
 
+    const existingSearchParams = new URLSearchParams(searchParams.toString())
+
+    // Sort both for comparison
+    existingSearchParams.sort()
+    params.sort()
+
+    if (existingSearchParams.toString() === params.toString()) return
+
     router.replace(`?${params.toString()}`, { scroll: false })
-  }, [issuers, selectedIssuerId, selectedFormat, selectedAuthorization, credentialType, router])
+  }, [issuers, selectedIssuerId, selectedFormat, selectedAuthorization, credentialType, router, searchParams])
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
