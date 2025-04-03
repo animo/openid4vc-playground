@@ -156,7 +156,7 @@ export const VerifyBlock: React.FC = () => {
           providers: [
             {
               protocol: 'openid4vp',
-              request: request.authorizationRequestObject,
+              request: JSON.stringify(request.authorizationRequestObject),
             },
           ],
         },

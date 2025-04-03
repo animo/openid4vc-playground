@@ -141,7 +141,7 @@ export function dcqlQueryFromRequest(
             meta: {
               doctype_value: c.doctype,
             },
-            claims: c.fields.map((f) => ({ path: [c.doctype, f], intent_to_retain: false })),
+            claims: c.fields.map((f) => ({ path: [c.namespace, f], intent_to_retain: false })),
           }
     ),
     credential_sets: request.credential_sets
