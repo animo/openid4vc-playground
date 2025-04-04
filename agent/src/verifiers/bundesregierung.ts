@@ -1,5 +1,5 @@
 import { AGENT_HOST } from '../constants'
-import { arfCompliantPidSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
+import { arfCompliantPidSdJwt, arfCompliantPidUrnVctSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
 import { taxIdMdoc, taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { pidMdocCredential, pidSdJwtCredential } from './util'
@@ -63,7 +63,7 @@ export const bundesregierungVerifier = {
       credentials: [
         {
           format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct],
+          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
           fields: [
             // Mandatory
             'family_name',
@@ -103,7 +103,7 @@ export const bundesregierungVerifier = {
       credentials: [
         {
           format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct],
+          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
           fields: [
             // Mandatory
             'family_name',
@@ -136,7 +136,7 @@ export const bundesregierungVerifier = {
       credentials: [
         {
           format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct],
+          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
           fields: [
             // Mandatory
             'family_name',

@@ -29,7 +29,7 @@ export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) 
   return {
     format: 'dc+sd-jwt',
     fields,
-    vcts: ['https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0', 'urn:eu.europa.ec.eudi:pid:1'],
+    vcts: ['https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
     issuers: [
       'https://demo.pid-issuer.bundesdruckerei.de/c',
       'https://demo.pid-issuer.bundesdruckerei.de/c1',
