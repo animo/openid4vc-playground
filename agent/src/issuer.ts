@@ -94,7 +94,14 @@ export async function getIssuer(issuerId: string) {
 export function getIssuerIdForCredentialConfigurationId(credentialConfigurationId: string) {
   const issuer = issuers.find(({ credentialConfigurationsSupported }) =>
     Object.values(credentialConfigurationsSupported)
-      .flatMap((a) => Object.values(a).map((b) => b.data.credentialConfigurationId))
+      .flatMap((a) =>
+        Object.values(a).flatMap((b) => [
+          b.data.credentialConfigurationId,
+          `${b.data.credentialConfigurationId}-dc-sd-jwt`,
+          `${b.data.credentialConfigurationId}-key-attestations`,
+          `${b.data.credentialConfigurationId}-dc-sd-jwt-key-attestations`,
+        ])
+      )
       .includes(credentialConfigurationId)
   )
 
@@ -127,8 +134,19 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       },
       presentationExchange:
         credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
+        credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
+        credentialConfigurationId ===
+          `${arfCompliantPidSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestations` ||
+        credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-key-attestations` ||
         credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId
+        credentialConfigurationId === `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
+        credentialConfigurationId ===
+          `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestations` ||
+        credentialConfigurationId === `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-key-attestations` ||
+        credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId ||
+        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
+        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestaions` ||
+        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-key-attestations`
           ? {
               definition: presentationDefinitionFromRequest({
                 name: 'Identity card',
@@ -206,15 +224,11 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
   }
 
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper = async ({
-  // FIXME: it would be useful if holderBinding would include some metadata on the key type / alg used
-  // for the key binding
-  holderBindings,
-  credentialConfigurationIds,
+  holderBinding,
+  credentialConfigurationId,
   verification,
   issuanceSession,
 }): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials | OpenId4VciSignW3cCredentials> => {
-  const credentialConfigurationId = credentialConfigurationIds[0]
-
   const certificates = getX509Certificates()
   const credentialData = issuersCredentialsData[credentialConfigurationId as keyof typeof issuersCredentialsData]
   if (!credentialData) {
@@ -381,47 +395,55 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
           : {}
 
-      const formatSpecificClaims = {
-        [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
-          driversLicenseClaims,
-        [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: driversLicenseClaims,
+      const formatSpecificClaims = Object.fromEntries(
+        Object.entries({
+          [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+            driversLicenseClaims,
+          [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+            driversLicenseClaims,
 
-        [bdrIssuer.credentialConfigurationsSupported[1]['vc+sd-jwt'].data.credentialConfigurationId]:
-          arfCompliantPidData,
+          [bdrIssuer.credentialConfigurationsSupported[1]['vc+sd-jwt'].data.credentialConfigurationId]:
+            arfCompliantPidData,
 
-        [bdrIssuer.credentialConfigurationsSupported[2]['vc+sd-jwt'].data.credentialConfigurationId]:
-          arfCompliantPidData,
+          [bdrIssuer.credentialConfigurationsSupported[2]['vc+sd-jwt'].data.credentialConfigurationId]:
+            arfCompliantPidData,
 
-        [nederlandenIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
-          nederlandenPidData,
-        // @ts-expect-error Can be undefined because other configuration does not have vc+sd-jwt
-        [nederlandenIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
-          nederlandenPidData,
+          [nederlandenIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+            nederlandenPidData,
+          // @ts-expect-error Can be undefined because other configuration does not have vc+sd-jwt
+          [nederlandenIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+            nederlandenPidData,
 
-        [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
-          healthIdClaims,
-        [krankenkasseIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
-          healthIdClaims,
+          [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+            healthIdClaims,
+          [krankenkasseIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+            healthIdClaims,
 
-        [steuernIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]: taxIdClaims,
-        [steuernIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: taxIdClaims,
+          [steuernIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]: taxIdClaims,
+          [steuernIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: taxIdClaims,
 
-        [kolnIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
-          certificateOfResidenceClaims,
-        [kolnIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
-          certificateOfResidenceClaims,
+          [kolnIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+            certificateOfResidenceClaims,
+          [kolnIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+            certificateOfResidenceClaims,
 
-        [telOrgIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
-          msisdnClaimsData,
-        [telOrgIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: msisdnClaimsData,
-      }
+          [telOrgIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+            msisdnClaimsData,
+          [telOrgIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: msisdnClaimsData,
+        }).flatMap(([configurationId, data]) => [
+          [configurationId, data],
+          [`${configurationId}-key-attestations`, data],
+          [`${configurationId}-dc-sd-jwt`, data],
+          [`${configurationId}-dc-sd-jwt-key-attestations`, data],
+        ])
+      )
 
       if (credentialData.format === ClaimFormat.SdJwtVc) {
         const { credential, ...restCredentialData } = credentialData
 
         return {
           ...restCredentialData,
-          credentials: holderBindings.map((holderBinding) => ({
+          credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
             payload: {
               ...credential.payload,
@@ -443,7 +465,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         const [namespace, values] = Object.entries(credential.namespaces)[0]
         console.log({
           ...restCredentialData,
-          credentials: holderBindings.map((holderBinding) => ({
+          credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
             namespaces: {
               [namespace]: {
@@ -458,7 +480,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         })
         return {
           ...restCredentialData,
-          credentials: holderBindings.map((holderBinding) => ({
+          credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
             namespaces: {
               [namespace]: {
@@ -479,7 +501,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     const { credential, ...restCredentialData } = credentialData
     return {
       ...restCredentialData,
-      credentials: holderBindings.map((holderBinding) => ({
+      credentials: holderBinding.keys.map((holderBinding) => ({
         ...credential,
         holder: holderBinding,
         issuer: {
@@ -495,7 +517,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     const { credential, ...restCredentialData } = credentialData
     return {
       ...restCredentialData,
-      credentials: holderBindings.map((holderBinding) => ({
+      credentials: holderBinding.keys.map((holderBinding) => ({
         ...credential,
         holderKey: holderBinding.key,
         issuerCertificate: getX509DcsCertificate(),
@@ -509,7 +531,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     const didWeb = await getWebDidDocument()
     return {
       ...restCredentialData,
-      credentials: holderBindings.map((holderBinding) => {
+      credentials: holderBinding.keys.map((holderBinding) => {
         if (holderBinding.method !== 'did') {
           throw new Error("Only 'did' holder binding supported for ldp vc")
         }

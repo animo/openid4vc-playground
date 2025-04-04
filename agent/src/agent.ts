@@ -82,6 +82,7 @@ export const agent = new Agent({
         x509BdrMdlIssuerCertificate,
         x509PidIssuerRootCertificate,
         certs.IACA_RDW_EU_PID,
+        certs.GOOGLE_CM_WALLET,
         certs.IACA_Bosa,
         certs.IACA_Luxembourg_TST,
         certs.IACA_Clear,

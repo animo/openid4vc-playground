@@ -33,6 +33,9 @@ import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verif
 const zCreateOfferRequest = z.object({
   credentialSupportedIds: z.array(z.string()),
   authorization: z.enum(['pin', 'none', 'presentation', 'browser']).default('none'),
+  requireDpop: z.boolean().default(false),
+  requireWalletAttestation: z.boolean().default(false),
+  requireKeyAttestation: z.boolean().default(false),
 })
 
 const zAddX509CertificateRequest = z.object({
@@ -47,14 +50,22 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   const createOfferRequest = zCreateOfferRequest.parse(request.body)
 
   // TODO: support multiple credential isuance
-  const configurationId = createOfferRequest.credentialSupportedIds[0]
+  const configurationId = createOfferRequest.requireKeyAttestation
+    ? `${createOfferRequest.credentialSupportedIds[0]}-key-attestations`
+    : createOfferRequest.credentialSupportedIds[0]
+
   const issuerId = getIssuerIdForCredentialConfigurationId(configurationId)
   const authorization = createOfferRequest.authorization
   const issuerMetadata = await agent.modules.openId4VcIssuer.getIssuerMetadata(issuerId)
 
   const offer = await agent.modules.openId4VcIssuer.createCredentialOffer({
     issuerId,
-    offeredCredentials: createOfferRequest.credentialSupportedIds,
+    credentialConfigurationIds: [configurationId],
+    version: 'v1.draft15',
+    authorization: {
+      requireDpop: createOfferRequest.requireDpop,
+      requireWalletAttestation: createOfferRequest.requireWalletAttestation,
+    },
     preAuthorizedCodeFlowConfig:
       authorization === 'pin' || authorization === 'none'
         ? {
@@ -127,9 +138,11 @@ apiRouter.get('/issuers', async (_, response: Response) => {
           return {
             display: first.configuration.display[0],
             formats: Object.fromEntries(
-              Object.entries(values).map(([format, configuration]) => [
-                format,
-                configuration.data.credentialConfigurationId,
+              Object.entries(values).flatMap(([format, configuration]) => [
+                [format, configuration.data.credentialConfigurationId],
+                ...(format === 'vc+sd-jwt'
+                  ? [['dc+sd-jwt', `${configuration.data.credentialConfigurationId}-dc-sd-jwt`]]
+                  : []),
               ])
             ),
           }
@@ -286,6 +299,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const presentationDefinition = authorizationRequestPayload.presentation_definition
     const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
 
+    console.log(JSON.stringify(authorizationRequestObject, null, 2))
     return response.json({
       authorizationRequestObject,
       authorizationRequestUri: authorizationRequest.replace('openid4vp://', requestScheme),

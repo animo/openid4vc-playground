@@ -13,10 +13,12 @@ import { type Issuers, createOffer, getIssuers } from '../lib/api'
 import { X509Certificates } from './X509Certificates'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
+import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
 
 const credentialFormatMap = {
-  'vc+sd-jwt': 'SD-JWT VC',
+  'vc+sd-jwt': 'SD-JWT VC (vc+sd-jwt)',
+  'dc+sd-jwt': 'SD-JWT VC (dc+sd-jwt)',
   mso_mdoc: 'mDOC',
   ldp_vc: 'W3C 1.1 JSON-LD',
 }
@@ -26,6 +28,10 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [selectedIssuerId, setSelectedIssuerId] = useState<string>()
   const [issuers, setIssuers] = useState<Issuers>()
   const [selectedFormat, setSelectedFormat] = useState<string>()
+  const [requireKeyAttestation, setRequireKeyAttestation] = useState<boolean>(false)
+  const [requireWalletAttestation, setRequireWalletAttestation] = useState<boolean>(false)
+  const [requireDpop, setRequireDpop] = useState<boolean>(false)
+
   const [selectedAuthorization, setSelectedAuthorization] = useState<string>('none')
 
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
@@ -54,6 +60,9 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
         query.format ?? Object.keys(i.find((i) => i.id === issuerId)?.credentials[credentialType]?.formats ?? {})[0]
       )
       if (query.authorization) setSelectedAuthorization(query.authorization)
+      if (query.dpop) setRequireDpop(query.dpop === 'true')
+      if (query.walletAttestation) setRequireWalletAttestation(query.walletAttestation === 'true')
+      if (query.keyAttestation) setRequireKeyAttestation(query.keyAttestation === 'true')
     })
   }, [issuers, searchParams])
 
@@ -66,6 +75,9 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     if (selectedIssuerId) params.set('issuerId', selectedIssuerId)
     if (selectedFormat) params.set('format', selectedFormat)
     if (selectedAuthorization) params.set('authorization', selectedAuthorization)
+    params.set('dpop', `${requireDpop}`)
+    params.set('keyAttestation', `${requireKeyAttestation}`)
+    params.set('walletAttestation', `${requireWalletAttestation}`)
     if (credentialType !== undefined) params.set('credentialType', `${credentialType}`)
 
     const existingSearchParams = new URLSearchParams(searchParams.toString())
@@ -77,7 +89,18 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     if (existingSearchParams.toString() === params.toString()) return
 
     router.replace(`?${params.toString()}`, { scroll: false })
-  }, [issuers, selectedIssuerId, selectedFormat, selectedAuthorization, credentialType, router, searchParams])
+  }, [
+    issuers,
+    selectedIssuerId,
+    selectedFormat,
+    selectedAuthorization,
+    credentialType,
+    router,
+    searchParams,
+    requireDpop,
+    requireKeyAttestation,
+    requireWalletAttestation,
+  ])
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
@@ -91,6 +114,9 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     const offer = await createOffer({
       credentialSupportedId,
       authorization: selectedAuthorization,
+      requireDpop,
+      requireKeyAttestation,
+      requireWalletAttestation,
     })
     setCredentialOfferUri(offer.credentialOffer)
     setUserPin(offer.issuanceSession.userPin)
@@ -254,6 +280,36 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
             <MiniRadioItem value="browser" label="Sign in" />
             <MiniRadioItem value="pin" label="Transaction code" />
           </RadioGroup>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="require-dpop">Require DPoP</Label>
+          <Switch
+            id="require-dpop"
+            name="require-dpop"
+            required
+            checked={requireDpop}
+            onCheckedChange={setRequireDpop}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="require-wallet-attestation">Require Wallet Attestation</Label>
+          <Switch
+            id="require-wallet-attestation"
+            name="require-wallet-attestation"
+            required
+            checked={requireWalletAttestation}
+            onCheckedChange={setRequireWalletAttestation}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="require-key-attestation">Require Key Attestation</Label>
+          <Switch
+            id="require-key-attestation"
+            name="require-key-attestation"
+            required
+            checked={requireKeyAttestation}
+            onCheckedChange={setRequireKeyAttestation}
+          />
         </div>
         <div className="flex justify-center items-center bg-gray-200 min-h-64 w-full rounded-md">
           {credentialOfferUri ? (

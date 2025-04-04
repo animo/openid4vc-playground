@@ -5,9 +5,15 @@ export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { us
 export async function createOffer({
   credentialSupportedId,
   authorization,
+  requireDpop,
+  requireWalletAttestation,
+  requireKeyAttestation,
 }: {
   credentialSupportedId: string
   authorization: string
+  requireDpop: boolean
+  requireWalletAttestation: boolean
+  requireKeyAttestation: boolean
 }): Promise<CreateOfferReturn> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/create`, {
     method: 'POST',
@@ -17,6 +23,9 @@ export async function createOffer({
     body: JSON.stringify({
       credentialSupportedIds: [credentialSupportedId],
       authorization,
+      requireDpop,
+      requireWalletAttestation,
+      requireKeyAttestation,
     }),
   })
 

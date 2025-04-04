@@ -1,5 +1,5 @@
 import path from 'path'
-import { KeyType } from '@credo-ts/core'
+import { JwaSignatureAlgorithm, KeyType } from '@credo-ts/core'
 import cors from 'cors'
 import express from 'express'
 import type { Response } from 'express'
@@ -22,9 +22,74 @@ async function run() {
       ...restIssuer,
       credentialConfigurationsSupported: Object.fromEntries(
         credentialConfigurationsSupported.flatMap((item) =>
-          Object.values(item).map((itemitem) => [itemitem.data.credentialConfigurationId, itemitem.configuration])
+          Object.values(item).flatMap((itemitem) => [
+            [itemitem.data.credentialConfigurationId, itemitem.configuration],
+            [
+              `${itemitem.data.credentialConfigurationId}-key-attestations`,
+              { ...itemitem.configuration, proof_types_supported: {} },
+            ],
+            ...(itemitem.configuration.format === 'vc+sd-jwt'
+              ? [
+                  [
+                    `${itemitem.data.credentialConfigurationId}-dc-sd-jwt`,
+                    { ...itemitem.configuration, format: 'dc+sd-jwt' },
+                  ],
+                  [
+                    `${itemitem.data.credentialConfigurationId}-dc-sd-jwt-key-attestations`,
+                    {
+                      ...itemitem.configuration,
+                      format: 'dc+sd-jwt',
+                      proof_types_supported: {
+                        jwt: {
+                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          key_attestations_required: {
+                            user_authentication: ['iso_18045_high'],
+                            key_storage: ['iso_18045_high'],
+                          },
+                        },
+                        attestation: {
+                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          key_attestations_required: {
+                            user_authentication: ['iso_18045_high'],
+                            key_storage: ['iso_18045_high'],
+                          },
+                        },
+                      },
+                    },
+                  ],
+                ]
+              : []),
+            ...(itemitem.configuration.format !== 'ldp_vc'
+              ? [
+                  [
+                    `${itemitem.data.credentialConfigurationId}-key-attestations`,
+                    {
+                      ...itemitem.configuration,
+                      proof_types_supported: {
+                        jwt: {
+                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          key_attestations_required: {
+                            user_authentication: ['iso_18045_high'],
+                            key_storage: ['iso_18045_high'],
+                          },
+                        },
+                        attestation: {
+                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          key_attestations_required: {
+                            user_authentication: ['iso_18045_high'],
+                            key_storage: ['iso_18045_high'],
+                          },
+                        },
+                      },
+                    },
+                  ],
+                ]
+              : []),
+          ])
         )
       ),
+      dpopSigningAlgValuesSupported: [JwaSignatureAlgorithm.ES256],
+      accessTokenSignerKeyType: KeyType.P256,
       authorizationServerConfigs: [
         {
           issuer: oidcUrl,

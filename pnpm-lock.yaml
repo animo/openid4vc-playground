@@ -5,10 +5,10 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@credo-ts/core': npm:@animo-id/credo-ts-core@0.5.14-alpha-20250324190316
-  '@credo-ts/node': npm:@animo-id/credo-ts-node@0.5.14-alpha-20250324190316
-  '@credo-ts/askar': npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316
-  '@credo-ts/openid4vc': npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316
+  '@credo-ts/core': npm:@animo-id/credo-ts-core@0.5.14-alpha-20250404083526
+  '@credo-ts/node': npm:@animo-id/credo-ts-node@0.5.14-alpha-20250404083526
+  '@credo-ts/askar': npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250404083526
+  '@credo-ts/openid4vc': npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250404083526
 
 patchedDependencies:
   '@animo-id/credo-ts-core':
@@ -29,17 +29,17 @@ importers:
         specifier: ^1.1.14
         version: 1.1.14(zod@3.23.8)
       '@credo-ts/askar':
-        specifier: npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316
-        version: '@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316(@openwallet-foundation/askar-shared@0.3.2)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+        specifier: npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250404083526
+        version: '@animo-id/credo-ts-askar@0.5.14-alpha-20250404083526(@openwallet-foundation/askar-shared@0.3.2)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@credo-ts/core':
-        specifier: npm:@animo-id/credo-ts-core@0.5.14-alpha-20250324190316
-        version: '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+        specifier: npm:@animo-id/credo-ts-core@0.5.14-alpha-20250404083526
+        version: '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@credo-ts/node':
-        specifier: npm:@animo-id/credo-ts-node@0.5.14-alpha-20250324190316
-        version: '@animo-id/credo-ts-node@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+        specifier: npm:@animo-id/credo-ts-node@0.5.14-alpha-20250404083526
+        version: '@animo-id/credo-ts-node@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@credo-ts/openid4vc':
-        specifier: npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316
-        version: '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+        specifier: npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250404083526
+        version: '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@openwallet-foundation/askar-nodejs':
         specifier: ^0.3.2
         version: 0.3.2
@@ -236,8 +236,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316':
-    resolution: {integrity: sha512-DjnsXysDFRLKX7SuW0gTgahoEA8WCyN1ipCFUHZUndjTlgW2h0gzSU6nrpkuzJQIvXFS5NYoGfsooOzLsApZEA==}
+  '@animo-id/credo-ts-askar@0.5.14-alpha-20250404083526':
+    resolution: {integrity: sha512-uufw7YOwI5FoDIOfR4YyAZrOa3NKN6pzUG8jGqJGcx95YD/QT3BjvYFiMXrxkariPy673WSU1iQQ0be1/b8dgA==}
     peerDependencies:
       '@animo-id/expo-secure-environment': ^0.1.0
       '@openwallet-foundation/askar-shared': ^0.3.1
@@ -245,17 +245,17 @@ packages:
       '@animo-id/expo-secure-environment':
         optional: true
 
-  '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316':
-    resolution: {integrity: sha512-G6L6qbPxdMNpe5tScYh5yPvV+qVmmEY0aKKcY95FA5UYRWde4cUGolPFPpVuCuMoqFpqdKr9PvI44+F2FSdqvA==}
+  '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526':
+    resolution: {integrity: sha512-BJQVqaL72jbcONqOtdSZu0H6JxXfjh/G7YJ7Tu8M86DabmaU6SufBabrZ4Ek0sNQmBCp/MS5CQ7TeqcYRfqemw==}
 
-  '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250324190316':
-    resolution: {integrity: sha512-5/vRxaoWQ1wJ4m4zs580cJYFjsucLkkU5IZcV5SambRCut82coJt4g53nl4pRW5RQ8ybxwDVruUJUlIy+ZV3ig==}
+  '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250404083526':
+    resolution: {integrity: sha512-7hry3OYqgR7yPTUHSJmGSP/YgJpuKXcbKIqRJOdy8PBiqMVKr8vt9ovRssrEyhkNQmBEWt3xFif8RQEb/xaFJQ==}
 
-  '@animo-id/credo-ts-node@0.5.14-alpha-20250324190316':
-    resolution: {integrity: sha512-gE7rpMOqkR9SFlD2kpV40LFY1G8gx8OohErD/vmvKCvEaihGVdgAF2d29eInJ/SQZ5cYPIwK1R0H1oP87hSQDg==}
+  '@animo-id/credo-ts-node@0.5.14-alpha-20250404083526':
+    resolution: {integrity: sha512-wMD6bEfAFUOLjTlE4Xn++aB+3pcXtyy4xOAuqJXpM+vgZHBR//5F7GF0kEKvJUtRcqKVmxY02IVSpS6KL7ee0w==}
 
-  '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316':
-    resolution: {integrity: sha512-j5OJ+B1rDf/EwKtoMFqAIKYVjyuJ/coENe69vSwtNdQJNm8wsK6wv0qDORXPt1DyQpt4QWOlYR3aPrW+51D+8Q==}
+  '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250404083526':
+    resolution: {integrity: sha512-uO0HdbIr4h58kdH9MC0S2uk4TgmUWouwb9CtZigREwBpoYQHnHGX2fPSd6+p8N/r4jAgWNHQhNFb61tYu0KQ2Q==}
 
   '@animo-id/mdoc@0.5.2':
     resolution: {integrity: sha512-EQVsNOOeXFfBaEHkiKoh24jbSEQ1MORB/kUu0rnNrAEETpY5GK/H9iWevYFdmNDIqQTIEJlkU7S+sIj3pe66eA==}
@@ -1617,20 +1617,20 @@ packages:
     resolution: {integrity: sha512-q9CRWjpHCMIh5sVyefoD1cA7PkvILqCZsnSOEUUivORLjxCO/Irmue2DprETiNgEqktDBZaM1Bi+jrarx1XdCg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  '@openid-federation/core@0.1.1-alpha.15':
-    resolution: {integrity: sha512-Q+GQfMpmP2zFtRdDFx6R9qBpyaWFlBVEZtbAEN9pA5H6AipuD90xZ25spAfBnQIsg3Q0QNhwjuI4kr/kbtJB4w==}
+  '@openid-federation/core@0.1.1-alpha.17':
+    resolution: {integrity: sha512-Bn5JaQzQnrQ2koPisiITHN69eOEewvs26EPyD4tp5XoR6Kdh9sy2f3w4hYV4MSaDwRorpRF7ttN6PGK1piMTng==}
 
-  '@openid4vc/oauth2@0.3.0-alpha-20250324183425':
-    resolution: {integrity: sha512-RhqXpuyHZeBLnhVbH4mg+OgSEMMdQRcU90A4lgUkoXG9Z/oweTTa3p6117ZZwu+AazYcdzuzKI6rQ7jI6o8D1w==}
+  '@openid4vc/oauth2@0.3.0-alpha-20250404080256':
+    resolution: {integrity: sha512-fAtMwk4dgXiLc1UnvLZMt6dN+hW9uOxLnS8tIJHXLQfdu4zemOIxv2/ivfieI6vgsBUqfUSsv2aawIiO2I4dnQ==}
 
-  '@openid4vc/openid4vci@0.3.0-alpha-20250324183425':
-    resolution: {integrity: sha512-m/PCMzM52LKl/fkVyPe14htVs3ZaXF7qeqvsuzXxF8jCPCjpHJQFKw4uqueD1bvpLNwsUfb512b8rECjV9/NYg==}
+  '@openid4vc/openid4vci@0.3.0-alpha-20250404080256':
+    resolution: {integrity: sha512-DhCR7opM0iXy9DiJ0QcXbbV3B2vlFdguofqMPQWq7Rt8RWHsAbG6yVoFKJ3ty+pAM+N2AQx5xKWeMoZPgmw7dw==}
 
-  '@openid4vc/openid4vp@0.3.0-alpha-20250324183425':
-    resolution: {integrity: sha512-ha2zfDeuL3V42eWhf8aI7Ok/C43vFr4gnNUkOJCXgYIyJ84QtoJyKXHSCkcCycxdwaxp6GAgX3a/dzJteQzCDg==}
+  '@openid4vc/openid4vp@0.3.0-alpha-20250404080256':
+    resolution: {integrity: sha512-cWijp9t/KZ6Q2sz9/KJXriO7AqRFTjbK59MtSbL82Mt3Nn20p6CdTbrhjger1RI1mgndwKTH3yVATdsdJC9APw==}
 
-  '@openid4vc/utils@0.3.0-alpha-20250324183425':
-    resolution: {integrity: sha512-xJ+cZR7KApZO/pt73AgDeJ+2POkdC3s3QqNXL4Z4dbtTdMSrK/DtBoCr0JeqNfZuRoDBxv1ktk6795i921VcYw==}
+  '@openid4vc/utils@0.3.0-alpha-20250404080256':
+    resolution: {integrity: sha512-qYz/J6oEaH7UYXOFVo+65ZcbNGF7PN05BfFfEDOZ1f3KCB+ENA5Iy3dAoRBGGBGu3zMZ6J4/sNgE9N+Ng8CjUw==}
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -2213,6 +2213,7 @@ packages:
 
   '@sphereon/kmp-mdoc-core@0.2.0-SNAPSHOT.26':
     resolution: {integrity: sha512-QXJ6R8ENiZV2rPMbn06cw5JKwqUYN1kzVRbYfONqE1PEXx1noQ4md7uxr2zSczi0ubKkNcbyYDNtIMTZIhGzmQ==}
+    bundledDependencies: []
 
   '@sphereon/pex-models@2.3.2':
     resolution: {integrity: sha512-foFxfLkRwcn/MOp/eht46Q7wsvpQGlO7aowowIIb5Tz9u97kYZ2kz6K2h2ODxWuv5CRA7Q0MY8XUBGE2lfOhOQ==}
@@ -3261,8 +3262,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  ec-compression@0.0.1-alpha.11:
-    resolution: {integrity: sha512-ppznPCx1m/TrjlThndIOZdJPSI9/PGqU1+RTDSHQGaMS66ZWdLM8bTQw8QbdBcseDS+5UV7ZZz8GwqpQhjsZYw==}
+  ec-compression@0.0.1-alpha.12:
+    resolution: {integrity: sha512-rfsgHPnS/q8SiiJyaJ5w+qpkLtvtvEFOXoh40VmjH+Xs1pjzCCKwhd9Un3BQV+1+Qg0es5VQnzwZVJ7fjzfN+A==}
 
   ed25519-signature-2018-context@1.1.0:
     resolution: {integrity: sha512-ppDWYMNwwp9bploq0fS4l048vHIq41nWsAbPq6H4mNVx9G/GxW3fwg4Ln0mqctP13MoEpREK7Biz8TbVVdYXqA==}
@@ -6505,9 +6506,9 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@animo-id/credo-ts-askar@0.5.14-alpha-20250324190316(@openwallet-foundation/askar-shared@0.3.2)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
+  '@animo-id/credo-ts-askar@0.5.14-alpha-20250404083526(@openwallet-foundation/askar-shared@0.3.2)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
-      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@openwallet-foundation/askar-shared': 0.3.2
       class-transformer: 0.5.1
       class-validator: 0.14.1
@@ -6522,7 +6523,7 @@ snapshots:
       - typescript
       - web-streams-polyfill
 
-  '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
+  '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
       '@animo-id/mdoc': 0.5.2
       '@animo-id/pex': 5.2.0
@@ -6554,7 +6555,7 @@ snapshots:
       class-validator: 0.14.1
       dcql: 0.2.20(typescript@5.3.3)
       did-resolver: 4.1.0
-      ec-compression: 0.0.1-alpha.11
+      ec-compression: 0.0.1-alpha.12
       lru_map: 0.4.1
       make-error: 1.3.6
       object-inspect: 1.13.2
@@ -6574,9 +6575,9 @@ snapshots:
       - typescript
       - web-streams-polyfill
 
-  '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
+  '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
-      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       class-transformer: 0.5.1
       class-validator: 0.14.1
       luxon: 3.5.0
@@ -6591,12 +6592,12 @@ snapshots:
       - typescript
       - web-streams-polyfill
 
-  '@animo-id/credo-ts-node@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
+  '@animo-id/credo-ts-node@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
       '@2060.io/ffi-napi': 4.0.9
       '@2060.io/ref-napi': 3.0.6
-      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
-      '@credo-ts/didcomm': '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+      '@credo-ts/didcomm': '@animo-id/credo-ts-didcomm@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
       '@types/express': 4.17.21
       express: 4.21.2
       rxjs: 7.8.1
@@ -6612,14 +6613,14 @@ snapshots:
       - utf-8-validate
       - web-streams-polyfill
 
-  '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250324190316(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
+  '@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250404083526(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)':
     dependencies:
-      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250324190316(patch_hash=it3rpqo3gntobsgbl3qvinvogq)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
-      '@openid-federation/core': 0.1.1-alpha.15
-      '@openid4vc/oauth2': 0.3.0-alpha-20250324183425
-      '@openid4vc/openid4vci': 0.3.0-alpha-20250324183425
-      '@openid4vc/openid4vp': 0.3.0-alpha-20250324183425
-      '@openid4vc/utils': 0.3.0-alpha-20250324183425
+      '@credo-ts/core': '@animo-id/credo-ts-core@0.5.14-alpha-20250404083526(patch_hash=2ijwdas3eizjujpneimto7mivu)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
+      '@openid-federation/core': 0.1.1-alpha.17
+      '@openid4vc/oauth2': 0.3.0-alpha-20250404080256
+      '@openid4vc/openid4vci': 0.3.0-alpha-20250404080256
+      '@openid4vc/openid4vp': 0.3.0-alpha-20250404080256
+      '@openid4vc/utils': 0.3.0-alpha-20250404080256
       class-transformer: 0.5.1
       rxjs: 7.8.1
       zod: 3.24.2
@@ -8565,29 +8566,29 @@ snapshots:
       semver: 7.6.3
     optional: true
 
-  '@openid-federation/core@0.1.1-alpha.15':
+  '@openid-federation/core@0.1.1-alpha.17':
     dependencies:
       buffer: 6.0.3
       zod: 3.24.2
 
-  '@openid4vc/oauth2@0.3.0-alpha-20250324183425':
+  '@openid4vc/oauth2@0.3.0-alpha-20250404080256':
     dependencies:
-      '@openid4vc/utils': 0.3.0-alpha-20250324183425
+      '@openid4vc/utils': 0.3.0-alpha-20250404080256
       zod: 3.24.2
 
-  '@openid4vc/openid4vci@0.3.0-alpha-20250324183425':
+  '@openid4vc/openid4vci@0.3.0-alpha-20250404080256':
     dependencies:
-      '@openid4vc/oauth2': 0.3.0-alpha-20250324183425
-      '@openid4vc/utils': 0.3.0-alpha-20250324183425
+      '@openid4vc/oauth2': 0.3.0-alpha-20250404080256
+      '@openid4vc/utils': 0.3.0-alpha-20250404080256
       zod: 3.24.2
 
-  '@openid4vc/openid4vp@0.3.0-alpha-20250324183425':
+  '@openid4vc/openid4vp@0.3.0-alpha-20250404080256':
     dependencies:
-      '@openid4vc/oauth2': 0.3.0-alpha-20250324183425
-      '@openid4vc/utils': 0.3.0-alpha-20250324183425
+      '@openid4vc/oauth2': 0.3.0-alpha-20250404080256
+      '@openid4vc/utils': 0.3.0-alpha-20250404080256
       zod: 3.24.2
 
-  '@openid4vc/utils@0.3.0-alpha-20250324183425':
+  '@openid4vc/utils@0.3.0-alpha-20250404080256':
     dependencies:
       buffer: 6.0.3
       zod: 3.24.2
@@ -10692,7 +10693,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  ec-compression@0.0.1-alpha.11: {}
+  ec-compression@0.0.1-alpha.12: {}
 
   ed25519-signature-2018-context@1.1.0: {}
 
