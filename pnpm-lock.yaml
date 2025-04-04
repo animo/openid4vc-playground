@@ -12,7 +12,7 @@ overrides:
 
 patchedDependencies:
   '@animo-id/credo-ts-core':
-    hash: it3rpqo3gntobsgbl3qvinvogq
+    hash: 2ijwdas3eizjujpneimto7mivu
     path: patches/@animo-id__credo-ts-core.patch
 
 importers:
