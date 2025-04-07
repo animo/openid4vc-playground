@@ -1,7 +1,7 @@
 'use client'
 
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
-import { BanknoteIcon, CarIcon, Circle, HeartPulseIcon, InfoIcon, LandmarkIcon } from 'lucide-react'
+import { BanknoteIcon, CarIcon, Circle, GlobeIcon, HeartPulseIcon, InfoIcon, LandmarkIcon } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
@@ -179,9 +179,9 @@ const iconMap = {
   government: LandmarkIcon,
   bank: BanknoteIcon,
   health: HeartPulseIcon,
+  interop: GlobeIcon,
   'car-rental': CarIcon,
 }
-
 const RadioGroupIcon = ({ icon }: { icon: keyof typeof iconMap }) => {
   const Icon = iconMap[icon]
   return <Icon className="size-6 text-accent" />
