@@ -97,7 +97,7 @@ export const bundesregierungVerifier = {
       ],
     },
     {
-      name: 'ARF PID (sd-jwt vc) - Mandatory',
+      name: 'ARF 1.5 PID (sd-jwt vc) - Mandatory',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
@@ -120,6 +120,7 @@ export const bundesregierungVerifier = {
         },
       ],
     },
+
     {
       name: 'BDR PID (sd-jwt vc) - Names',
       purpose: 'Please sign this document',
@@ -130,7 +131,7 @@ export const bundesregierungVerifier = {
       ],
     },
     {
-      name: 'ARF PID (sd-jwt vc) - Names',
+      name: 'ARF 1.5 PID (sd-jwt vc) - Names',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
@@ -146,7 +147,7 @@ export const bundesregierungVerifier = {
       ],
     },
     {
-      name: 'PID (mdoc) - Most',
+      name: 'ARF PID (mdoc) - Most',
       purpose: 'To grant you access we need to verify your PID',
 
       credentials: [
@@ -184,7 +185,7 @@ export const bundesregierungVerifier = {
       ],
     },
     {
-      name: 'PID (mdoc) - Mandatory',
+      name: 'ARF PID (mdoc) - Mandatory',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
@@ -206,7 +207,7 @@ export const bundesregierungVerifier = {
       ],
     },
     {
-      name: 'PID (mdoc) - Names',
+      name: 'ARF PID (mdoc) - Names',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
@@ -250,6 +251,42 @@ export const bundesregierungVerifier = {
           doctype: mobileDriversLicenseMdoc.doctype,
           namespace: 'org.iso.18013.5.1',
           fields: ['given_name', 'family_name'],
+        },
+      ],
+    },
+    {
+      name: 'ARF 1.8 PID (sd-jwt-vc) - Names',
+      purpose: 'To grant you access we need to verify your ARF compliant PID',
+
+      credentials: [
+        {
+          format: 'dc+sd-jwt',
+          vcts: ['urn:eudi:pid:1'],
+          fields: ['family_name', 'given_name'],
+        },
+      ],
+    },
+    {
+      name: 'ARF 1.8 PID (sd-jwt-vc) - Mandatory',
+      purpose: 'To grant you access we need to verify your ARF compliant PID',
+
+      credentials: [
+        {
+          format: 'dc+sd-jwt',
+          vcts: ['urn:eudi:pid:1'],
+          fields: [
+            // Mandatory
+            'family_name',
+            'given_name',
+            'birthdate',
+            'age_over_18',
+
+            // Mandatory metadata
+            'date_of_issuance',
+            'date_of_expiry',
+            'issuing_country',
+            'issuing_authority',
+          ],
         },
       ],
     },
