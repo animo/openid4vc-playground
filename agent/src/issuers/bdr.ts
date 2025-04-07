@@ -382,7 +382,7 @@ export const arfCompliantPidUrnVctSdJwtData = {
 
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const bdrIssuer = {
-  tags: [mobileDriversLicenseDisplay.name, arfCompliantPidDisplay.name],
+  tags: [mobileDriversLicenseDisplay.name, 'ARF 1.5 PID (SD-JWT VC)'],
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
   credentialConfigurationsSupported: [
     {

@@ -258,7 +258,7 @@ export const eudiPidSdJwtData = {
 
 // https://animosolutions.getoutline.com/doc/credential-msisdn-1BljW1GEM0
 export const nederlandenIssuer = {
-  tags: [photoIdDisplay.name],
+  tags: [photoIdDisplay.name, 'ARF 1.5 PID'],
   issuerId: '40adc717-933f-471c-ae42-0f5e92b3cca1',
   credentialConfigurationsSupported: [
     {
