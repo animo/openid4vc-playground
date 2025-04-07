@@ -128,5 +128,27 @@ export const potentialVerifier = {
 
       credentials: [mdlNames, pidMdocNames],
     },
+
+    {
+      name: 'PID (mdoc) - Names',
+      purpose: 'PID (mdoc) - first_name and given_name',
+      credentials: [pidMdocNames],
+    },
+    {
+      name: 'PID (mdoc) - Mandatory',
+      purpose: 'PID (mdoc) - all mandatory fields',
+      credentials: [pidMdocMandatory],
+    },
+
+    {
+      name: 'PID (sd-jwt-vc) - Names',
+      purpose: 'PID (sd-jwt-vc) - first_name and given_name',
+      credentials: [pidSdJwtVcNames],
+    },
+    {
+      name: 'PID (sd-jwt-vc) - Mandatory',
+      purpose: 'PID (sd-jwt-vc) - all mandatory fields',
+      credentials: [pidSdJwtVcMandatory],
+    },
   ],
 } as const satisfies PlaygroundVerifierOptions
