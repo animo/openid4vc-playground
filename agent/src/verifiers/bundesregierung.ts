@@ -279,10 +279,10 @@ export const bundesregierungVerifier = {
             'family_name',
             'given_name',
             'birthdate',
-            'age_over_18',
+            'place_of_birth.country',
+            'nationalities',
 
             // Mandatory metadata
-            'date_of_issuance',
             'date_of_expiry',
             'issuing_country',
             'issuing_authority',
