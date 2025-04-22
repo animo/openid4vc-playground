@@ -230,7 +230,11 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   issuanceSession,
 }): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials | OpenId4VciSignW3cCredentials> => {
   const certificates = getX509Certificates()
-  const credentialData = issuersCredentialsData[credentialConfigurationId as keyof typeof issuersCredentialsData]
+
+  const normalizedCredentialConfigurationId = credentialConfigurationId
+    .replace('-dc-sd-jwt', '')
+    .replace('-key-attestations', '')
+  const credentialData = issuersCredentialsData[normalizedCredentialConfigurationId]
   if (!credentialData) {
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
   }
