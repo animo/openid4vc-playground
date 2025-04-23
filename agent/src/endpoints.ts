@@ -128,7 +128,7 @@ apiRouter.get('/issuers', async (_, response: Response) => {
     issuers.map((issuer) => {
       return {
         id: issuer.issuerId,
-        name: issuer.display[0].name,
+        name: issuer.playgroundDisplayName ?? issuer.display[0].name,
         tags: issuer.tags,
         logo: issuer.display[0].logo.uri,
 

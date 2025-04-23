@@ -7,6 +7,9 @@ export interface SdJwtCredential {
   vcts: string[]
   issuers?: string[]
   fields: [string, ...string[]]
+
+  // aka claim sets. Only used for DCQL
+  field_options?: string[][]
 }
 
 export interface MdocCredential {
@@ -14,6 +17,9 @@ export interface MdocCredential {
   doctype: string
   namespace: string
   fields: [string, ...string[]]
+
+  // aka claim sets. Only used for DCQL
+  field_options?: string[][]
 }
 
 export function pidMdocCredential({ fields }: Pick<MdocCredential, 'fields'>) {
@@ -124,16 +130,18 @@ export function dcqlQueryFromRequest(
               vct_values: c.vcts,
             },
             claims: [
-              ...c.fields.map((f) => ({ path: f.split('.') })),
+              ...c.fields.map((f) => ({ path: f.split('.'), id: f })),
               ...(c.issuers?.length
                 ? [
                     {
+                      id: 'iss',
                       path: ['iss'],
                       values: c.issuers,
                     },
                   ]
                 : []),
             ],
+            claim_sets: c.field_options?.map((o) => (c.issuers?.length ? [...o, 'iss'] : o)),
           }
         : {
             id: `${credentialIndex}`,
@@ -141,7 +149,8 @@ export function dcqlQueryFromRequest(
             meta: {
               doctype_value: c.doctype,
             },
-            claims: c.fields.map((f) => ({ path: [c.namespace, f], intent_to_retain: false })),
+            claims: c.fields.map((f) => ({ id: f, path: [c.namespace, f], intent_to_retain: false })),
+            claim_sets: c.field_options,
           }
     ),
     credential_sets: request.credential_sets

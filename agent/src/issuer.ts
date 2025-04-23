@@ -54,6 +54,7 @@ export interface PlaygroundIssuerOptions
   tags: string[]
   issuerId: string
   display: [IssuerDisplay, ...IssuerDisplay[]]
+  playgroundDisplayName?: string
   credentialConfigurationsSupported: Array<{
     mso_mdoc?: {
       configuration: MdocConfiguration
