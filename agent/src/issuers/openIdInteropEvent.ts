@@ -1,6 +1,6 @@
 import { AGENT_HOST } from '../constants'
 import type { PlaygroundIssuerOptions } from '../issuer'
-import { ageSdJwt, ageSdJwtData } from './credentials/ageSdJWt'
+import { ageSdJwt, ageSdJwtData } from './credentials/ageSdJwt'
 import { arfPidMdoc, arfPidMdocData } from './credentials/arf18PidMdoc'
 import { arfCompliantPidSdJwt, arfCompliantPidSdJwtData } from './credentials/arf18PidSdJwt'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
