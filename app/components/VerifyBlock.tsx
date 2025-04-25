@@ -269,6 +269,17 @@ export const VerifyBlock: React.FC = () => {
       requests.find((r) => r.id === presentationDefinitionId)
     )?.[0] ?? Object.keys(groupedVerifier)[0]
 
+  const isInteropOpenIdInteropEventUseCase = selectedUseCase === 'OpenID Foundation Interop Event April'
+
+  useEffect(() => {
+    if (!isInteropOpenIdInteropEventUseCase) return
+
+    if (requestVersion !== 'v1.draft24') setRequestVersion('v1.draft24')
+    if (requestSignerType === 'openid-federation') setRequestSignerType('x5c')
+    if (queryLanguage !== 'dcql') setQueryLanguage('dcql')
+    if (!responseMode.startsWith('dc_api')) setResponseMode('dc_api.jwt')
+  }, [isInteropOpenIdInteropEventUseCase, requestVersion, requestSignerType, queryLanguage, responseMode])
+
   return (
     <Card className="p-6">
       <Alert variant="default" className="mb-5">
@@ -299,7 +310,7 @@ export const VerifyBlock: React.FC = () => {
             <span className="text-accent font-medium text-sm">Use Case</span>
           </div>
           <RadioGroup
-            className="grid grid-cols-2 gap-2 py-2 pb-4"
+            className="grid  grid-cols-1 sm:grid-cols-2 gap-2 py-2 pb-4"
             value={selectedUseCase}
             onValueChange={(useCase) => setPresentationDefinitionId(groupedVerifier[useCase][0].id)}
           >
@@ -358,7 +369,9 @@ export const VerifyBlock: React.FC = () => {
               }
             }}
           >
-            <MiniRadioItem key="v1.draft21" value="v1.draft21" label="Draft 21" />
+            {!isInteropOpenIdInteropEventUseCase && (
+              <MiniRadioItem key="v1.draft21" value="v1.draft21" label="Draft 21" />
+            )}
             <MiniRadioItem key="v1.draft24" value="v1.draft24" label="Draft 24" />
           </RadioGroup>
         </div>
@@ -378,7 +391,7 @@ export const VerifyBlock: React.FC = () => {
               }
             }}
           >
-            <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
+            {!isInteropOpenIdInteropEventUseCase && <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />}
             {requestVersion === 'v1.draft24' && (
               <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
             )}
@@ -390,10 +403,12 @@ export const VerifyBlock: React.FC = () => {
           <RadioGroup
             name="query-language"
             required
-            onValueChange={(value) => setQueryLanguage(value as 'pex' | 'dcql')}
             value={queryLanguage}
+            onValueChange={(value) => setQueryLanguage(value as 'pex' | 'dcql')}
           >
-            <MiniRadioItem key="pex" value="pex" label="DIF Presentation Exchange" />
+            {!isInteropOpenIdInteropEventUseCase && (
+              <MiniRadioItem key="pex" value="pex" label="DIF Presentation Exchange" />
+            )}
             {requestVersion === 'v1.draft24' && <MiniRadioItem key="dcql" value="dcql" label="DCQL" />}
           </RadioGroup>
         </div>
@@ -420,12 +435,14 @@ export const VerifyBlock: React.FC = () => {
             defaultValue="x5c"
           >
             <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
+            {!isInteropOpenIdInteropEventUseCase && (
+              <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
+            )}
             {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
           </RadioGroup>
         </div>
 
-        {requestVersion === 'v1.draft24' && (
+        {requestVersion === 'v1.draft24' && !isInteropOpenIdInteropEventUseCase && (
           <div className="space-y-2">
             <Label htmlFor="presentation-type">Transaction Authorization</Label>
             <Select
@@ -466,11 +483,13 @@ export const VerifyBlock: React.FC = () => {
             }
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="request-purpose">Purpose</Label>
-          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
-        </div>
+        {!isInteropOpenIdInteropEventUseCase && (
+          <div className="space-y-2">
+            <Label htmlFor="request-purpose">Purpose</Label>
+            <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
+            <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
+          </div>
+        )}
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
             {authorizationRequestUriHasBeenFetched ? (

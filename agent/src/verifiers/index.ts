@@ -25,7 +25,7 @@ export const verifiers = [
   pgeuVerifier,
   europeanUnionVerifier,
   potentialVerifier,
-  // openIdInteropVerifier,
+  openIdInteropVerifier,
 ]
 export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 

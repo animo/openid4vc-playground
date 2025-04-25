@@ -6,7 +6,7 @@ export interface SdJwtCredential {
   format: 'dc+sd-jwt'
   vcts: string[]
   issuers?: string[]
-  fields: [string, ...string[]]
+  fields: Array<string | { path: string; values: Array<string | number | boolean> }>
 
   // aka claim sets. Only used for DCQL
   field_options?: string[][]
@@ -16,7 +16,7 @@ export interface MdocCredential {
   format: 'mso_mdoc'
   doctype: string
   namespace: string
-  fields: [string, ...string[]]
+  fields: Array<string | { path: string; values: Array<string | number | boolean> }>
 
   // aka claim sets. Only used for DCQL
   field_options?: string[][]
@@ -76,11 +76,18 @@ export function presentationDefinitionFromRequest(
           ...c.fields.map((field) =>
             c.format === 'dc+sd-jwt'
               ? {
-                  path: [`$.${field}`],
+                  path: [`$.${typeof field === 'string' ? field : field.path}`],
+                  filter:
+                    typeof field !== 'string'
+                      ? {
+                          enum: field.values,
+                        }
+                      : undefined,
                 }
               : {
                   intent_to_retain: false,
-                  path: [`$['${c.namespace}']['${field}']`],
+                  path: [`$['${c.namespace}']['${typeof field === 'string' ? field : field.path}']`],
+                  // Filter not allowed for mdoc
                 }
           ),
           ...(c.format === 'dc+sd-jwt' && c.issuers?.length
@@ -130,7 +137,11 @@ export function dcqlQueryFromRequest(
               vct_values: c.vcts,
             },
             claims: [
-              ...c.fields.map((f) => ({ path: f.split('.'), id: f })),
+              ...c.fields.map((f) =>
+                typeof f === 'string'
+                  ? { path: f.split('.'), id: f.replace('.', '_') }
+                  : { path: f.path.split('.'), id: f.path.replace('.', '_'), values: f.values }
+              ),
               ...(c.issuers?.length
                 ? [
                     {
@@ -141,7 +152,10 @@ export function dcqlQueryFromRequest(
                   ]
                 : []),
             ],
-            claim_sets: c.field_options?.map((o) => (c.issuers?.length ? [...o, 'iss'] : o)),
+            claim_sets: c.field_options?.map((o) => {
+              const oo = o.map((oo) => oo.replace('.', '_'))
+              return c.issuers?.length ? [...oo, 'iss'] : oo
+            }),
           }
         : {
             id: `${credentialIndex}`,
@@ -149,8 +163,17 @@ export function dcqlQueryFromRequest(
             meta: {
               doctype_value: c.doctype,
             },
-            claims: c.fields.map((f) => ({ id: f, path: [c.namespace, f], intent_to_retain: false })),
-            claim_sets: c.field_options,
+            claims: c.fields.map((f) =>
+              typeof f === 'string'
+                ? { id: f.replace('.', '_'), path: [c.namespace, f], intent_to_retain: false }
+                : {
+                    id: f.path.replace('.', '_'),
+                    path: [c.namespace, f.path],
+                    intent_to_retain: false,
+                    values: f.values,
+                  }
+            ),
+            claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
           }
     ),
     credential_sets: request.credential_sets
