@@ -354,7 +354,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
               family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
 
-              birth_city: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
 
               resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
               resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
@@ -390,7 +390,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
               family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
 
-              birth_city: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
 
               resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
               resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
