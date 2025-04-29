@@ -63,7 +63,9 @@ export const arfCompliantPidSdJwtData = {
       issuing_authority: 'NL',
 
       // Extra
-      age_over_18: true,
+      age_equal_or_over: {
+        18: true,
+      },
       portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
 
       issuance_date: issuanceDate.toISOString(),
@@ -78,13 +80,15 @@ export const arfCompliantPidSdJwtData = {
         'family_name',
         'given_name',
         'birthdate',
-        'age_over_18',
         'portrait',
         'issuance_date',
         'nationalities',
       ],
       place_of_birth: {
         _sd: ['country', 'region', 'locality'],
+      },
+      age_equal_or_over: {
+        _sd: ['18'],
       },
     },
   },
