@@ -24,7 +24,7 @@ const photoIdPayload = {
   given_name_latin1: 'Erika',
   birth_date: new DateOnly('1986-03-14'),
   portrait: new Uint8Array(erikaPortrait),
-  issue_date: new DateOnly('2024-08-01'),
+  issue_date: new DateOnly(),
   expiry_date: new DateOnly('2029-08-01'),
   issuing_authority_unicode: 'Fime',
   issuing_country: 'NL',
