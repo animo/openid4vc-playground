@@ -32,7 +32,7 @@ const arfPidPayload = {
   issuing_authority: 'Fime',
   issuing_country: 'NL',
   document_number: '0123456789',
-  issuance_date: new DateOnly('2025-01-28'),
+  issuance_date: new DateOnly(),
   age_over_18: true,
   age_in_years: 38,
   age_birth_year: 1986,
