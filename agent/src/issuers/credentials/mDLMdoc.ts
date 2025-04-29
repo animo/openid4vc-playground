@@ -28,6 +28,7 @@ const mobileDriversLicensePayload = {
   document_number: 'Z021AB37X13',
   portrait: new Uint8Array(erikaPortrait),
   signature_usual_mark: new Uint8Array(erikaSignature),
+  resident_postal_code: '90210',
   un_distinguishing_sign: 'D',
   issuing_authority: 'Bundesrepublik Deutschland',
   issue_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),

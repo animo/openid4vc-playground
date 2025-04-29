@@ -58,6 +58,13 @@ export const arfCompliantPidSdJwtData = {
       },
       nationalities: ['NL'],
 
+      address: {
+        region: 'Utrecht',
+        locality: 'Utrecht',
+        country: 'NL',
+        postal_code: '90210',
+      },
+
       // Mandatory metadata
       issuing_country: 'NL',
       issuing_authority: 'NL',
@@ -86,6 +93,9 @@ export const arfCompliantPidSdJwtData = {
       ],
       place_of_birth: {
         _sd: ['country', 'region', 'locality'],
+      },
+      address: {
+        _sd: ['country', 'region', 'locality', 'postal_code'],
       },
       age_equal_or_over: {
         _sd: ['18'],

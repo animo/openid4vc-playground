@@ -22,12 +22,13 @@ export interface MdocCredential {
   field_options?: string[][]
 }
 
-export function pidMdocCredential({ fields }: Pick<MdocCredential, 'fields'>) {
+export function pidMdocCredential({ fields, field_options }: Pick<MdocCredential, 'fields' | 'field_options'>) {
   return {
     format: 'mso_mdoc',
     fields,
     doctype: 'eu.europa.ec.eudi.pid.1',
     namespace: 'eu.europa.ec.eudi.pid.1',
+    field_options,
   } satisfies MdocCredential
 }
 

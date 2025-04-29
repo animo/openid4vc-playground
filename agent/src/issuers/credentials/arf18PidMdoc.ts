@@ -18,7 +18,7 @@ const arfPidPayload = {
   resident_country: 'NL',
   resident_state: 'Zuid-Holland',
   resident_city: 'Leiden',
-  resident_postal_code: '2314 XZ',
+  resident_postal_code: '90210',
   resident_street: 'De Heyderweg',
   resident_house_number: '2',
   personal_administrative_number: '9876543210',
