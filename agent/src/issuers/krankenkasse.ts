@@ -71,7 +71,7 @@ export const healthIdSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
   scope: 'health-id-sd-jwt',
-  vct: 'https://example.eudi.ec.europa.eu/hiid/1',
+  vct: 'eu.europa.ec.eudi.hiid.1',
   display: [healthIdDisplay],
   proof_types_supported: {
     jwt: {
