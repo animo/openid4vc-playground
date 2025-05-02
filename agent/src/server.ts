@@ -9,7 +9,7 @@ import { createDidWeb, getWebDidDocument } from './didWeb'
 import { apiRouter } from './endpoints'
 import { type PlaygroundIssuerOptions, createOrUpdateIssuer } from './issuer'
 import { issuers } from './issuers'
-import { setupX509Certificate } from './keyMethods'
+import { getCertificateRevocationList, setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createOrUpdateVerifier } from './verifier'
 import { verifiers } from './verifiers'
@@ -139,6 +139,11 @@ async function run() {
     const didWeb = await getWebDidDocument()
     return response.json(didWeb.toJSON())
   })
+
+  app.use('/crl', async (_, response) => {
+    return response.contentType('application/pkix-crl').send(getCertificateRevocationList())
+  })
+
   const oidc = await getProvider()
   app.use(oidcRouterPath, oidc.callback())
 

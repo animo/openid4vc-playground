@@ -2,6 +2,67 @@ import { type Key, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X50
 import { agent } from '../agent'
 import { AGENT_DNS, AGENT_HOST } from '../constants'
 
+import * as x509 from '@peculiar/x509'
+import { type AgentContext, CredoWebCrypto, CredoWebCryptoKey } from '@credo-ts/core'
+import { credoKeyTypeIntoCryptoKeyAlgorithm } from '@credo-ts/core/build/crypto/webcrypto/utils/keyAlgorithmConversion'
+import { tenDaysInMilliseconds } from '../utils/date'
+
+/**
+ * Creates a Certificate Revocation List (CRL) for the agent.
+ *
+ * @throws Will throw an error if the CRL creation process fails.
+ */
+export async function createCertificateRevocationList({
+  entityName,
+  context,
+  key,
+}: {
+  entityName: string
+  context: AgentContext
+  key: Key
+}) {
+  try {
+    const webCrypto = new CredoWebCrypto(context)
+    const cryptoKeyAlgorithm = credoKeyTypeIntoCryptoKeyAlgorithm(key.keyType)
+    const privateKey = new CredoWebCryptoKey(key, cryptoKeyAlgorithm, false, 'private', ['sign'])
+    const publicKey = new CredoWebCryptoKey(key, cryptoKeyAlgorithm, true, 'public', ['sign'])
+    context.config.logger.info('Creating Certificate Revocation List')
+    const authorityKeyIdentifierExtension = await x509.AuthorityKeyIdentifierExtension.create(
+      publicKey,
+      false, // mark extension as non-critical
+      webCrypto
+    )
+    const crlNumberExtension = new x509.Extension(
+      '2.5.29.20', // CRL Number OID
+      false, // mark extension as non-critical
+      new Uint8Array([0x02, 0x01, 0x01]) // ASN.1 INTEGER with value 1
+    )
+    const crl = await x509.X509CrlGenerator.create(
+      {
+        signingKey: privateKey,
+        issuer: `CN=${entityName},C=NL`,
+        thisUpdate: new Date(),
+        nextUpdate: new Date(Date.now() + 360 * 24 * 60 * 60 * 1000),
+        extensions: [authorityKeyIdentifierExtension, crlNumberExtension],
+        entries: [],
+        signingAlgorithm: {
+          name: 'ECDSA',
+          hash: { name: 'SHA-256' },
+        },
+      },
+      webCrypto
+    )
+    agent.config.logger.info('Certificate Revocation List created')
+
+    return crl
+  } catch (error) {
+    agent.config.logger.error('Error creating Certificate Revocation List', {
+      error,
+    })
+    throw new Error(`Error creating Certificate Revocation List: ${error}`)
+  }
+}
+
 export const createRootCertificate = async (key: Key) => {
   const lastYear = new Date()
   const nextYear = new Date()
@@ -32,7 +93,7 @@ export const createRootCertificate = async (key: Key) => {
         markAsCritical: true,
       },
       crlDistributionPoints: {
-        urls: ['https://animo.id'],
+        urls: [`${AGENT_HOST}/crl`],
       },
     },
   })
@@ -43,10 +104,10 @@ export const createDocumentSignerCertificate = async (
   subjectKey: Key,
   rootCertificate: X509Certificate
 ) => {
-  const lastYear = new Date()
+  const notBefore = new Date(Date.now() - tenDaysInMilliseconds * 2)
+
   const nextYear = new Date()
-  nextYear.setFullYear(nextYear.getFullYear() + 3)
-  lastYear.setFullYear(lastYear.getFullYear() - 1)
+  nextYear.setFullYear(nextYear.getFullYear() + 1)
 
   return X509Service.createCertificate(agent.context, {
     authorityKey,
@@ -54,7 +115,7 @@ export const createDocumentSignerCertificate = async (
     issuer: rootCertificate.issuer,
     subject: { commonName: 'credo dcs', countryName: 'NL' },
     validity: {
-      notBefore: lastYear,
+      notBefore,
       notAfter: nextYear,
     },
     extensions: {

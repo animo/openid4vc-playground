@@ -1,11 +1,16 @@
-import { WalletKeyExistsError, X509Service } from '@credo-ts/core'
+import { type Logger, WalletKeyExistsError, X509Certificate, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
 import { X509_DCS_CERTIFICATE, X509_ROOT_CERTIFICATE } from '../constants'
 import { createKeys } from './createKeys'
-import { createDocumentSignerCertificate, createRootCertificate } from './createSelfSignedCertificate'
+import {
+  createCertificateRevocationList,
+  createDocumentSignerCertificate,
+  createRootCertificate,
+} from './createSelfSignedCertificate'
 
 let x509RootCertificate: string | undefined = undefined
 let x509DcsCertificate: string | undefined = undefined
+let crl: Buffer | undefined = undefined
 
 export async function setupX509Certificate() {
   const x509Record = await agent.genericRecords.findById('X509_CERTIFICATE')
@@ -75,11 +80,22 @@ export async function setupX509Certificate() {
     }
   }
 
+  const crlInstance = await createCertificateRevocationList({
+    context: agent.context,
+    entityName: 'Animo',
+    key: X509Certificate.fromEncodedCertificate(x509RootCertificate).publicKey,
+  })
+
+  crl = Buffer.from(crlInstance.rawData)
+
   console.log('======= X.509 IACA ROOT Certificate ===========')
   console.log(x509RootCertificate)
 
   console.log('======= X.509 IACA DCS  Certificate ===========')
   console.log(x509DcsCertificate)
+
+  console.log('======= X.509 CRL ===========')
+  console.log(crlInstance.toString('pem'))
 
   if (!x509RootCertificate || !x509DcsCertificate) {
     throw new Error('Error setting up certificates')
@@ -94,6 +110,14 @@ export function getX509RootCertificate() {
     throw new Error('X509 root certificate is not setup properly')
   }
   return x509RootCertificate
+}
+
+export function getCertificateRevocationList() {
+  if (!crl) {
+    throw new Error('X509 Certificate Revocation List is not setup properly')
+  }
+
+  return crl
 }
 
 export function getX509DcsCertificate() {
