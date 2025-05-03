@@ -3,6 +3,10 @@ import type { PlaygroundIssuerOptions } from '../issuer'
 import { ageSdJwt, ageSdJwtData } from './credentials/ageSdJwt'
 import { arfPidMdoc, arfPidMdocData } from './credentials/arf18PidMdoc'
 import { arfCompliantPidSdJwt, arfCompliantPidSdJwtData } from './credentials/arf18PidSdJwt'
+import {
+  arfCompliantPidSdJwtNoNonDisclosure,
+  arfCompliantPidSdJwtNoNonDisclosureData,
+} from './credentials/arf18PidSdJwtNoNonDiscloseableFields'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
 import { openIdSdJwt, openIdSdJwtData } from './credentials/openIDSdJwt'
 import { photoIdMdoc, photoIdMdocData } from './credentials/photoIdMdoc'
@@ -25,6 +29,12 @@ export const openIdInteropEventGovernmentIssuer = {
       mso_mdoc: {
         configuration: arfPidMdoc,
         data: arfPidMdocData,
+      },
+    },
+    {
+      'vc+sd-jwt': {
+        configuration: arfCompliantPidSdJwtNoNonDisclosure,
+        data: arfCompliantPidSdJwtNoNonDisclosureData,
       },
     },
     {
@@ -68,4 +78,5 @@ export const openIdInteropData = {
   [photoIdMdocData.credentialConfigurationId]: photoIdMdocData,
   [openIdSdJwtData.credentialConfigurationId]: openIdSdJwtData,
   [ageSdJwtData.credentialConfigurationId]: ageSdJwtData,
+  [arfCompliantPidSdJwtNoNonDisclosureData.credentialConfigurationId]: arfCompliantPidSdJwtNoNonDisclosureData,
 }
