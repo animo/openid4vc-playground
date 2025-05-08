@@ -1,6 +1,4 @@
 import {
-  DateOnly,
-  DifPresentationExchangeService,
   JsonEncoder,
   JsonTransformer,
   Jwt,
@@ -12,23 +10,22 @@ import {
   X509Certificate,
   X509ModuleConfig,
 } from '@credo-ts/core'
-import {
-  type OpenId4VcVerificationSessionRecord,
-  OpenId4VcVerificationSessionState,
-  OpenId4VpVerifierService,
-} from '@credo-ts/openid4vc'
+import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
 import { validateVerificationRequest, zValidateVerificationRequestSchema } from './ai'
-import { AGENT_HOST } from './constants'
 import { getIssuerIdForCredentialConfigurationId } from './issuer'
 import { issuers } from './issuers'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { type PlaygroundVerifierOptions, getVerifier } from './verifier'
-import { allDefinitions, verifiers } from './verifiers'
+import { verifiers } from './verifiers'
 import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verifiers/util'
+import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
+import { randomUUID } from 'crypto'
+
+const responseCodeMap = new LimitedSizeCollection<string>()
 
 const zCreateOfferRequest = z.object({
   credentialSupportedIds: z.array(z.string()),
@@ -198,6 +195,7 @@ const zCreatePresentationRequestBody = z.object({
   transactionAuthorizationType: z.enum(['none', 'qes']),
   version: z.enum(['v1.draft21', 'v1.draft24']).default('v1.draft24'),
   queryLanguage: z.enum(['pex', 'dcql']).default('dcql'),
+  redirectUriBase: z.string().url().optional(),
 })
 
 const zReceiveDcResponseBody = z.object({
@@ -216,6 +214,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       version,
       purpose,
       queryLanguage,
+      redirectUriBase,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
     const x509RootCertificate = getX509RootCertificate()
@@ -238,8 +237,12 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     const credentialIds = definition.credentials.map((_, index) => `${index}`)
 
+    const responseCode = randomUUID()
+    const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
+
     const { authorizationRequest, verificationSession, authorizationRequestObject } =
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
+        authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
         requestSigner:
           requestSignerType === 'none'
@@ -290,6 +293,10 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
             ? [request.headers.origin as string]
             : undefined,
       })
+
+    if (redirectUri) {
+      responseCodeMap.set(responseCode, verificationSession.id)
+    }
 
     const authorizationRequestJwt = verificationSession.authorizationRequestJwt
       ? Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
@@ -454,7 +461,8 @@ apiRouter.post('/requests/verify-dc', async (request: Request, response: Respons
 })
 
 apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
-  const verificationSessionId = request.params.verificationSessionId
+  const verificationSessionId =
+    responseCodeMap.get(request.params.verificationSessionId) ?? request.params.verificationSessionId
 
   try {
     const verificationSession = await agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
