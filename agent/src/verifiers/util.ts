@@ -37,11 +37,11 @@ export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) 
     format: 'dc+sd-jwt',
     fields,
     vcts: ['https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
-    issuers: [
-      'https://demo.pid-issuer.bundesdruckerei.de/c',
-      'https://demo.pid-issuer.bundesdruckerei.de/c1',
-      'https://demo.pid-issuer.bundesdruckerei.de/b1',
-    ],
+    // issuers: [
+    //   'https://demo.pid-issuer.bundesdruckerei.de/c',
+    //   'https://demo.pid-issuer.bundesdruckerei.de/c1',
+    //   'https://demo.pid-issuer.bundesdruckerei.de/b1',
+    // ],
   } satisfies SdJwtCredential
 }
 
@@ -108,7 +108,7 @@ export function presentationDefinitionFromRequest(
                   path: ['$.vct'],
                   filter: {
                     type: 'string',
-                    enum: c.vcts,
+                    ...(c.vcts.length === 1 ? { const: c.vcts[0] } : { enum: c.vcts }),
                   },
                 },
               ]
