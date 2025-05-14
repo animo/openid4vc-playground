@@ -1,6 +1,7 @@
 import type { PlaygroundVerifierOptions } from '../verifier'
 import { bundesregierungVerifier } from './bundesregierung'
 import { cheapCarsVerifier } from './cheapCars'
+import { deineBankVerifier } from './deineBank'
 import { europeanUnionVerifier } from './europeanUnion'
 import { farmatecVerifier } from './farmatec'
 import { kvkVerifier } from './kvk'
@@ -18,6 +19,7 @@ export const verifiers = [
   kvkVerifier,
   trustPilotVerifier,
   openHorizonBankVerifier,
+  deineBankVerifier,
   bundesregierungVerifier,
   cheapCarsVerifier,
   redcarePharmacyVerifier,
