@@ -35,15 +35,5 @@ export const openHorizonBankVerifier = {
         }),
       ],
     },
-    {
-      name: 'Open a bank account with your Person Identification Data',
-      purpose:
-        'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
-      credentials: [
-        pidSdJwtCredential({
-          fields: ['given_name', 'family_name', 'birthdate', 'place_of_birth.locality', 'nationalities'],
-        }),
-      ],
-    },
   ],
 } as const satisfies PlaygroundVerifierOptions
