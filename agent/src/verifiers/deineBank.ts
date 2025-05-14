@@ -1,0 +1,29 @@
+import { AGENT_HOST } from '../constants'
+import type { PlaygroundVerifierOptions } from '../verifier'
+import { pidSdJwtCredential } from './util'
+
+export const deineBankVerifier = {
+  verifierId: '044721ed-af79-45ec-bab3-de85c3e722d0',
+  useCase: {
+    name: 'Open a bank account',
+    icon: 'bank',
+    tags: ['Federation support', 'Smart AI warnings', 'multi-credentials', 'mixed-credentials'],
+  },
+
+  clientMetadata: {
+    logo_uri: `${AGENT_HOST}/assets/verifiers/deinebank.png`,
+    client_name: 'DeineBank',
+  },
+  requests: [
+    {
+      name: 'Open a bank account with your Person Identification Data',
+      purpose:
+        'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
+      credentials: [
+        pidSdJwtCredential({
+          fields: ['given_name', 'family_name', 'birthdate', 'place_of_birth.locality', 'nationalities'],
+        }),
+      ],
+    },
+  ],
+} as const satisfies PlaygroundVerifierOptions
