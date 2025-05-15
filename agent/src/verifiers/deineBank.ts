@@ -21,7 +21,18 @@ export const deineBankVerifier = {
         'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
       credentials: [
         pidSdJwtCredential({
-          fields: ['given_name', 'family_name', 'birthdate', 'place_of_birth.locality', 'nationalities'],
+          fields: [
+            'given_name',
+            'family_name',
+            'birth_family_name',
+            'birthdate',
+            'age_equal_or_over.18',
+            'place_of_birth.locality',
+            'address.locality',
+            'address.postal_code',
+            'address.street_address',
+            'nationalities',
+          ],
         }),
       ],
     },
@@ -32,7 +43,18 @@ export const deineBankVerifier = {
         'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
       credentials: [
         pidSdJwtCredential({
-          fields: ['given_name', 'family_name', 'birthdate', 'place_of_birth.locality', 'nationalities'],
+          fields: [
+            'given_name',
+            'family_name',
+            'birth_family_name',
+            'birthdate',
+            'age_equal_or_over.18',
+            'place_of_birth.locality',
+            'address.locality',
+            'address.postal_code',
+            'address.street_address',
+            'nationalities',
+          ],
         }),
       ],
     },
