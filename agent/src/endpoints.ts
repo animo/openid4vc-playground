@@ -24,6 +24,11 @@ import { verifiers } from './verifiers'
 import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verifiers/util'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
 import { randomUUID } from 'crypto'
+import {
+  funkeDeployedAccessCertificate,
+  funkeDeployedAccessCertificateRoot,
+  funkeDeployedRegistrationCertificate,
+} from './eudiTrust'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -240,18 +245,40 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
 
+    // Only include it in this one
+    const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
     const { authorizationRequest, verificationSession, authorizationRequestObject } =
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
+        // @ts-ignore
+        additionalJwtPayload: isEudiAuthorization
+          ? {
+              verifier_attestations: [
+                {
+                  format: 'jwt',
+                  data: funkeDeployedRegistrationCertificate,
+                },
+              ],
+            }
+          : undefined,
         requestSigner:
           requestSignerType === 'none'
             ? { method: 'none' }
             : requestSignerType === 'x5c'
-              ? {
-                  method: 'x5c',
-                  x5c: [x509DcsCertificate, x509RootCertificate],
-                }
+              ? // Include the certificate from the german registrar
+                isEudiAuthorization
+                ? {
+                    method: 'x5c',
+                    x5c: [
+                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificate).toString('base64'),
+                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot).toString('base64'),
+                    ],
+                  }
+                : {
+                    method: 'x5c',
+                    x5c: [x509DcsCertificate, x509RootCertificate],
+                  }
               : {
                   method: 'federation',
                 },
