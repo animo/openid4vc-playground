@@ -1,6 +1,6 @@
 import { AGENT_HOST } from '../constants'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidSdJwtCredential } from './util'
+import { pidMdocCredential, pidSdJwtCredential } from './util'
 
 export const deineBankVerifier = {
   verifierId: '044721ed-af79-45ec-bab3-de85c3e722d0',
@@ -54,6 +54,26 @@ export const deineBankVerifier = {
             'address.postal_code',
             'address.street_address',
             'nationalities',
+          ],
+        }),
+      ],
+    },
+    {
+      name: 'Open a bank account with your Person Identification Data',
+      purpose:
+        'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
+
+      credentials: [
+        pidMdocCredential({
+          fields: [
+            'family_name',
+            'given_name',
+            'birth_date',
+            'nationality',
+            'resident_country',
+            'resident_city',
+            'resident_postal_code',
+            'resident_street',
           ],
         }),
       ],
