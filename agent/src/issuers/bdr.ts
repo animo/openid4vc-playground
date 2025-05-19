@@ -296,6 +296,7 @@ const arfCompliantPidData = {
   given_name: 'Erika',
   birth_date: new DateOnly('1964-08-12'),
   age_over_18: true,
+  nationality: 'DE',
 
   // Mandatory metadata
   issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
@@ -316,8 +317,21 @@ const arfCompliantPidData = {
   resident_country: 'DE',
   resident_city: 'KÖLN',
   resident_postal_code: '51147',
-  resident_street: 'HEIDESTRASSE 17',
-  nationality: 'DE',
+  resident_street: 'HEIDESTRASSE',
+
+  // UC3 stuff
+  resident_address: 'HEIDESTRASSE 17, 51147, KÖLN',
+  resident_state: 'NORTH RHINE-WESTPHALIA',
+  resident_house_number: '17',
+  personal_administrative_number: '123123123123',
+  portrait: new Uint8Array(erikaPortrait),
+  given_name_birth: 'Erika',
+  sex: 'female',
+  email_address: 'erika@mustermann.de',
+  mobile_phone_number: '+49 (0)30 901820',
+  document_number: '1119999',
+  issuing_jurisdiction: 'DE',
+  location_status: 'GOOD',
 }
 
 export const arfCompliantPidSdJwtData = {

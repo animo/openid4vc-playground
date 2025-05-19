@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -15,20 +16,19 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import z from 'zod'
 import { agent } from './agent'
 import { validateVerificationRequest, zValidateVerificationRequestSchema } from './ai'
-import { getIssuerIdForCredentialConfigurationId } from './issuer'
-import { issuers } from './issuers'
-import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
-import { oidcUrl } from './oidcProvider/provider'
-import { type PlaygroundVerifierOptions, getVerifier } from './verifier'
-import { verifiers } from './verifiers'
-import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verifiers/util'
-import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
-import { randomUUID } from 'crypto'
 import {
   funkeDeployedAccessCertificate,
   funkeDeployedAccessCertificateRoot,
   funkeDeployedRegistrationCertificate,
 } from './eudiTrust'
+import { getIssuerIdForCredentialConfigurationId } from './issuer'
+import { issuers } from './issuers'
+import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
+import { oidcUrl } from './oidcProvider/provider'
+import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
+import { type PlaygroundVerifierOptions, getVerifier } from './verifier'
+import { verifiers } from './verifiers'
+import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verifiers/util'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 

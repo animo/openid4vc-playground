@@ -6,7 +6,7 @@ import { openIdSdJwt } from '../issuers/credentials/openIDSdJwt'
 import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc'
 
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util'
+import { type MdocCredential, type SdJwtCredential, pidMdocCredential } from './util'
 
 const pidSdJwtVcNames = {
   format: 'dc+sd-jwt',

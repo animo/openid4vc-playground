@@ -1,10 +1,10 @@
 import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date'
-import { loadJPEGBufferSync } from '../../utils/image'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../../constants'
 import type { CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer'
 import type { StaticMdocSignInput } from '../../types'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date'
+import { loadJPEGBufferSync } from '../../utils/image'
 
 const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../../assets/erika.jpeg`)
 const erikaSignature = loadJPEGBufferSync(`${__dirname}/../../../assets/signature.jpeg`)

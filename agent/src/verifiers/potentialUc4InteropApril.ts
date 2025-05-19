@@ -1,7 +1,7 @@
 import { AGENT_HOST } from '../constants'
 import { arfCompliantPidSdJwt, arfCompliantPidUrnVctSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util'
+import { type MdocCredential, type SdJwtCredential, pidMdocCredential } from './util'
 
 const pidSdJwtVcNames = {
   format: 'dc+sd-jwt',

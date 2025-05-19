@@ -1,4 +1,8 @@
 import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
+import { AGENT_HOST } from '../../constants'
+import type { SdJwtConfiguration } from '../../issuer'
+import type { StaticSdJwtSignInput } from '../../types'
 import {
   dateToSeconds,
   oneYearInMilliseconds,
@@ -6,10 +10,6 @@ import {
   tenDaysInMilliseconds,
 } from '../../utils/date'
 import { loadJPEGBufferSync } from '../../utils/image'
-import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import { AGENT_HOST } from '../../constants'
-import type { SdJwtConfiguration } from '../../issuer'
-import type { StaticSdJwtSignInput } from '../../types'
 
 const issuanceDate = new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds)
 const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds)

@@ -2,9 +2,9 @@ import { type Key, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X50
 import { agent } from '../agent'
 import { AGENT_DNS, AGENT_HOST } from '../constants'
 
-import * as x509 from '@peculiar/x509'
 import { type AgentContext, CredoWebCrypto, CredoWebCryptoKey } from '@credo-ts/core'
 import { credoKeyTypeIntoCryptoKeyAlgorithm } from '@credo-ts/core/build/crypto/webcrypto/utils/keyAlgorithmConversion'
+import * as x509 from '@peculiar/x509'
 import { tenDaysInMilliseconds } from '../utils/date'
 
 /**
