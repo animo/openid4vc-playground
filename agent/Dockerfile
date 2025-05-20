@@ -1,6 +1,7 @@
 FROM node:20 AS base
 
 COPY package.json /app/package.json
+COPY ../pnpm-lock.yaml /app/pnpm-lock.yaml
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
