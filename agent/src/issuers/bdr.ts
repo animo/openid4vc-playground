@@ -324,7 +324,7 @@ const arfCompliantPidData = {
   resident_state: 'NORTH RHINE-WESTPHALIA',
   resident_house_number: '17',
   personal_administrative_number: '123123123123',
-  portrait: new Uint8Array(erikaPortrait),
+  portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
   given_name_birth: 'Erika',
   sex: 'female',
   email_address: 'erika@mustermann.de',
