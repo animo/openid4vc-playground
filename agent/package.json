@@ -15,7 +15,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "oidc-provider": "^8.5.3",
-    "zod": "^3.24.1"
+    "zod": "3.24.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
