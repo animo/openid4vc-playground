@@ -16,7 +16,7 @@ export const deineBankVerifier = {
   },
   requests: [
     {
-      name: 'Open a bank account with your Person Identification Data',
+      name: 'DeineBank.de',
       purpose:
         'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
       credentials: [
@@ -38,7 +38,7 @@ export const deineBankVerifier = {
     },
     // This one will include the RP access and registration certificate
     {
-      name: 'RP A&A - Open a bank account with your Person Identification Data',
+      name: 'RP A&A - DeineBank.de',
       purpose:
         'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
       credentials: [
@@ -59,7 +59,7 @@ export const deineBankVerifier = {
       ],
     },
     {
-      name: 'Open a bank account with your Person Identification Data',
+      name: 'DeineBank.de',
       purpose:
         'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
 
