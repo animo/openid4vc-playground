@@ -78,5 +78,29 @@ export const deineBankVerifier = {
         }),
       ],
     },
+    {
+      name: 'Overasking - DeineBank.de',
+      purpose:
+        'Um ein Konto bei DeineBank zu eröffnen, müssen wir Ihren Namen, Ihr Geburtsdatum, Ihren Wohnsitz und Ihre Staatsangehörigkeit überprüfen.',
+
+      credentials: [
+        pidMdocCredential({
+          fields: [
+            'family_name',
+            'given_name',
+            'birth_date',
+            'nationality',
+            'resident_country',
+            'resident_city',
+            'resident_postal_code',
+            'resident_street',
+
+            'birth_place',
+            'age_over_18',
+            'family_name_birth',
+          ],
+        }),
+      ],
+    },
   ],
 } as const satisfies PlaygroundVerifierOptions

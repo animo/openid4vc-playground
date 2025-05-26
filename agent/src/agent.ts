@@ -62,6 +62,7 @@ export const agent = new Agent({
     openId4VcVerifier: new OpenId4VcVerifierModule({
       baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
       router: openId4VpRouter,
+      authorizationRequestExpirationInSeconds: 600,
       federation: {
         async getAuthorityHints(agentContext, { verifierId }) {
           return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
