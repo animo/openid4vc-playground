@@ -240,7 +240,15 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
 
-    const credentialIds = definition.credentials.map((_, index) => `${index}`)
+    const queryLanguageDefinition =
+      queryLanguage === 'pex'
+        ? presentationDefinitionFromRequest(definition, purpose)
+        : dcqlQueryFromRequest(definition, purpose)
+
+    const credentialIds =
+      'input_descriptors' in queryLanguageDefinition
+        ? queryLanguageDefinition.input_descriptors.map((descriptor) => descriptor.id)
+        : queryLanguageDefinition.credentials.map((query) => query.id)
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
@@ -302,15 +310,15 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               ]
             : undefined,
         presentationExchange:
-          queryLanguage === 'pex'
+          'input_descriptors' in queryLanguageDefinition
             ? {
-                definition: presentationDefinitionFromRequest(definition, purpose),
+                definition: queryLanguageDefinition,
               }
             : undefined,
         dcql:
-          queryLanguage === 'dcql'
+          'credentials' in queryLanguageDefinition
             ? {
-                query: dcqlQueryFromRequest(definition, purpose),
+                query: queryLanguageDefinition,
               }
             : undefined,
         responseMode,
