@@ -30,7 +30,7 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^1.1.14
-        version: 1.1.14(zod@3.24.2)
+        version: 1.1.14(zod@3.24.1)
       '@credo-ts/askar':
         specifier: npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250508212929
         version: '@animo-id/credo-ts-askar@0.5.14-alpha-20250508212929(@openwallet-foundation/askar-shared@0.3.2)(expo@51.0.38(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(react@18.3.1))(typescript@5.3.3)(web-streams-polyfill@3.3.3)'
@@ -54,7 +54,7 @@ importers:
         version: 1.12.3
       ai:
         specifier: ^4.1.51
-        version: 4.1.51(react@18.3.1)(zod@3.24.2)
+        version: 4.1.51(react@18.3.1)(zod@3.24.1)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -68,8 +68,8 @@ importers:
         specifier: ^8.5.3
         version: 8.5.3
       zod:
-        specifier: ^3.24.1
-        version: 3.24.2
+        specifier: 3.24.1
+        version: 3.24.1
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -6441,6 +6441,9 @@ packages:
     peerDependencies:
       zod: ^3.18.0
 
+  zod@3.24.1:
+    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
+
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
@@ -6466,42 +6469,42 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ai-sdk/anthropic@1.1.14(zod@3.24.2)':
+  '@ai-sdk/anthropic@1.1.14(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.9
-      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.2)
-      zod: 3.24.2
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.1)
+      zod: 3.24.1
 
-  '@ai-sdk/provider-utils@2.1.10(zod@3.24.2)':
+  '@ai-sdk/provider-utils@2.1.10(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.9
       eventsource-parser: 3.0.0
       nanoid: 3.3.8
       secure-json-parse: 2.7.0
     optionalDependencies:
-      zod: 3.24.2
+      zod: 3.24.1
 
   '@ai-sdk/provider@1.0.9':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.1.20(react@18.3.1)(zod@3.24.2)':
+  '@ai-sdk/react@1.1.20(react@18.3.1)(zod@3.24.1)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.2)
-      '@ai-sdk/ui-utils': 1.1.16(zod@3.24.2)
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.1)
+      '@ai-sdk/ui-utils': 1.1.16(zod@3.24.1)
       swr: 2.2.5(react@18.3.1)
       throttleit: 2.1.0
     optionalDependencies:
       react: 18.3.1
-      zod: 3.24.2
+      zod: 3.24.1
 
-  '@ai-sdk/ui-utils@1.1.16(zod@3.24.2)':
+  '@ai-sdk/ui-utils@1.1.16(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.9
-      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.2)
-      zod-to-json-schema: 3.24.3(zod@3.24.2)
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.1)
+      zod-to-json-schema: 3.24.3(zod@3.24.1)
     optionalDependencies:
-      zod: 3.24.2
+      zod: 3.24.1
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -8574,7 +8577,7 @@ snapshots:
   '@openid-federation/core@0.1.1-alpha.17':
     dependencies:
       buffer: 6.0.3
-      zod: 3.24.2
+      zod: 3.24.1
 
   '@openid4vc/oauth2@0.3.0-alpha-20250404080256':
     dependencies:
@@ -9744,17 +9747,17 @@ snapshots:
       indent-string: 4.0.0
     optional: true
 
-  ai@4.1.51(react@18.3.1)(zod@3.24.2):
+  ai@4.1.51(react@18.3.1)(zod@3.24.1):
     dependencies:
       '@ai-sdk/provider': 1.0.9
-      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.2)
-      '@ai-sdk/react': 1.1.20(react@18.3.1)(zod@3.24.2)
-      '@ai-sdk/ui-utils': 1.1.16(zod@3.24.2)
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.24.1)
+      '@ai-sdk/react': 1.1.20(react@18.3.1)(zod@3.24.1)
+      '@ai-sdk/ui-utils': 1.1.16(zod@3.24.1)
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
     optionalDependencies:
       react: 18.3.1
-      zod: 3.24.2
+      zod: 3.24.1
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -10029,8 +10032,8 @@ snapshots:
       chalk: 4.1.2
       invariant: 2.2.4
       pretty-format: 24.9.0
-      zod: 3.24.2
-      zod-validation-error: 2.1.0(zod@3.24.2)
+      zod: 3.24.1
+      zod-validation-error: 2.1.0(zod@3.24.1)
     optional: true
 
   babel-plugin-react-native-web@0.19.13:
@@ -14675,13 +14678,15 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-to-json-schema@3.24.3(zod@3.24.2):
+  zod-to-json-schema@3.24.3(zod@3.24.1):
     dependencies:
-      zod: 3.24.2
+      zod: 3.24.1
 
-  zod-validation-error@2.1.0(zod@3.24.2):
+  zod-validation-error@2.1.0(zod@3.24.1):
     dependencies:
-      zod: 3.24.2
+      zod: 3.24.1
     optional: true
+
+  zod@3.24.1: {}
 
   zod@3.24.2: {}
