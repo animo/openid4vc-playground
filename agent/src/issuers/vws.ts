@@ -6,6 +6,9 @@ import type { CredentialConfigurationDisplay, MdocConfiguration, PlaygroundIssue
 import type { StaticMdocSignInput } from '../types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../utils/date'
 
+import { over70mDLMdoc, over70mDLMdocData } from './credentials/over70mDLMdoc'
+import { age18mDLMdoc, age18mDLMdocData } from './credentials/age18mDLMdoc'
+
 const eHealthDisplay = {
   locale: 'en',
   name: 'Vaccination certificate',
@@ -136,6 +139,18 @@ export const vwsIssuer = {
         data: eHealthMdocData,
       },
     },
+    {
+      mso_mdoc: {
+        configuration: over70mDLMdoc,
+        data: over70mDLMdocData,
+      },
+    },
+    {
+      mso_mdoc: {
+        configuration: age18mDLMdoc,
+        data: age18mDLMdocData,
+      },
+    },
   ],
   batchCredentialIssuance: {
     batchSize: 10,
@@ -154,4 +169,6 @@ export const vwsIssuer = {
 
 export const vwsCredentialsData = {
   [eHealthMdocData.credentialConfigurationId]: eHealthMdocData,
+  [over70mDLMdocData.credentialConfigurationId]: over70mDLMdocData,
+  [age18mDLMdocData.credentialConfigurationId]: age18mDLMdocData,
 }
