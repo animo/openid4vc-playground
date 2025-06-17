@@ -149,62 +149,107 @@ export const VerifyBlock: React.FC = () => {
   })
 
   const initiateDc = async (request: CreateRequestResponse) => {
+    let credentialResponse: Credential | null | undefined = undefined
+
     try {
-      const credentialResponse = await navigator.credentials.get({
+      credentialResponse = await navigator.credentials.get({
         // @ts-ignore
         digital: {
-          providers: [
+          requests: [
             {
               protocol: 'openid4vp',
-              request: request.authorizationRequestObject,
+              data: request.authorizationRequestObject,
             },
           ],
         },
       })
-      if (!credentialResponse) {
+    } catch (error) {
+      if (error instanceof TypeError) {
+        console.error('Error triggering DC API with new strucutre', error)
+      } else {
         setRequestStatus({
           ...request,
           responseStatus: 'Error',
-          error: 'Did not receive a response from Digital Credentials API',
+          error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
         })
         return
       }
-      if (credentialResponse.constructor.name === 'DigitalCredential') {
-        // @ts-ignore
-        const data = credentialResponse.data
-
-        setRequestStatus(
-          await verifyResponseDc({
-            verificationSessionId: request.verificationSessionId,
-            data,
-          })
-        )
-        return
-      }
-      if (credentialResponse.constructor.name === 'IdentityCredential') {
-        // @ts-ignore
-        const data = credentialResponse.token
-
-        setRequestStatus(
-          await verifyResponseDc({
-            verificationSessionId: request.verificationSessionId,
-            data,
-          })
-        )
-        return
-      }
-      setRequestStatus({
-        ...request,
-        responseStatus: 'Error',
-        error: 'Unknown response type from Digital Credentials API',
-      })
-    } catch (error) {
-      setRequestStatus({
-        ...request,
-        responseStatus: 'Error',
-        error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-      })
     }
+
+    // Try legacy structure
+    if (credentialResponse === undefined) {
+      try {
+        credentialResponse = await navigator.credentials.get({
+          // @ts-ignore
+          digital: {
+            providers: [
+              {
+                protocol: 'openid4vp',
+                request: request.authorizationRequestObject,
+              },
+            ],
+          },
+        })
+      } catch (error) {
+        if (error instanceof TypeError) {
+          console.error('Error triggering DC API with legacy strucutre', error)
+        } else {
+          setRequestStatus({
+            ...request,
+            responseStatus: 'Error',
+            error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
+          })
+          return
+        }
+      }
+    }
+
+    if (credentialResponse === undefined) {
+      setRequestStatus({
+        ...request,
+        responseStatus: 'Error',
+        error: 'An error occurred while requesting a credential using the Digital Credentials API',
+      })
+      return
+    }
+
+    if (!credentialResponse) {
+      setRequestStatus({
+        ...request,
+        responseStatus: 'Error',
+        error: 'Did not receive a response from Digital Credentials API',
+      })
+      return
+    }
+    if (credentialResponse.constructor.name === 'DigitalCredential') {
+      // @ts-ignore
+      const data = credentialResponse.data
+
+      setRequestStatus(
+        await verifyResponseDc({
+          verificationSessionId: request.verificationSessionId,
+          data,
+        })
+      )
+      return
+    }
+    if (credentialResponse.constructor.name === 'IdentityCredential') {
+      // @ts-ignore
+      const data = credentialResponse.token
+
+      setRequestStatus(
+        await verifyResponseDc({
+          verificationSessionId: request.verificationSessionId,
+          data,
+        })
+      )
+      return
+    }
+    setRequestStatus({
+      ...request,
+      responseStatus: 'Error',
+      error: 'Unknown response type from Digital Credentials API',
+    })
   }
 
   const onSubmitCreateRequest = async (e: FormEvent) => {
