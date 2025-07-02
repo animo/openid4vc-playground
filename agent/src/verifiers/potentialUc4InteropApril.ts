@@ -75,6 +75,13 @@ const mdlNames = {
   fields: ['given_name', 'family_name'],
 } satisfies MdocCredential
 
+const mdlAgeOver18 = {
+  format: 'mso_mdoc',
+  doctype: mobileDriversLicenseMdoc.doctype,
+  namespace: 'org.iso.18013.5.1',
+  fields: ['age_over_18'],
+} satisfies MdocCredential
+
 export const potentialVerifier = {
   verifierId: '826fc673-6c8b-4189-a5ec-0ed408f4e6a2',
   useCase: {
@@ -94,6 +101,11 @@ export const potentialVerifier = {
       name: 'mDL (mdoc) - Names',
       purpose: 'mDL - first_name and given_name',
       credentials: [mdlNames],
+    },
+    {
+      name: 'mDL (mdoc) - Age over 18',
+      purpose: 'mDL - age_over_18',
+      credentials: [mdlAgeOver18],
     },
     {
       name: 'mDL (mdoc) - Mandatory',
