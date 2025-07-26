@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import type { CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer'
 import type { StaticMdocSignInput } from '../../types'
@@ -64,13 +64,13 @@ const photoIdPayload_3 = {
 export const photoIdMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'government-photo-id-mdoc',
   doctype: 'org.iso.23220.photoID.1',
   display: [photoIdDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration

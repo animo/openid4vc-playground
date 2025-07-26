@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -6,8 +6,8 @@ import type { CredentialConfigurationDisplay, MdocConfiguration, PlaygroundIssue
 import type { StaticMdocSignInput } from '../types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../utils/date'
 
-import { over70mDLMdoc, over70mDLMdocData } from './credentials/over70mDLMdoc'
 import { age18mDLMdoc, age18mDLMdocData } from './credentials/age18mDLMdoc'
+import { over70mDLMdoc, over70mDLMdocData } from './credentials/over70mDLMdoc'
 
 const eHealthDisplay = {
   locale: 'en',
@@ -93,13 +93,13 @@ const eHealthPayload_2 = {
 export const eHealthMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'e-health-mdoc',
   doctype: 'org.micov.vtr.1.',
   display: [eHealthDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration

@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -46,13 +46,13 @@ const msisdnPayload = {
 export const msisdnMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'msisdn-mdoc',
   doctype: 'eu.europa.ec.eudi.msisdn.1',
   display: [msisdnDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration
@@ -82,13 +82,13 @@ export const msisdnMdocData = {
 export const msisdnSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'msisdn-sd-jwt',
   vct: 'eu.europa.ec.eudi.msisdn.1',
   display: [msisdnDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies SdJwtConfiguration

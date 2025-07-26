@@ -1,5 +1,5 @@
 import path from 'path'
-import { JwaSignatureAlgorithm, KeyType } from '@credo-ts/core'
+import { Kms } from '@credo-ts/core'
 import cors from 'cors'
 import express from 'express'
 import type { Response } from 'express'
@@ -41,14 +41,14 @@ async function run() {
                       format: 'dc+sd-jwt',
                       proof_types_supported: {
                         jwt: {
-                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
                           key_attestations_required: {
                             user_authentication: ['iso_18045_high'],
                             key_storage: ['iso_18045_high'],
                           },
                         },
                         attestation: {
-                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
                           key_attestations_required: {
                             user_authentication: ['iso_18045_high'],
                             key_storage: ['iso_18045_high'],
@@ -67,14 +67,14 @@ async function run() {
                       ...itemitem.configuration,
                       proof_types_supported: {
                         jwt: {
-                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
                           key_attestations_required: {
                             user_authentication: ['iso_18045_high'],
                             key_storage: ['iso_18045_high'],
                           },
                         },
                         attestation: {
-                          proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
                           key_attestations_required: {
                             user_authentication: ['iso_18045_high'],
                             key_storage: ['iso_18045_high'],
@@ -88,8 +88,11 @@ async function run() {
           ])
         )
       ),
-      dpopSigningAlgValuesSupported: [JwaSignatureAlgorithm.ES256],
-      accessTokenSignerKeyType: KeyType.P256,
+      dpopSigningAlgValuesSupported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+      accessTokenSignerKeyType: {
+        kty: 'EC',
+        crv: 'P-256',
+      },
       authorizationServerConfigs: [
         {
           issuer: oidcUrl,
@@ -108,10 +111,13 @@ async function run() {
 
   await setupX509Certificate()
   await getWebDidDocument().catch(async () => {
-    const key = await agent.wallet.createKey({
-      keyType: KeyType.Ed25519,
+    const { publicJwk } = await agent.kms.createKey({
+      type: {
+        kty: 'OKP',
+        crv: 'Ed25519',
+      },
     })
-    await createDidWeb(key)
+    await createDidWeb(Kms.PublicJwk.fromPublicJwk(publicJwk))
   })
 
   const app = express()

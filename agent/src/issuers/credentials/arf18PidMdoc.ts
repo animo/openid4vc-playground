@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../../constants'
 import type { MdocConfiguration } from '../../issuer'
@@ -41,7 +41,7 @@ const arfPidPayload = {
 export const arfPidMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'government-arf-18-pid-mdoc',
   doctype: 'eu.europa.ec.eudi.pid.1',
   display: [
@@ -58,7 +58,7 @@ export const arfPidMdoc = {
   ],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration

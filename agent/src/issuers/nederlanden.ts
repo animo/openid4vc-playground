@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -77,13 +77,13 @@ const photoIdPayload_3 = {
 export const photoIdMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'photo-id-mdoc',
   doctype: 'org.iso.23220.photoID.1',
   display: [photoIdDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration
@@ -162,13 +162,13 @@ const eudiPidPayload = {
 export const eudiPidMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'eudi-pid-mdoc',
   doctype: 'eu.europa.ec.eudi.pid.1',
   display: [eudiPidDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration
@@ -198,13 +198,13 @@ export const eudiPidMdocData = {
 export const eudiPidSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'eudi-pid-sd-jwt',
   vct: 'eu.europa.ec.eudi.pid.1',
   display: [eudiPidDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies SdJwtConfiguration

@@ -96,11 +96,10 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
 
 apiRouter.get('/x509', async (_, response: Response) => {
   const certificate = getX509RootCertificate()
-  const instance = X509Certificate.fromEncodedCertificate(certificate)
   return response.json({
-    base64: instance.toString('base64'),
-    pem: instance.toString('pem'),
-    decoded: instance.toString('text'),
+    base64: certificate.toString('base64'),
+    pem: certificate.toString('pem'),
+    decoded: certificate.toString('text'),
   })
 })
 
@@ -113,7 +112,7 @@ apiRouter.post('/x509', async (request: Request, response: Response) => {
     const base64 = instance.toString('base64')
 
     if (!trustedCertificates?.includes(base64)) {
-      agent.x509.addTrustedCertificate(base64)
+      agent.x509.config.addTrustedCertificate(base64)
     }
 
     return response.send(instance.toString('text'))
@@ -225,6 +224,10 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const x509RootCertificate = getX509RootCertificate()
     const x509DcsCertificate = getX509DcsCertificate()
 
+    // Funke access certificate uses same key as the dcs certificate
+    const funkeDcsAccessCertificate = X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificate)
+    funkeDcsAccessCertificate.publicJwk.keyId = x509DcsCertificate.publicJwk.keyId
+
     const [verifierId, requestIndex] = presentationDefinitionId.split('__')
     const verifier = await getVerifier(verifierId)
 
@@ -259,17 +262,12 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
-        // @ts-ignore
-        additionalJwtPayload: isEudiAuthorization
-          ? {
-              verifier_attestations: [
-                {
-                  format: 'jwt',
-                  data: funkeDeployedRegistrationCertificate,
-                },
-              ],
-            }
-          : undefined,
+        verifierAttestations: [
+          {
+            format: 'jwt',
+            data: funkeDeployedRegistrationCertificate,
+          },
+        ],
         requestSigner:
           requestSignerType === 'none'
             ? { method: 'none' }
@@ -279,8 +277,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 ? {
                     method: 'x5c',
                     x5c: [
-                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificate).toString('base64'),
-                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot).toString('base64'),
+                      funkeDcsAccessCertificate,
+                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot),
                     ],
                   }
                 : {

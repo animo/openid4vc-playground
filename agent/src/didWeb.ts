@@ -1,9 +1,4 @@
-import {
-  DidDocumentBuilder,
-  type Key,
-  VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2020,
-  getEd25519VerificationKey2020,
-} from '@credo-ts/core'
+import { DidDocumentBuilder, type Kms, getEd25519VerificationKey2020 } from '@credo-ts/core'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 
@@ -11,11 +6,11 @@ const cleanHost = encodeURIComponent(AGENT_HOST.replace('https://', '').replace(
 
 const didWeb = `did:web:${cleanHost}`
 
-export async function createDidWeb(key: Key) {
+export async function createDidWeb(publicJwk: Kms.PublicJwk<Kms.Ed25519PublicJwk>) {
   const didDocumentBuilder = new DidDocumentBuilder(didWeb)
 
   const verificationMethod = getEd25519VerificationKey2020({
-    key,
+    publicJwk,
     id: `${didWeb}#key-1`,
     controller: didWeb,
   })
@@ -31,6 +26,12 @@ export async function createDidWeb(key: Key) {
   await agent.dids.import({
     did: didWeb,
     didDocument,
+    keys: [
+      {
+        didDocumentRelativeKeyId: '#key-1',
+        kmsKeyId: publicJwk.keyId,
+      },
+    ],
   })
 
   return [didWeb]

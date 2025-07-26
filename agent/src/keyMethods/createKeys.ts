@@ -1,17 +1,28 @@
-import { KeyType, TypedArrayEncoder } from '@credo-ts/core'
+import { transformSeedToPrivateJwk } from '@credo-ts/askar'
+import { Kms, TypedArrayEncoder } from '@credo-ts/core'
 import { agent } from '../agent'
 import { DCS_P256_SEED, ROOT_P256_SEED } from '../constants'
 
 export async function createKeys() {
-  const authorityKey = await agent.wallet.createKey({
-    keyType: KeyType.P256,
+  const { privateJwk: authorityPrivateJwk } = transformSeedToPrivateJwk({
+    type: { kty: 'EC', crv: 'P-256' },
     seed: TypedArrayEncoder.fromString(ROOT_P256_SEED),
   })
 
-  const documentSignerKey = await agent.wallet.createKey({
-    keyType: KeyType.P256,
-    seed: TypedArrayEncoder.fromString(DCS_P256_SEED),
+  const { publicJwk: authorityPublicJwk } = await agent.kms.importKey({
+    privateJwk: authorityPrivateJwk,
   })
 
-  return { authorityKey, documentSignerKey }
+  const { privateJwk: documentSignerPrivateJwk } = transformSeedToPrivateJwk({
+    type: { kty: 'EC', crv: 'P-256' },
+    seed: TypedArrayEncoder.fromString(DCS_P256_SEED),
+  })
+  const { publicJwk: documentSignerPublicJwk } = await agent.kms.importKey({
+    privateJwk: documentSignerPrivateJwk,
+  })
+
+  return {
+    authorityPublicJwk: Kms.PublicJwk.fromPublicJwk(authorityPublicJwk),
+    documentSignerPublicJwk: Kms.PublicJwk.fromPublicJwk(documentSignerPublicJwk),
+  }
 }

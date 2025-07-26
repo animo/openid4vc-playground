@@ -1,4 +1,4 @@
-import { ClaimFormat, DateOnly, JwaSignatureAlgorithm, W3cCredential } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms, W3cCredential } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
@@ -78,13 +78,13 @@ const mobileDriversLicensePayload = {
 export const mobileDriversLicenseMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'mobile-drivers-license-mdoc',
   doctype: 'org.iso.18013.5.1.mDL',
   display: [mobileDriversLicenseDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration
@@ -92,7 +92,7 @@ export const mobileDriversLicenseMdoc = {
 export const mobileDriversLicenseLdpVc = {
   format: OpenId4VciCredentialFormatProfile.LdpVc,
   cryptographic_binding_methods_supported: ['did:jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'mobile-drivers-license-ldp-vc',
   credential_definition: {
     '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vdl/v2'],
@@ -101,7 +101,7 @@ export const mobileDriversLicenseLdpVc = {
   display: [mobileDriversLicenseDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.EdDSA, 'Ed25519Signature2020'],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.EdDSA, 'Ed25519Signature2020'],
     },
   },
 } as const satisfies LdpVcConfiguration
@@ -182,13 +182,13 @@ export const mobileDriversLicenseMdocData = {
 export const mobileDriversLicenseSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'mobile-drivers-license-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/mdl/1',
   display: [mobileDriversLicenseDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies SdJwtConfiguration
@@ -265,13 +265,13 @@ const arfCompliantPidUrnVctDisplay = {
 export const arfCompliantPidSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'arf-pid-sd-jwt',
   vct: 'eu.europa.ec.eudi.pid.1',
   display: [arfCompliantPidDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } satisfies SdJwtConfiguration
@@ -279,13 +279,13 @@ export const arfCompliantPidSdJwt = {
 export const arfCompliantPidUrnVctSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'arf-pid-sd-jwt-urn-vct',
   vct: 'urn:eu.europa.ec.eudi:pid:1',
   display: [arfCompliantPidUrnVctDisplay],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } satisfies SdJwtConfiguration

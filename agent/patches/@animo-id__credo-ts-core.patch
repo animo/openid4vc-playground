@@ -1,12 +1,11 @@
 diff --git a/build/modules/vc/W3cCredentialsModule.js b/build/modules/vc/W3cCredentialsModule.js
-index 355945b9f5e4a1ec1cca43dcdeb122891c060c98..9642bc83b257a0b2db00b56640c165063cc93967 100644
+index 05f1171469ed3b63dc2a9e1ded7ff99e7991a71b..ac2a424b8dd7cde8d9934c20c4d221877a2377b6 100644
 --- a/build/modules/vc/W3cCredentialsModule.js
 +++ b/build/modules/vc/W3cCredentialsModule.js
-@@ -27,16 +27,16 @@ class W3cCredentialsModule {
-         dependencyManager.registerSingleton(SignatureSuiteRegistry_1.SignatureSuiteRegistry);
+@@ -28,15 +28,15 @@ class W3cCredentialsModule {
          // Register the config
          dependencyManager.registerInstance(W3cCredentialsModuleConfig_1.W3cCredentialsModuleConfig, this.config);
--        // Always register ed25519 signature suite
+         // Always register ed25519 signature suite
 -        dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
 -            suiteClass: signature_suites_1.Ed25519Signature2018,
 -            proofType: 'Ed25519Signature2018',
@@ -14,9 +13,8 @@ index 355945b9f5e4a1ec1cca43dcdeb122891c060c98..9642bc83b257a0b2db00b56640c16506
 -                dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2018,
 -                dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2020,
 -            ],
--            keyTypes: [crypto_1.KeyType.Ed25519],
+-            supportedPublicJwkTypes: [kms_1.Ed25519PublicJwk],
 -        });
-+        // // Always register ed25519 signature suite
 +        // dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
 +        //     suiteClass: signature_suites_1.Ed25519Signature2018,
 +        //     proofType: 'Ed25519Signature2018',
@@ -24,21 +22,8 @@ index 355945b9f5e4a1ec1cca43dcdeb122891c060c98..9642bc83b257a0b2db00b56640c16506
 +        //         dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2018,
 +        //         dids_1.VERIFICATION_METHOD_TYPE_ED25519_VERIFICATION_KEY_2020,
 +        //     ],
-+        //     keyTypes: [crypto_1.KeyType.Ed25519],
++        //     supportedPublicJwkTypes: [kms_1.Ed25519PublicJwk],
 +        // });
          dependencyManager.registerInstance(SignatureSuiteRegistry_1.SignatureSuiteToken, {
              suiteClass: signature_suites_1.Ed25519Signature2020,
              proofType: 'Ed25519Signature2020',
-diff --git a/build/modules/x509/X509Service.js b/build/modules/x509/X509Service.js
-index 7de83a3e1b5e7cc27e378a3a671792dbc28be236..dbcc1b902ffa4f31e4fc0242f6c4c811010e2121 100644
---- a/build/modules/x509/X509Service.js
-+++ b/build/modules/x509/X509Service.js
-@@ -108,7 +108,7 @@ let X509Service = class X509Service {
-             // In this case we could skip the signature verification (not other verifications), as we already trust the signer certificate,
-             // but i think the purpose of ISO 18013-5 mDL is that you trust the root certificate. If we can't verify the whole chain e.g.
-             // when we receive a credential we have the chance it will fail later on.
--            const skipSignatureVerification = i === 0 && trustedCertificates && cert.issuer !== cert.subject && !publicKey;
-+            const skipSignatureVerification = i === 0 && trustedCertificates && !publicKey;
-             // NOTE: at some point we might want to change this to throw an error instead of skipping the signature verification of the trusted
-             // but it would basically prevent mDOCs from unknown issuers to be verified in the wallet. Verifiers should only trust the root certificate
-             // anyway.

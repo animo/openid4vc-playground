@@ -1,9 +1,9 @@
-import { type Key, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X509Service } from '@credo-ts/core'
+import { type Kms, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X509Service } from '@credo-ts/core'
 import { agent } from '../agent'
 import { AGENT_DNS, AGENT_HOST } from '../constants'
 
 import { type AgentContext, CredoWebCrypto, CredoWebCryptoKey } from '@credo-ts/core'
-import { credoKeyTypeIntoCryptoKeyAlgorithm } from '@credo-ts/core/build/crypto/webcrypto/utils/keyAlgorithmConversion'
+import { publicJwkToCryptoKeyAlgorithm } from '@credo-ts/core/build/crypto/webcrypto/utils/keyAlgorithmConversion'
 import * as x509 from '@peculiar/x509'
 import { tenDaysInMilliseconds } from '../utils/date'
 
@@ -15,17 +15,17 @@ import { tenDaysInMilliseconds } from '../utils/date'
 export async function createCertificateRevocationList({
   entityName,
   context,
-  key,
+  publicJwk,
 }: {
   entityName: string
   context: AgentContext
-  key: Key
+  publicJwk: Kms.PublicJwk
 }) {
   try {
     const webCrypto = new CredoWebCrypto(context)
-    const cryptoKeyAlgorithm = credoKeyTypeIntoCryptoKeyAlgorithm(key.keyType)
-    const privateKey = new CredoWebCryptoKey(key, cryptoKeyAlgorithm, false, 'private', ['sign'])
-    const publicKey = new CredoWebCryptoKey(key, cryptoKeyAlgorithm, true, 'public', ['sign'])
+    const cryptoKeyAlgorithm = publicJwkToCryptoKeyAlgorithm(publicJwk)
+    const privateKey = new CredoWebCryptoKey(publicJwk, cryptoKeyAlgorithm, false, 'private', ['sign'])
+    const publicKey = new CredoWebCryptoKey(publicJwk, cryptoKeyAlgorithm, true, 'public', ['sign'])
     context.config.logger.info('Creating Certificate Revocation List')
     const authorityKeyIdentifierExtension = await x509.AuthorityKeyIdentifierExtension.create(
       publicKey,
@@ -63,14 +63,14 @@ export async function createCertificateRevocationList({
   }
 }
 
-export const createRootCertificate = async (key: Key) => {
+export const createRootCertificate = async (publicJwk: Kms.PublicJwk) => {
   const lastYear = new Date()
   const nextYear = new Date()
   nextYear.setFullYear(nextYear.getFullYear() + 3)
   lastYear.setFullYear(lastYear.getFullYear() - 1)
 
   return X509Service.createCertificate(agent.context, {
-    authorityKey: key,
+    authorityKey: publicJwk,
     issuer: { countryName: 'NL', commonName: 'Animo' },
     validity: {
       notBefore: lastYear,
@@ -100,8 +100,8 @@ export const createRootCertificate = async (key: Key) => {
 }
 
 export const createDocumentSignerCertificate = async (
-  authorityKey: Key,
-  subjectKey: Key,
+  authorityPublicJwk: Kms.PublicJwk,
+  subjectPublicJwk: Kms.PublicJwk,
   rootCertificate: X509Certificate
 ) => {
   const notBefore = new Date(Date.now() - tenDaysInMilliseconds * 2)
@@ -110,8 +110,8 @@ export const createDocumentSignerCertificate = async (
   nextYear.setFullYear(nextYear.getFullYear() + 1)
 
   return X509Service.createCertificate(agent.context, {
-    authorityKey,
-    subjectPublicKey: subjectKey,
+    authorityKey: authorityPublicJwk,
+    subjectPublicKey: subjectPublicJwk,
     issuer: rootCertificate.issuer,
     subject: { commonName: 'credo dcs', countryName: 'NL' },
     validity: {

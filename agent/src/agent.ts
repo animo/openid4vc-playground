@@ -42,15 +42,15 @@ export const agent = new Agent({
   config: {
     label: 'OpenID4VC Playground',
     logger: new ConsoleLogger(LogLevel.trace),
-    // TODO: add postgres storage
-    walletConfig: {
-      id: 'openid4vc-playground',
-      key: AGENT_WALLET_KEY,
-    },
   },
   modules: {
     askar: new AskarModule({
       askar,
+      // TODO: add postgres storage
+      store: {
+        id: 'openid4vc-playground',
+        key: AGENT_WALLET_KEY,
+      },
     }),
     openId4VcIssuer: new OpenId4VcIssuerModule({
       baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),

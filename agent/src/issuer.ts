@@ -479,7 +479,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               },
             },
 
-            holderKey: holderBinding.key,
+            holderKey: holderBinding.jwk,
             issuerCertificate: getX509DcsCertificate(),
           })),
         })
@@ -494,7 +494,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               },
             },
 
-            holderKey: holderBinding.key,
+            holderKey: holderBinding.jwk,
             issuerCertificate: getX509DcsCertificate(),
           })),
         } satisfies OpenId4VciSignMdocCredentials
@@ -524,7 +524,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       ...restCredentialData,
       credentials: holderBinding.keys.map((holderBinding) => ({
         ...credential,
-        holderKey: holderBinding.key,
+        holderKey: holderBinding.jwk,
         issuerCertificate: getX509DcsCertificate(),
       })),
     } satisfies OpenId4VciSignMdocCredentials

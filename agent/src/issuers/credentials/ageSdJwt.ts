@@ -1,4 +1,4 @@
-import { ClaimFormat, JwaSignatureAlgorithm } from '@credo-ts/core'
+import { ClaimFormat, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import type { SdJwtConfiguration } from '../../issuer'
 import type { StaticSdJwtSignInput } from '../../types'
@@ -15,7 +15,7 @@ const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilli
 export const ageSdJwt = {
   format: OpenId4VciCredentialFormatProfile.SdJwtVc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [JwaSignatureAlgorithm.ES256],
+  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'age-sd-jwt',
   vct: 'urn:openid:interop:age:1',
   display: [
@@ -31,7 +31,7 @@ export const ageSdJwt = {
   ],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [JwaSignatureAlgorithm.ES256],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } satisfies SdJwtConfiguration
