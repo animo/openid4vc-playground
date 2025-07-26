@@ -480,7 +480,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             },
 
             holderKey: holderBinding.jwk,
-            issuerCertificate: getX509DcsCertificate(),
+            issuerCertificate: getX509DcsCertificate().toString('pem'),
           })),
         })
         return {

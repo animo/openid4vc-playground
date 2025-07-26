@@ -262,12 +262,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
-        verifierAttestations: [
-          {
-            format: 'jwt',
-            data: funkeDeployedRegistrationCertificate,
-          },
-        ],
+        verifierAttestations: isEudiAuthorization
+          ? [
+              {
+                format: 'jwt',
+                data: funkeDeployedRegistrationCertificate,
+              },
+            ]
+          : undefined,
         requestSigner:
           requestSignerType === 'none'
             ? { method: 'none' }

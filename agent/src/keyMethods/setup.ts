@@ -78,7 +78,7 @@ export async function setupX509Certificate() {
         content: x509RecordContext,
       })
     }
-    console.log(x509DcsCertificate, x509RootCertificate)
+    console.log(x509DcsCertificate.toString('pem'), x509RootCertificate.toString('pem'))
   } catch (error) {
     // If the key already exists, we assume the self-signed certificate is already created
     if (error instanceof Kms.KeyManagementKeyExistsError) {
@@ -105,10 +105,10 @@ export async function setupX509Certificate() {
   crl = Buffer.from(crlInstance.rawData)
 
   console.log('======= X.509 IACA ROOT Certificate ===========')
-  console.log(x509RootCertificate)
+  console.log(x509RootCertificate.toString('pem'))
 
   console.log('======= X.509 IACA DCS  Certificate ===========')
-  console.log(x509DcsCertificate)
+  console.log(x509DcsCertificate.toString('pem'))
 
   console.log('======= X.509 CRL ===========')
   console.log(crlInstance.toString('pem'))
