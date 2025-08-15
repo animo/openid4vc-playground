@@ -28,7 +28,7 @@ import { bundesregierungVerifier } from './verifiers/bundesregierung'
 import { pidMdocCredential, pidSdJwtCredential, presentationDefinitionFromRequest } from './verifiers/util'
 
 export type CredentialConfigurationDisplay = NonNullable<
-  OpenId4VciCredentialConfigurationSupportedWithFormats['display']
+  NonNullable<OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata']>['display']
 >[number]
 
 type IssuerDisplay = OpenId4VciCredentialIssuerMetadataDisplay & {
@@ -73,6 +73,7 @@ export interface PlaygroundIssuerOptions
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
+    console.log('Updating')
     await agent.modules.openId4VcIssuer.updateIssuerMetadata(options)
   } else {
     return agent.modules.openId4VcIssuer.createIssuer(options)
@@ -125,7 +126,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       throw new Error('Presentation during issuance is only supported for mso_mdoc and vc+sd-jwt')
     }
 
-    const credentialName = credentialConfiguration.display?.[0]?.name ?? 'card'
+    const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
 
     const authorizationRequest = await verifierApi.createAuthorizationRequest({
       verifierId: verifier.verifierId,
@@ -447,6 +448,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         const { credential, ...restCredentialData } = credentialData
 
         return {
+          type: 'credentials',
           ...restCredentialData,
           credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
@@ -484,6 +486,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           })),
         })
         return {
+          type: 'credentials',
           ...restCredentialData,
           credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
@@ -505,6 +508,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   if (credentialData.format === ClaimFormat.SdJwtVc) {
     const { credential, ...restCredentialData } = credentialData
     return {
+      type: 'credentials',
       ...restCredentialData,
       credentials: holderBinding.keys.map((holderBinding) => ({
         ...credential,
@@ -521,6 +525,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   if (credentialData.format === ClaimFormat.MsoMdoc) {
     const { credential, ...restCredentialData } = credentialData
     return {
+      type: 'credentials',
       ...restCredentialData,
       credentials: holderBinding.keys.map((holderBinding) => ({
         ...credential,
@@ -535,6 +540,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
     const didWeb = await getWebDidDocument()
     return {
+      type: 'credentials',
       ...restCredentialData,
       credentials: holderBinding.keys.map((holderBinding) => {
         if (holderBinding.method !== 'did') {

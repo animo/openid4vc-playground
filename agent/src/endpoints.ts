@@ -43,7 +43,6 @@ const zCreateOfferRequest = z.object({
 const zAddX509CertificateRequest = z.object({
   certificate: z.string(),
 })
-
 export const apiRouter = express.Router()
 
 apiRouter.use(express.json())
@@ -262,7 +261,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       await agent.modules.openId4VcVerifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
-        verifierAttestations: isEudiAuthorization
+        verifierInfo: isEudiAuthorization
           ? [
               {
                 format: 'jwt',
@@ -385,8 +384,9 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     console.log(verified.dcql?.presentationResult)
 
     const presentations = await Promise.all(
-      (verified.presentationExchange?.presentations ?? Object.values(verified.dcql?.presentations ?? {})).map(
-        async (presentation) => {
+      (verified.presentationExchange?.presentations ?? Object.values(verified.dcql?.presentations ?? {}))
+        .flat()
+        .map(async (presentation) => {
           if (presentation instanceof W3cJsonLdVerifiablePresentation) {
             return {
               pretty: presentation.toJson(),
@@ -433,8 +433,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
             },
             encoded: presentation.compact,
           }
-        }
-      ) ?? []
+        }) ?? []
     )
 
     const dcqlSubmission = verified.dcql

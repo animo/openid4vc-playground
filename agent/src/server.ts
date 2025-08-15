@@ -17,6 +17,7 @@ async function run() {
   await agent.initialize()
 
   for (const issuer of issuers as PlaygroundIssuerOptions[]) {
+    console.log(oidcUrl)
     const { tags, credentialConfigurationsSupported, ...restIssuer } = issuer
     await createOrUpdateIssuer({
       ...restIssuer,
@@ -134,11 +135,16 @@ async function run() {
   app.use('/oid4vci', openId4VciRouter)
   app.use('/oid4vp', openId4VpRouter)
   app.use('/api', apiRouter)
-  app.use((request, _, next) => {
+  app.use(async (request, _, next) => {
     if (request.path === '/provider/request' || request.path === '/provider/token') {
       request.body.client_id = 'wallet'
       request.body.client_secret = 'wallet'
     }
+
+    if (request.path === '/test') {
+      console.dir(await agent.modules.openId4VcIssuer.getAllIssuers(), { depth: Number.POSITIVE_INFINITY })
+    }
+
     next()
   })
   app.use('/.well-known/did.json', async (_, response: Response) => {
