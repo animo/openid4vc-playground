@@ -196,7 +196,7 @@ const zCreatePresentationRequestBody = z.object({
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
   transactionAuthorizationType: z.enum(['none', 'qes']),
-  version: z.enum(['v1.draft21', 'v1.draft24']).default('v1.draft24'),
+  version: z.enum(['v1.draft21', 'v1.draft24', 'v1']).default('v1'),
   queryLanguage: z.enum(['pex', 'dcql']).default('dcql'),
   redirectUriBase: z.string().url().optional(),
 })

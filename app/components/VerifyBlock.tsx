@@ -69,7 +69,7 @@ export const VerifyBlock: React.FC = () => {
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
-  const [requestVersion, setRequestVersion] = useState<'v1.draft21' | 'v1.draft24'>('v1.draft24')
+  const [requestVersion, setRequestVersion] = useState<'v1.draft21' | 'v1.draft24' | 'v1'>('v1')
   const [queryLanguage, setQueryLanguage] = useState<'dcql' | 'pex'>('dcql')
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -132,7 +132,7 @@ export const VerifyBlock: React.FC = () => {
       if (query.requestScheme) setRequestScheme(query.requestScheme as string)
       if (query.purpose) setPurpose(query.purpose as string)
       if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
-      if (query.requestVersion) setRequestVersion(query.requestVersion as 'v1.draft21' | 'v1.draft24')
+      if (query.requestVersion) setRequestVersion(query.requestVersion as 'v1.draft21' | 'v1.draft24' | 'v1')
       if (query.queryLanguage) setQueryLanguage(query.queryLanguage as 'dcql' | 'pex')
     })
   }, [searchParams, verifier])
@@ -405,7 +405,7 @@ export const VerifyBlock: React.FC = () => {
             required
             value={requestVersion}
             onValueChange={(value) => {
-              setRequestVersion(value as 'v1.draft21' | 'v1.draft24')
+              setRequestVersion(value as 'v1.draft21' | 'v1.draft24' | 'v1')
               if (value === 'v1.draft21') {
                 setResponseMode((r) => r.replace('dc_api', 'direct_post') as ResponseMode)
                 setRequestSignerType((r) => (r === 'none' ? 'x5c' : r))
@@ -418,6 +418,7 @@ export const VerifyBlock: React.FC = () => {
               <MiniRadioItem key="v1.draft21" value="v1.draft21" label="Draft 21" />
             )}
             <MiniRadioItem key="v1.draft24" value="v1.draft24" label="Draft 24" />
+            <MiniRadioItem key="v1" value="v1" label="Version 1" />
           </RadioGroup>
         </div>
         <div className="space-y-2">
@@ -437,7 +438,7 @@ export const VerifyBlock: React.FC = () => {
             }}
           >
             {!isInteropOpenIdInteropEventUseCase && <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />}
-            {requestVersion === 'v1.draft24' && (
+            {requestVersion !== 'v1.draft21' && (
               <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
             )}
           </RadioGroup>
@@ -451,10 +452,10 @@ export const VerifyBlock: React.FC = () => {
             value={queryLanguage}
             onValueChange={(value) => setQueryLanguage(value as 'pex' | 'dcql')}
           >
-            {!isInteropOpenIdInteropEventUseCase && (
+            {!isInteropOpenIdInteropEventUseCase && requestVersion !== 'v1' && (
               <MiniRadioItem key="pex" value="pex" label="DIF Presentation Exchange" />
             )}
-            {requestVersion === 'v1.draft24' && <MiniRadioItem key="dcql" value="dcql" label="DCQL" />}
+            {requestVersion !== 'v1.draft21' && <MiniRadioItem key="dcql" value="dcql" label="DCQL" />}
           </RadioGroup>
         </div>
         {responseMode.includes('direct_post') && (
@@ -487,13 +488,12 @@ export const VerifyBlock: React.FC = () => {
           </RadioGroup>
         </div>
 
-        {requestVersion === 'v1.draft24' && !isInteropOpenIdInteropEventUseCase && (
+        {requestVersion !== 'v1.draft21' && !isInteropOpenIdInteropEventUseCase && (
           <div className="space-y-2">
             <Label htmlFor="presentation-type">Transaction Authorization</Label>
             <Select
               name="transaction-data"
               required
-              disabled={requestVersion !== 'v1.draft24'}
               value={transactionAuthorizationType}
               onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
             >
@@ -544,7 +544,7 @@ export const VerifyBlock: React.FC = () => {
             ) : authorizationRequestUri ? (
               <TooltipProvider>
                 <Tooltip>
-                  <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
+                  <div className="flex flex-col p-5 gap-2 justify-center items-center">
                     <div className="bg-white p-5 rounded-md w-[296px]">
                       <QRCode size={256} value={authorizationRequestUri} />
                     </div>

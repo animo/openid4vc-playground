@@ -123,7 +123,7 @@ export async function createRequest(data: {
   responseMode: ResponseMode
   purpose?: string
   transactionAuthorizationType: 'none' | 'qes'
-  version: 'v1.draft21' | 'v1.draft24'
+  version: 'v1.draft21' | 'v1.draft24' | 'v1'
   queryLanguage: 'pex' | 'dcql'
 }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
