@@ -302,9 +302,9 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
             value={selectedDeferBy}
           >
             <MiniRadioItem value="none" label="None" />
+            <MiniRadioItem value="1m" label="1 Minute" />
             <MiniRadioItem value="1h" label="1 Hour" />
             <MiniRadioItem value="1d" label="1 Day" />
-            <MiniRadioItem value="1w" label="1 Week" />
           </RadioGroup>
         </div>
         <div className="flex flex-col gap-2">

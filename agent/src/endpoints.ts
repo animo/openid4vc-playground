@@ -38,7 +38,7 @@ const zCreateOfferRequest = z.object({
   requireDpop: z.boolean().default(false),
   requireWalletAttestation: z.boolean().default(false),
   requireKeyAttestation: z.boolean().default(false),
-  deferBy: z.enum(['none', '1h', '1d', '1w']).optional().default('none'),
+  deferBy: z.enum(['none', '1m', '1h', '1d']).optional().default('none'),
 })
 
 const zAddX509CertificateRequest = z.object({
@@ -63,14 +63,14 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   // Parse deferment options
   let deferUntil: Date | undefined
   switch (createOfferRequest.deferBy) {
+    case '1m':
+      deferUntil = new Date(Date.now() + 1000)
+      break
     case '1h':
-      deferUntil = new Date(Date.now() + 60 * 60 * 1000)
+      deferUntil = new Date(Date.now() + 30 * 1000)
       break
     case '1d':
       deferUntil = new Date(Date.now() + 24 * 60 * 60 * 1000)
-      break
-    case '1w':
-      deferUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       break
   }
 

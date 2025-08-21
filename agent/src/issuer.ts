@@ -578,7 +578,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
                 : {
                     method: 'jwk',
                     jwk: holderBinding.jwk.toJson(),
-            },
+                  },
           })),
         } satisfies SerializableSdJwtVcSignOptions
       } else if (credentialData.format === ClaimFormat.MsoMdoc) {
@@ -593,10 +593,10 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             validityInfo: Buffer.from(cborEncode(credential.validityInfo)).toString('base64url'),
             namespaces: Buffer.from(
               cborEncode({
-              [namespace]: {
-                ...values,
-                ...formatSpecificClaims[credentialConfigurationId],
-              },
+                [namespace]: {
+                  ...values,
+                  ...formatSpecificClaims[credentialConfigurationId],
+                },
               })
             ).toString('base64url'),
 
@@ -621,7 +621,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               : {
                   method: 'jwk',
                   jwk: holderBinding.jwk.toJson(),
-          },
+                },
         })),
       } satisfies SerializableSdJwtVcSignOptions
     } else if (credentialData.format === ClaimFormat.MsoMdoc) {
@@ -674,7 +674,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     return {
       type: 'deferral',
       transactionId: randomUUID() as string,
-      interval: 15 * 60, // 15 minutes
+      interval: calculateInterval(issuanceMetadata.deferUntil),
     }
   }
 
@@ -708,6 +708,27 @@ export const deferredCredentialRequestToCredentialMapper: OpenId4VciDeferredCred
   return {
     type: 'deferral',
     transactionId: deferredCredentialRequest.transaction_id,
-    interval: 2000,
+    interval: calculateInterval(issuanceMetadata.deferUntil),
   }
+}
+
+const calculateInterval = (deferUntil: number) => {
+  const secondsUntilIssuance = Math.floor((deferUntil - Date.now()) / 1000)
+
+  // Issuance time in less than 1 minute
+  if (secondsUntilIssuance <= 60) {
+    return 60 // Check every 1 minute
+  }
+
+  // Issuance time in less than 1 hour
+  if (secondsUntilIssuance <= 3600) {
+    return 30 * 60 // Check every 30 minutes
+  }
+
+  // Issuance time in less than 1 day
+  if (secondsUntilIssuance <= 86400) {
+    return 6 * 60 * 60 // Check every 6 hours
+  }
+
+  return 24 * 60 * 60 // Check every day
 }
