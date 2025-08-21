@@ -17,7 +17,6 @@ async function run() {
   await agent.initialize()
 
   for (const issuer of issuers as PlaygroundIssuerOptions[]) {
-    console.log(oidcUrl)
     const { tags, credentialConfigurationsSupported, ...restIssuer } = issuer
     await createOrUpdateIssuer({
       ...restIssuer,

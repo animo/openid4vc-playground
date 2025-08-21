@@ -3,6 +3,7 @@
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.14",
+    "@animo-id/mdoc": "^0.5.2",
     "@credo-ts/askar": "0.6.0-alpha-20250324131619",
     "@credo-ts/core": "0.6.0-alpha-20250324131619",
     "@credo-ts/node": "0.6.0-alpha-20250324131619",
@@ -32,10 +33,10 @@
   },
   "pnpm": {
     "overrides": {
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250815090500",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250815090500",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250815090500",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250815090500"
+      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250821112012",
+      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250821112012",
+      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250821112012",
+      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250821112012"
     },
     "patchedDependencies": {
       "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"

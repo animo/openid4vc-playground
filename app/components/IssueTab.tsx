@@ -33,6 +33,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [requireDpop, setRequireDpop] = useState<boolean>(false)
 
   const [selectedAuthorization, setSelectedAuthorization] = useState<string>('none')
+  const [selectedDeferBy, setDeferBy] = useState<string>('none')
 
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
   const [userPin, setUserPin] = useState<string>()
@@ -60,6 +61,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
         query.format ?? Object.keys(i.find((i) => i.id === issuerId)?.credentials[credentialType]?.formats ?? {})[0]
       )
       if (query.authorization) setSelectedAuthorization(query.authorization)
+      if (query.deferBy) setDeferBy(query.deferBy)
       if (query.dpop) setRequireDpop(query.dpop === 'true')
       if (query.walletAttestation) setRequireWalletAttestation(query.walletAttestation === 'true')
       if (query.keyAttestation) setRequireKeyAttestation(query.keyAttestation === 'true')
@@ -75,6 +77,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     if (selectedIssuerId) params.set('issuerId', selectedIssuerId)
     if (selectedFormat) params.set('format', selectedFormat)
     if (selectedAuthorization) params.set('authorization', selectedAuthorization)
+    if (selectedDeferBy) params.set('deferBy', selectedDeferBy)
     params.set('dpop', `${requireDpop}`)
     params.set('keyAttestation', `${requireKeyAttestation}`)
     params.set('walletAttestation', `${requireWalletAttestation}`)
@@ -94,6 +97,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     selectedIssuerId,
     selectedFormat,
     selectedAuthorization,
+    selectedDeferBy,
     credentialType,
     router,
     searchParams,
@@ -114,6 +118,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
     const offer = await createOffer({
       credentialSupportedId,
       authorization: selectedAuthorization,
+      deferBy: selectedDeferBy,
       requireDpop,
       requireKeyAttestation,
       requireWalletAttestation,
@@ -279,6 +284,27 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
             <MiniRadioItem value="presentation" label="Presentation during issuance" />
             <MiniRadioItem value="browser" label="Sign in" />
             <MiniRadioItem value="pin" label="Transaction code" />
+          </RadioGroup>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <Label htmlFor="format">Deferral</Label>
+            <p className="text-gray-500 text-sm">Choose whether to defer the credential issuance.</p>
+          </div>
+
+          <RadioGroup
+            name="authorization"
+            required
+            className="flex flex-col gap-2 md:gap-4 md:flex-row"
+            onValueChange={(v) => {
+              setDeferBy(v)
+            }}
+            value={selectedDeferBy}
+          >
+            <MiniRadioItem value="none" label="None" />
+            <MiniRadioItem value="1h" label="1 Hour" />
+            <MiniRadioItem value="1d" label="1 Day" />
+            <MiniRadioItem value="1w" label="1 Week" />
           </RadioGroup>
         </div>
         <div className="flex flex-col gap-2">

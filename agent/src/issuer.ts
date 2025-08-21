@@ -1,11 +1,24 @@
-import { ClaimFormat, JsonTransformer, W3cCredential, parseDid } from '@credo-ts/core'
+import { randomUUID } from 'crypto'
+import { cborDecode, cborEncode } from '@animo-id/mdoc'
+import {
+  ClaimFormat,
+  JsonTransformer,
+  Kms,
+  type MdocSignOptions,
+  type SdJwtVcSignOptions,
+  W3cCredential,
+  parseDid,
+} from '@credo-ts/core'
 import {
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
   type OpenId4VciCredentialIssuerMetadataDisplay,
   type OpenId4VciCredentialRequestToCredentialMapper,
+  type OpenId4VciDeferredCredentialRequestToCredentialMapper,
+  type OpenId4VciDeferredCredentials,
   type OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization,
+  type OpenId4VciSignCredentials,
   type OpenId4VciSignMdocCredentials,
   type OpenId4VciSignSdJwtCredentials,
   type OpenId4VciSignW3cCredentials,
@@ -71,9 +84,113 @@ export interface PlaygroundIssuerOptions
   }>
 }
 
+export type SerializableSdJwtVcSignOptions = Omit<OpenId4VciSignSdJwtCredentials, 'type' | 'credentials'> & {
+  credentials: Array<
+    Omit<SdJwtVcSignOptions, 'holder' | 'issuer'> & {
+      holder:
+        | {
+            method: 'did'
+            didUrl: string
+          }
+        | {
+            method: 'jwk'
+            jwk: Record<string, unknown>
+          }
+    }
+  >
+}
+
+export type SerializableMdocSignOptions = Omit<OpenId4VciSignMdocCredentials, 'type' | 'credentials'> & {
+  credentials: Array<
+    Omit<MdocSignOptions, 'namespaces' | 'issuerCertificate' | 'holderKey' | 'validityInfo'> & {
+      holderKey: Record<string, unknown>
+      validityInfo: string
+      namespaces: string
+    }
+  >
+}
+
+export type SerializableW3cSignOptions = Omit<OpenId4VciSignW3cCredentials, 'type' | 'credentials'> & {
+  credentials: Array<{
+    verificationMethod: string
+    credential: Record<string, unknown>
+  }>
+}
+
+export type SerializableSignCredentialOptions =
+  | SerializableSdJwtVcSignOptions
+  | SerializableMdocSignOptions
+  | SerializableW3cSignOptions
+
+export interface IssuanceMetadata extends Record<string, unknown> {
+  deferUntil?: number
+  signOptions?: SerializableSignCredentialOptions
+}
+
+export function serializableSignOptionsToSignOptions({
+  format,
+  credentials,
+  ...rest
+}: SerializableSignCredentialOptions): OpenId4VciSignCredentials {
+  switch (format) {
+    case ClaimFormat.SdJwtVc:
+      return {
+        type: 'credentials',
+        format,
+        ...rest,
+        credentials: credentials.map((credential) => ({
+          ...credential,
+          holder:
+            credential.holder.method === 'did'
+              ? {
+                  method: credential.holder.method,
+                  didUrl: credential.holder.didUrl,
+                }
+              : {
+                  method: credential.holder.method,
+                  jwk: Kms.PublicJwk.fromUnknown(credential.holder.jwk),
+                },
+          issuer: {
+            method: 'x5c',
+            x5c: getX509Certificates(),
+            issuer: AGENT_HOST,
+          },
+        })),
+      } satisfies OpenId4VciSignSdJwtCredentials
+
+    case ClaimFormat.MsoMdoc:
+      return {
+        type: 'credentials',
+        format,
+        ...rest,
+        credentials: credentials.map((credential) => ({
+          ...credential,
+          validityInfo: cborDecode(Buffer.from(credential.validityInfo, 'base64url')),
+          namespaces: cborDecode(Buffer.from(credential.namespaces, 'base64url')),
+          holderKey: Kms.PublicJwk.fromUnknown(credential.holderKey),
+          issuerCertificate: getX509DcsCertificate(),
+        })),
+      } satisfies OpenId4VciSignMdocCredentials
+
+    case ClaimFormat.JwtVc:
+    case ClaimFormat.LdpVc:
+      return {
+        type: 'credentials',
+        format,
+        ...rest,
+        credentials: credentials.map((credential) => ({
+          verificationMethod: credential.verificationMethod,
+          credential: W3cCredential.fromJson(credential.credential),
+        })),
+      }
+
+    default:
+      throw new Error(`Unsupported claim format: ${format}`)
+  }
+}
+
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
-    console.log('Updating')
     await agent.modules.openId4VcIssuer.updateIssuerMetadata(options)
   } else {
     return agent.modules.openId4VcIssuer.createIssuer(options)
@@ -230,9 +347,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   credentialConfigurationId,
   verification,
   issuanceSession,
-}): Promise<OpenId4VciSignMdocCredentials | OpenId4VciSignSdJwtCredentials | OpenId4VciSignW3cCredentials> => {
-  const certificates = getX509Certificates()
-
+}): Promise<OpenId4VciSignCredentials | OpenId4VciDeferredCredentials> => {
   const normalizedCredentialConfigurationId = credentialConfigurationId
     .replace('-dc-sd-jwt', '')
     .replace('-key-attestations', '')
@@ -240,6 +355,8 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   if (!credentialData) {
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
   }
+
+  let signOptions: SerializableSignCredentialOptions | undefined
 
   if (issuanceSession.presentation?.required) {
     const descriptor = verification?.presentationExchange?.descriptors[0]
@@ -447,8 +564,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       if (credentialData.format === ClaimFormat.SdJwtVc) {
         const { credential, ...restCredentialData } = credentialData
 
-        return {
-          type: 'credentials',
+        signOptions = {
           ...restCredentialData,
           credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
@@ -456,108 +572,142 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               ...credential.payload,
               ...formatSpecificClaims[credentialConfigurationId],
             },
-            holder: holderBinding,
-            issuer: {
-              method: 'x5c',
-              x5c: certificates,
-              issuer: AGENT_HOST,
+            holder:
+              holderBinding.method === 'did'
+                ? holderBinding
+                : {
+                    method: 'jwk',
+                    jwk: holderBinding.jwk.toJson(),
             },
           })),
-        } satisfies OpenId4VciSignSdJwtCredentials
-      }
-
-      if (credentialData.format === ClaimFormat.MsoMdoc) {
+        } satisfies SerializableSdJwtVcSignOptions
+      } else if (credentialData.format === ClaimFormat.MsoMdoc) {
         const { credential, ...restCredentialData } = credentialData
 
         const [namespace, values] = Object.entries(credential.namespaces)[0]
-        console.log({
+
+        signOptions = {
           ...restCredentialData,
           credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
-            namespaces: {
+            validityInfo: Buffer.from(cborEncode(credential.validityInfo)).toString('base64url'),
+            namespaces: Buffer.from(
+              cborEncode({
               [namespace]: {
                 ...values,
                 ...formatSpecificClaims[credentialConfigurationId],
               },
-            },
+              })
+            ).toString('base64url'),
 
-            holderKey: holderBinding.jwk,
-            issuerCertificate: getX509DcsCertificate().toString('pem'),
+            holderKey: holderBinding.jwk.toJson(),
           })),
-        })
-        return {
-          type: 'credentials',
-          ...restCredentialData,
-          credentials: holderBinding.keys.map((holderBinding) => ({
-            ...credential,
-            namespaces: {
-              [namespace]: {
-                ...values,
-                ...formatSpecificClaims[credentialConfigurationId],
-              },
-            },
-
-            holderKey: holderBinding.jwk,
-            issuerCertificate: getX509DcsCertificate(),
-          })),
-        } satisfies OpenId4VciSignMdocCredentials
+        } satisfies SerializableMdocSignOptions
       }
     }
   }
 
-  if (credentialData.format === ClaimFormat.SdJwtVc) {
-    const { credential, ...restCredentialData } = credentialData
-    return {
-      type: 'credentials',
-      ...restCredentialData,
-      credentials: holderBinding.keys.map((holderBinding) => ({
-        ...credential,
-        holder: holderBinding,
-        issuer: {
-          method: 'x5c',
-          x5c: certificates,
-          issuer: AGENT_HOST,
-        },
-      })),
-    } satisfies OpenId4VciSignSdJwtCredentials
+  if (!signOptions) {
+    if (credentialData.format === ClaimFormat.SdJwtVc) {
+      const { credential, ...restCredentialData } = credentialData
+
+      signOptions = {
+        ...restCredentialData,
+        credentials: holderBinding.keys.map((holderBinding) => ({
+          ...credential,
+          holder:
+            holderBinding.method === 'did'
+              ? holderBinding
+              : {
+                  method: 'jwk',
+                  jwk: holderBinding.jwk.toJson(),
+          },
+        })),
+      } satisfies SerializableSdJwtVcSignOptions
+    } else if (credentialData.format === ClaimFormat.MsoMdoc) {
+      const { credential, ...restCredentialData } = credentialData
+
+      signOptions = {
+        ...restCredentialData,
+        credentials: holderBinding.keys.map((holderBinding) => ({
+          ...credential,
+          validityInfo: Buffer.from(cborEncode(credential.validityInfo)).toString('base64url'),
+          namespaces: Buffer.from(cborEncode(credential.namespaces)).toString('base64url'),
+          holderKey: holderBinding.jwk.toJson(),
+        })),
+      } satisfies SerializableMdocSignOptions
+    } else if (credentialData.format === ClaimFormat.LdpVc) {
+      const { credential, ...restCredentialData } = credentialData
+
+      const didWeb = await getWebDidDocument()
+
+      signOptions = {
+        ...restCredentialData,
+        credentials: holderBinding.keys.map((holderBinding) => {
+          if (holderBinding.method !== 'did') {
+            throw new Error("Only 'did' holder binding supported for ldp vc")
+          }
+
+          const json = JsonTransformer.toJSON(credential.credential)
+          json.credentialSubject.id = parseDid(holderBinding.didUrl).did
+          json.issuer.id = didWeb.id
+
+          return {
+            verificationMethod: `${didWeb.id}#key-1`,
+            credential: json,
+          }
+        }),
+      } satisfies SerializableW3cSignOptions
+    } else {
+      throw new Error(`Unsupported credential ${credentialConfigurationId}`)
+    }
   }
 
-  if (credentialData.format === ClaimFormat.MsoMdoc) {
-    const { credential, ...restCredentialData } = credentialData
+  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
+  if (issuanceMetadata.deferUntil) {
+    issuanceMetadata.signOptions = signOptions
+
+    // NOTE: This is a bit hacky. We rely on the fact that we know that Credo
+    // updates the stored issuance session after returning a deferral.
+    issuanceSession.issuanceMetadata = issuanceMetadata
+
     return {
-      type: 'credentials',
-      ...restCredentialData,
-      credentials: holderBinding.keys.map((holderBinding) => ({
-        ...credential,
-        holderKey: holderBinding.jwk,
-        issuerCertificate: getX509DcsCertificate(),
-      })),
-    } satisfies OpenId4VciSignMdocCredentials
+      type: 'deferral',
+      transactionId: randomUUID() as string,
+      interval: 15 * 60, // 15 minutes
+    }
   }
 
-  if (credentialData.format === ClaimFormat.LdpVc) {
-    const { credential, ...restCredentialData } = credentialData
+  return serializableSignOptionsToSignOptions(signOptions)
+}
 
-    const didWeb = await getWebDidDocument()
-    return {
-      type: 'credentials',
-      ...restCredentialData,
-      credentials: holderBinding.keys.map((holderBinding) => {
-        if (holderBinding.method !== 'did') {
-          throw new Error("Only 'did' holder binding supported for ldp vc")
-        }
-
-        const json = JsonTransformer.toJSON(credential.credential)
-        json.credentialSubject.id = parseDid(holderBinding.didUrl).did
-        json.issuer.id = didWeb.id
-
-        return {
-          verificationMethod: `${didWeb.id}#key-1`,
-          credential: W3cCredential.fromJson(json),
-        }
-      }),
-    } satisfies OpenId4VciSignW3cCredentials
+export const deferredCredentialRequestToCredentialMapper: OpenId4VciDeferredCredentialRequestToCredentialMapper = ({
+  deferredCredentialRequest,
+  issuanceSession,
+}) => {
+  if (!issuanceSession.issuanceMetadata) {
+    throw new Error('Issuance session does not have associated issuance metadata')
   }
 
-  throw new Error(`Unsupported credential ${credentialConfigurationId}`)
+  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata
+
+  if (!issuanceMetadata.deferUntil) {
+    throw new Error('Issuance session metadata does not have deferUntil set')
+  }
+
+  if (!issuanceMetadata.signOptions) {
+    throw new Error('Issuance session metadata does not have signOptions set')
+  }
+
+  // If no longer deferred, return the credentials
+  if (issuanceMetadata.deferUntil < Date.now()) {
+    return serializableSignOptionsToSignOptions(issuanceMetadata.signOptions)
+  }
+
+  // Otherwise, keep deferring
+  return {
+    type: 'deferral',
+    transactionId: deferredCredentialRequest.transaction_id,
+    interval: 2000,
+  }
 }

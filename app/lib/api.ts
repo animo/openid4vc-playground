@@ -5,12 +5,14 @@ export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { us
 export async function createOffer({
   credentialSupportedId,
   authorization,
+  deferBy,
   requireDpop,
   requireWalletAttestation,
   requireKeyAttestation,
 }: {
   credentialSupportedId: string
   authorization: string
+  deferBy: string
   requireDpop: boolean
   requireWalletAttestation: boolean
   requireKeyAttestation: boolean
@@ -23,6 +25,7 @@ export async function createOffer({
     body: JSON.stringify({
       credentialSupportedIds: [credentialSupportedId],
       authorization,
+      deferBy,
       requireDpop,
       requireWalletAttestation,
       requireKeyAttestation,

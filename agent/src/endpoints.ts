@@ -21,7 +21,7 @@ import {
   funkeDeployedAccessCertificateRoot,
   funkeDeployedRegistrationCertificate,
 } from './eudiTrust'
-import { getIssuerIdForCredentialConfigurationId } from './issuer'
+import { type IssuanceMetadata, getIssuerIdForCredentialConfigurationId } from './issuer'
 import { issuers } from './issuers'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
@@ -38,6 +38,7 @@ const zCreateOfferRequest = z.object({
   requireDpop: z.boolean().default(false),
   requireWalletAttestation: z.boolean().default(false),
   requireKeyAttestation: z.boolean().default(false),
+  deferBy: z.enum(['none', '1h', '1d', '1w']).optional().default('none'),
 })
 
 const zAddX509CertificateRequest = z.object({
@@ -59,6 +60,20 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   const authorization = createOfferRequest.authorization
   const issuerMetadata = await agent.modules.openId4VcIssuer.getIssuerMetadata(issuerId)
 
+  // Parse deferment options
+  let deferUntil: Date | undefined
+  switch (createOfferRequest.deferBy) {
+    case '1h':
+      deferUntil = new Date(Date.now() + 60 * 60 * 1000)
+      break
+    case '1d':
+      deferUntil = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      break
+    case '1w':
+      deferUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      break
+  }
+
   const offer = await agent.modules.openId4VcIssuer.createCredentialOffer({
     issuerId,
     credentialConfigurationIds: [configurationId],
@@ -67,6 +82,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
       requireDpop: createOfferRequest.requireDpop,
       requireWalletAttestation: createOfferRequest.requireWalletAttestation,
     },
+    generateRefreshTokens: !!createOfferRequest.deferBy,
     preAuthorizedCodeFlowConfig:
       authorization === 'pin' || authorization === 'none'
         ? {
@@ -88,6 +104,9 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
               authorization === 'browser' ? oidcUrl : issuerMetadata.credentialIssuer.credential_issuer,
           }
         : undefined,
+    issuanceMetadata: {
+      deferUntil: deferUntil?.getTime(),
+    } satisfies IssuanceMetadata,
   })
 
   return response.json(offer)

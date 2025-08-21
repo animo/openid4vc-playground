@@ -5,7 +5,11 @@ import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule }
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { Router } from 'express'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
-import { credentialRequestToCredentialMapper, getVerificationSessionForIssuanceSession } from './issuer'
+import {
+  credentialRequestToCredentialMapper,
+  deferredCredentialRequestToCredentialMapper,
+  getVerificationSessionForIssuanceSession,
+} from './issuer'
 import { verifierTrustChains } from './verifiers'
 import { getAuthorityHints, isSubordinateTo } from './verifiers/trustChains'
 
@@ -56,6 +60,7 @@ export const agent = new Agent({
       baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
       router: openId4VciRouter,
       credentialRequestToCredentialMapper,
+      deferredCredentialRequestToCredentialMapper,
       getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
     }),
     openId4VcHolder: new OpenId4VcHolderModule(),
