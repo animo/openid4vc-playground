@@ -9,10 +9,10 @@
   },
   "pnpm": {
     "overrides": {
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250821112012",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250821112012",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250821112012",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250821112012"
+      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20250917081245",
+      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20250917081245",
+      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20250917081245",
+      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20250917081245"
     },
     "patchedDependencies": {
       "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"
