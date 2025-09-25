@@ -195,7 +195,7 @@ export const mobileDriversLicenseSdJwt = {
 
 export const mobileDriversLicenseSdJwtData = {
   credentialConfigurationId: 'mobile-drivers-license-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...mobileDriversLicensePayload,
@@ -336,7 +336,7 @@ const arfCompliantPidData = {
 
 export const arfCompliantPidSdJwtData = {
   credentialConfigurationId: 'arf-pid-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...arfCompliantPidData,

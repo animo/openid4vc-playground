@@ -42,7 +42,7 @@ export const arfCompliantPidSdJwt = {
 
 export const arfCompliantPidSdJwtData = {
   credentialConfigurationId: 'government-arf-18-pid-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       vct: arfCompliantPidSdJwt.vct,

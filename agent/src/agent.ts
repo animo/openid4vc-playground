@@ -1,7 +1,7 @@
 import { AskarModule } from '@credo-ts/askar'
 import { Agent, ConsoleLogger, LogLevel, X509Module, joinUriParts } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
-import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule } from '@credo-ts/openid4vc'
+import { OpenId4VcModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { Router } from 'express'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
@@ -44,7 +44,6 @@ BAMCA0gAMEUCIQD4pFHRCnOkuP4l1GHy66dd60bLkRNsQbHOFvYE7OP44QIgJHyJ
 export const agent = new Agent({
   dependencies: agentDependencies,
   config: {
-    label: 'OpenID4VC Playground',
     logger: new ConsoleLogger(LogLevel.trace),
   },
   modules: {
@@ -56,26 +55,27 @@ export const agent = new Agent({
         key: AGENT_WALLET_KEY,
       },
     }),
-    openId4VcIssuer: new OpenId4VcIssuerModule({
-      baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
-      router: openId4VciRouter,
-      credentialRequestToCredentialMapper,
-      deferredCredentialRequestToCredentialMapper,
-      getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
-    }),
-    openId4VcHolder: new OpenId4VcHolderModule(),
-    openId4VcVerifier: new OpenId4VcVerifierModule({
-      baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
-      router: openId4VpRouter,
-      authorizationRequestExpirationInSeconds: 600,
-      federation: {
-        async getAuthorityHints(agentContext, { verifierId }) {
-          return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
-            joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
-          )
-        },
-        async isSubordinateEntity(agentContext, options) {
-          return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
+    openid4vc: new OpenId4VcModule({
+      issuer: {
+        baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
+        router: openId4VciRouter,
+        credentialRequestToCredentialMapper,
+        deferredCredentialRequestToCredentialMapper,
+        getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
+      },
+      verifier: {
+        baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
+        router: openId4VpRouter,
+        authorizationRequestExpirationInSeconds: 600,
+        federation: {
+          async getAuthorityHints(agentContext, { verifierId }) {
+            return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
+              joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
+            )
+          },
+          async isSubordinateEntity(agentContext, options) {
+            return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
+          },
         },
       },
     }),

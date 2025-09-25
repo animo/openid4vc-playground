@@ -38,7 +38,7 @@ export const openIdSdJwt = {
 
 export const openIdSdJwtData = {
   credentialConfigurationId: 'openid-id-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       vct: openIdSdJwt.vct,

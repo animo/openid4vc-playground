@@ -42,7 +42,7 @@ export const arfCompliantPidSdJwtNoNonDisclosure = {
 
 export const arfCompliantPidSdJwtNoNonDisclosureData = {
   credentialConfigurationId: 'government-arf-18-pid-sd-jwt-no-non-disclosure',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       vct: arfCompliantPidSdJwtNoNonDisclosure.vct,

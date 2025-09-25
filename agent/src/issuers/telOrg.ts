@@ -95,7 +95,7 @@ export const msisdnSdJwt = {
 
 export const msisdnSdJwtData = {
   credentialConfigurationId: 'msisdn-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...msisdnPayload,

@@ -140,10 +140,6 @@ async function run() {
       request.body.client_secret = 'wallet'
     }
 
-    if (request.path === '/test') {
-      console.dir(await agent.modules.openId4VcIssuer.getAllIssuers(), { depth: Number.POSITIVE_INFINITY })
-    }
-
     next()
   })
   app.use('/.well-known/did.json', async (_, response: Response) => {

@@ -86,7 +86,7 @@ export const certificateOfResidenceSdJwt = {
 
 export const certificateOfResidenceSdJwtData = {
   credentialConfigurationId: 'certificate-of-residence-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...certificateOfResidencePayload,

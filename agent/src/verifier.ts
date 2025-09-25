@@ -21,12 +21,12 @@ export interface PlaygroundVerifierOptions {
 
 export async function createOrUpdateVerifier(options: PlaygroundVerifierOptions) {
   if (await doesVerifierExist(options.verifierId)) {
-    await agent.modules.openId4VcVerifier.updateVerifierMetadata({
+    await agent.openid4vc.verifier.updateVerifierMetadata({
       verifierId: options.verifierId,
       clientMetadata: options.clientMetadata,
     })
   } else {
-    return agent.modules.openId4VcVerifier.createVerifier({
+    return agent.openid4vc.verifier.createVerifier({
       clientMetadata: options.clientMetadata,
       verifierId: options.verifierId,
     })
@@ -35,7 +35,7 @@ export async function createOrUpdateVerifier(options: PlaygroundVerifierOptions)
 
 export async function doesVerifierExist(verifierId: string) {
   try {
-    await agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId)
+    await agent.openid4vc.verifier.getVerifierByVerifierId(verifierId)
     return true
   } catch (error) {
     return false
@@ -43,5 +43,5 @@ export async function doesVerifierExist(verifierId: string) {
 }
 
 export async function getVerifier(verifierId: string) {
-  return agent.modules.openId4VcVerifier.getVerifierByVerifierId(verifierId)
+  return agent.openid4vc.verifier.getVerifierByVerifierId(verifierId)
 }

@@ -8,6 +8,9 @@ import {
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
+  W3cV2JwtVerifiableCredential,
+  W3cV2JwtVerifiablePresentation,
+  W3cV2SdJwtVerifiablePresentation,
   X509Certificate,
   X509ModuleConfig,
 } from '@credo-ts/core'
@@ -58,7 +61,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
 
   const issuerId = getIssuerIdForCredentialConfigurationId(configurationId)
   const authorization = createOfferRequest.authorization
-  const issuerMetadata = await agent.modules.openId4VcIssuer.getIssuerMetadata(issuerId)
+  const issuerMetadata = await agent.openid4vc.issuer.getIssuerMetadata(issuerId)
 
   // Parse deferment options
   let deferUntil: Date | undefined
@@ -74,7 +77,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
       break
   }
 
-  const offer = await agent.modules.openId4VcIssuer.createCredentialOffer({
+  const offer = await agent.openid4vc.issuer.createCredentialOffer({
     issuerId,
     credentialConfigurationIds: [configurationId],
     version: 'v1.draft15',
@@ -200,7 +203,7 @@ apiRouter.post('/trust-chains', async (request: Request, response: Response) => 
 
   const { entityId, trustAnchorEntityIds } = parseResult.data
 
-  const chains = await agent.modules.openId4VcHolder.resolveOpenIdFederationChains({
+  const chains = await agent.openid4vc.holder.resolveOpenIdFederationChains({
     entityId,
     trustAnchorEntityIds,
   })
@@ -277,7 +280,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     // Only include it in this one
     const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
     const { authorizationRequest, verificationSession, authorizationRequestObject } =
-      await agent.modules.openId4VcVerifier.createAuthorizationRequest({
+      await agent.openid4vc.verifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
         verifierInfo: isEudiAuthorization
@@ -398,7 +401,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
   const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
 
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
-    const verified = await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(verificationSession.id)
+    const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)
     console.log(verified.presentationExchange?.presentations)
     console.log(verified.dcql?.presentationResult)
 
@@ -443,6 +446,13 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
               }),
               encoded: presentation.base64Url,
             }
+          }
+
+          if (
+            presentation instanceof W3cV2JwtVerifiablePresentation ||
+            presentation instanceof W3cV2SdJwtVerifiablePresentation
+          ) {
+            throw new Error('W3C V2 presentations are not supported yet')
           }
 
           return {
@@ -498,7 +508,7 @@ apiRouter.post('/requests/verify-dc', async (request: Request, response: Respons
   const { verificationSessionId, data } = await zReceiveDcResponseBody.parseAsync(request.body)
 
   try {
-    const { verificationSession } = await agent.modules.openId4VcVerifier.verifyAuthorizationResponse({
+    const { verificationSession } = await agent.openid4vc.verifier.verifyAuthorizationResponse({
       verificationSessionId,
       authorizationResponse: typeof data === 'string' ? JSON.parse(data) : data,
       origin: request.headers.origin,
@@ -518,7 +528,7 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
     responseCodeMap.get(request.params.verificationSessionId) ?? request.params.verificationSessionId
 
   try {
-    const verificationSession = await agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
+    const verificationSession = await agent.openid4vc.verifier.getVerificationSessionById(verificationSessionId)
     return response.json(await getVerificationStatus(verificationSession))
   } catch (error) {
     if (error instanceof RecordNotFoundError) {

@@ -82,7 +82,7 @@ export const healthIdSdJwt = {
 
 export const healthIdSdJwtData = {
   credentialConfigurationId: 'health-id-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...healthIdPayload,

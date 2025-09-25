@@ -211,7 +211,7 @@ export const eudiPidSdJwt = {
 
 export const eudiPidSdJwtData = {
   credentialConfigurationId: 'eudi-pid-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...eudiPidPayload,

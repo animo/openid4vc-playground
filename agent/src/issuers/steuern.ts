@@ -90,7 +90,7 @@ export const taxIdSdJwt = {
 
 export const taxIdSdJwtData = {
   credentialConfigurationId: 'tax-id-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       ...taxIdPayload,

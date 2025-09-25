@@ -133,7 +133,7 @@ export function serializableSignOptionsToSignOptions({
   ...rest
 }: SerializableSignCredentialOptions): OpenId4VciSignCredentials {
   switch (format) {
-    case ClaimFormat.SdJwtVc:
+    case ClaimFormat.SdJwtDc:
       return {
         type: 'credentials',
         format,
@@ -191,15 +191,15 @@ export function serializableSignOptionsToSignOptions({
 
 export async function createOrUpdateIssuer(options: OpenId4VciCreateIssuerOptions & { issuerId: string }) {
   if (await doesIssuerExist(options.issuerId)) {
-    await agent.modules.openId4VcIssuer.updateIssuerMetadata(options)
+    await agent.openid4vc.issuer.updateIssuerMetadata(options)
   } else {
-    return agent.modules.openId4VcIssuer.createIssuer(options)
+    return agent.openid4vc.issuer.createIssuer(options)
   }
 }
 
 export async function doesIssuerExist(issuerId: string) {
   try {
-    await agent.modules.openId4VcIssuer.getIssuerByIssuerId(issuerId)
+    await agent.openid4vc.issuer.getIssuerByIssuerId(issuerId)
     return true
   } catch (error) {
     return false
@@ -207,7 +207,7 @@ export async function doesIssuerExist(issuerId: string) {
 }
 
 export async function getIssuer(issuerId: string) {
-  return agent.modules.openId4VcIssuer.getIssuerByIssuerId(issuerId)
+  return agent.openid4vc.issuer.getIssuerByIssuerId(issuerId)
 }
 
 export function getIssuerIdForCredentialConfigurationId(credentialConfigurationId: string) {
@@ -362,9 +362,9 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     const descriptor = verification?.presentationExchange?.descriptors[0]
 
     // We allow receiving the PID in both SD-JWT and mdoc when issuing in sd-jwt or mdoc format
-    if (descriptor?.claimFormat === ClaimFormat.SdJwtVc || descriptor?.claimFormat === ClaimFormat.MsoMdoc) {
+    if (descriptor?.claimFormat === ClaimFormat.SdJwtDc || descriptor?.claimFormat === ClaimFormat.MsoMdoc) {
       const driversLicenseClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               given_name: descriptor.credential.prettyClaims.given_name,
               family_name: descriptor.credential.prettyClaims.family_name,
@@ -392,7 +392,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const taxIdClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               registered_given_name: descriptor.credential.prettyClaims.given_name,
               registered_family_name: descriptor.credential.prettyClaims.family_name,
@@ -414,7 +414,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const certificateOfResidenceClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -434,10 +434,10 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
-      const healthIdClaims = descriptor.claimFormat === ClaimFormat.SdJwtVc ? {} : {}
+      const healthIdClaims = descriptor.claimFormat === ClaimFormat.SdJwtDc ? {} : {}
 
       const msisdnClaimsData =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               registered_given_name: descriptor.credential.prettyClaims.given_name,
               registered_family_name: descriptor.credential.prettyClaims.family_name,
@@ -449,7 +449,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             }
 
       const arfCompliantPidData =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -483,7 +483,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           : {}
 
       const nederlandenPidData =
-        descriptor.claimFormat === ClaimFormat.SdJwtVc
+        descriptor.claimFormat === ClaimFormat.SdJwtDc
           ? {
               family_name: descriptor.credential.prettyClaims.family_name,
               given_name: descriptor.credential.prettyClaims.given_name,
@@ -561,7 +561,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         ])
       )
 
-      if (credentialData.format === ClaimFormat.SdJwtVc) {
+      if (credentialData.format === ClaimFormat.SdJwtDc) {
         const { credential, ...restCredentialData } = credentialData
 
         signOptions = {
@@ -608,7 +608,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   if (!signOptions) {
-    if (credentialData.format === ClaimFormat.SdJwtVc) {
+    if (credentialData.format === ClaimFormat.SdJwtDc) {
       const { credential, ...restCredentialData } = credentialData
 
       signOptions = {

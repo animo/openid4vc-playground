@@ -38,7 +38,7 @@ export const ageSdJwt = {
 
 export const ageSdJwtData = {
   credentialConfigurationId: 'age-sd-jwt',
-  format: ClaimFormat.SdJwtVc,
+  format: ClaimFormat.SdJwtDc,
   credential: {
     payload: {
       vct: ageSdJwt.vct,
