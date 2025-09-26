@@ -70,7 +70,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
       deferUntil = new Date(Date.now() + 1000)
       break
     case '1h':
-      deferUntil = new Date(Date.now() + 30 * 1000)
+      deferUntil = new Date(Date.now() + 60 * 60 * 1000)
       break
     case '1d':
       deferUntil = new Date(Date.now() + 24 * 60 * 60 * 1000)
