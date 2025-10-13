@@ -165,8 +165,8 @@ export function serializableSignOptionsToSignOptions({
         ...rest,
         credentials: credentials.map((credential) => ({
           ...credential,
-          validityInfo: cborDecode(Buffer.from(credential.validityInfo, 'base64url')),
-          namespaces: cborDecode(Buffer.from(credential.namespaces, 'base64url')),
+          validityInfo: cborDecode(Buffer.from(credential.validityInfo, 'base64url'), { mapsAsObjects: true }),
+          namespaces: cborDecode(Buffer.from(credential.namespaces, 'base64url'), { mapsAsObjects: true }),
           holderKey: Kms.PublicJwk.fromUnknown(credential.holderKey),
           issuerCertificate: getX509DcsCertificate(),
         })),
@@ -590,14 +590,19 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           ...restCredentialData,
           credentials: holderBinding.keys.map((holderBinding) => ({
             ...credential,
-            validityInfo: Buffer.from(cborEncode(credential.validityInfo)).toString('base64url'),
+            validityInfo: Buffer.from(cborEncode(credential.validityInfo, { mapsAsObjects: true })).toString(
+              'base64url'
+            ),
             namespaces: Buffer.from(
-              cborEncode({
-                [namespace]: {
-                  ...values,
-                  ...formatSpecificClaims[credentialConfigurationId],
+              cborEncode(
+                {
+                  [namespace]: {
+                    ...values,
+                    ...formatSpecificClaims[credentialConfigurationId],
+                  },
                 },
-              })
+                { mapsAsObjects: true }
+              )
             ).toString('base64url'),
 
             holderKey: holderBinding.jwk.toJson(),
@@ -626,13 +631,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       } satisfies SerializableSdJwtVcSignOptions
     } else if (credentialData.format === ClaimFormat.MsoMdoc) {
       const { credential, ...restCredentialData } = credentialData
-
       signOptions = {
         ...restCredentialData,
         credentials: holderBinding.keys.map((holderBinding) => ({
           ...credential,
-          validityInfo: Buffer.from(cborEncode(credential.validityInfo)).toString('base64url'),
-          namespaces: Buffer.from(cborEncode(credential.namespaces)).toString('base64url'),
+          validityInfo: Buffer.from(cborEncode(credential.validityInfo, { mapsAsObjects: true })).toString('base64url'),
+          namespaces: Buffer.from(cborEncode(credential.namespaces, { mapsAsObjects: true })).toString('base64url'),
           holderKey: holderBinding.jwk.toJson(),
         })),
       } satisfies SerializableMdocSignOptions
