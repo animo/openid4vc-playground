@@ -123,7 +123,7 @@ export type SerializableSignCredentialOptions =
   | SerializableW3cSignOptions
 
 export interface IssuanceMetadata extends Record<string, unknown> {
-  deferUntil?: number
+  deferInterval?: number
   signOptions?: SerializableSignCredentialOptions
 }
 
@@ -668,7 +668,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
-  if (issuanceMetadata.deferUntil) {
+  if (issuanceMetadata.deferInterval) {
     issuanceMetadata.signOptions = signOptions
 
     // NOTE: This is a bit hacky. We rely on the fact that we know that Credo
@@ -678,7 +678,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     return {
       type: 'deferral',
       transactionId: randomUUID() as string,
-      interval: calculateInterval(issuanceMetadata.deferUntil),
+      interval: issuanceMetadata.deferInterval,
     }
   }
 
@@ -695,16 +695,18 @@ export const deferredCredentialRequestToCredentialMapper: OpenId4VciDeferredCred
 
   const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata
 
-  if (!issuanceMetadata.deferUntil) {
-    throw new Error('Issuance session metadata does not have deferUntil set')
+  if (!issuanceMetadata.deferInterval) {
+    throw new Error('Issuance session metadata does not have deferInterval set')
   }
 
   if (!issuanceMetadata.signOptions) {
     throw new Error('Issuance session metadata does not have signOptions set')
   }
 
+  const deferUntil = issuanceSession.createdAt.getTime() + issuanceMetadata.deferInterval * 1000
+
   // If no longer deferred, return the credentials
-  if (issuanceMetadata.deferUntil < Date.now()) {
+  if (deferUntil < Date.now()) {
     return serializableSignOptionsToSignOptions(issuanceMetadata.signOptions)
   }
 
@@ -712,27 +714,6 @@ export const deferredCredentialRequestToCredentialMapper: OpenId4VciDeferredCred
   return {
     type: 'deferral',
     transactionId: deferredCredentialRequest.transaction_id,
-    interval: calculateInterval(issuanceMetadata.deferUntil),
+    interval: issuanceMetadata.deferInterval,
   }
-}
-
-const calculateInterval = (deferUntil: number) => {
-  const secondsUntilIssuance = Math.floor((deferUntil - Date.now()) / 1000)
-
-  // Issuance time in less than 1 minute
-  if (secondsUntilIssuance <= 60) {
-    return 60 // Check every 1 minute
-  }
-
-  // Issuance time in less than 1 hour
-  if (secondsUntilIssuance <= 3600) {
-    return 30 * 60 // Check every 30 minutes
-  }
-
-  // Issuance time in less than 1 day
-  if (secondsUntilIssuance <= 86400) {
-    return 6 * 60 * 60 // Check every 6 hours
-  }
-
-  return 24 * 60 * 60 // Check every day
 }

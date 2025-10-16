@@ -49,6 +49,13 @@ const zAddX509CertificateRequest = z.object({
 })
 export const apiRouter = express.Router()
 
+const deferIntervalMapping: Record<z.infer<typeof zCreateOfferRequest>['deferBy'], number | undefined> = {
+  '1m': 60,
+  '1h': 3600,
+  '1d': 86400,
+  none: undefined,
+}
+
 apiRouter.use(express.json())
 apiRouter.use(express.text())
 apiRouter.post('/offers/create', async (request: Request, response: Response) => {
@@ -64,18 +71,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   const issuerMetadata = await agent.openid4vc.issuer.getIssuerMetadata(issuerId)
 
   // Parse deferment options
-  let deferUntil: Date | undefined
-  switch (createOfferRequest.deferBy) {
-    case '1m':
-      deferUntil = new Date(Date.now() + 1000)
-      break
-    case '1h':
-      deferUntil = new Date(Date.now() + 60 * 60 * 1000)
-      break
-    case '1d':
-      deferUntil = new Date(Date.now() + 24 * 60 * 60 * 1000)
-      break
-  }
+  const deferInterval = deferIntervalMapping[createOfferRequest.deferBy]
 
   const offer = await agent.openid4vc.issuer.createCredentialOffer({
     issuerId,
@@ -108,7 +104,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
           }
         : undefined,
     issuanceMetadata: {
-      deferUntil: deferUntil?.getTime(),
+      deferInterval,
     } satisfies IssuanceMetadata,
   })
 
