@@ -18,7 +18,6 @@ import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionSt
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
-import { validateVerificationRequest, zValidateVerificationRequestSchema } from './ai'
 import {
   funkeDeployedAccessCertificate,
   funkeDeployedAccessCertificateRoot,
@@ -538,25 +537,4 @@ apiRouter.use((error: Error, _request: Request, response: Response, _next: NextF
   return response.status(500).json({
     error: error.message,
   })
-})
-
-apiRouter.post('/validate-verification-request', async (request: Request, response: Response) => {
-  try {
-    const validateVerificationRequestBody = zValidateVerificationRequestSchema.parse(request.body)
-    const result = await validateVerificationRequest(validateVerificationRequestBody)
-    return response.json(result)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return response.status(400).json({
-        error: 'Invalid request body',
-        details: error.errors,
-      })
-    }
-
-    console.error('Error validating verification request:', error)
-    return response.status(500).json({
-      error: 'Internal server error during verification validation',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    })
-  }
 })
