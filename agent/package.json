@@ -2,7 +2,6 @@
   "name": "agent",
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.1.14",
     "@credo-ts/askar": "0.6.0-alpha-20250324131619",
     "@credo-ts/core": "0.6.0-alpha-20250324131619",
     "@credo-ts/node": "0.6.0-alpha-20250324131619",
@@ -10,7 +9,6 @@
     "@openwallet-foundation/askar-nodejs": "^0.3.2",
     "@openwallet-foundation/askar-shared": "^0.3.2",
     "@peculiar/x509": "^1.12.3",
-    "ai": "^4.1.51",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
