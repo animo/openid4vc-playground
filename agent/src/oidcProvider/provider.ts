@@ -29,7 +29,7 @@ async function getProvider() {
         grant_types: ['authorization_code'],
         id_token_signed_response_alg: 'ES256',
         redirect_uris: ['https://paradym.id/invitation/redirect'],
-        application_type: 'native'
+        application_type: 'native',
       },
       {
         client_id: 'wallet',
