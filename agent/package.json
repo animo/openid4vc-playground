@@ -2,7 +2,7 @@
   "name": "agent",
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.1.14",
+    "@ai-sdk/anthropic": "^1.2.12",
     "@animo-id/mdoc": "^0.5.2",
     "@credo-ts/askar": "0.6.0-alpha-20250324131619",
     "@credo-ts/core": "0.6.0-alpha-20250324131619",
@@ -10,21 +10,21 @@
     "@credo-ts/openid4vc": "0.6.0-alpha-20250324131619",
     "@openwallet-foundation/askar-nodejs": "^0.3.2",
     "@openwallet-foundation/askar-shared": "^0.3.2",
-    "@peculiar/x509": "^1.13.0",
-    "ai": "^4.1.51",
+    "@peculiar/x509": "^1.14.2",
+    "ai": "^4.3.19",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.2",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
     "oidc-provider": "^8.5.3",
-    "zod": "3.24.1"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.11.7",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.25",
+    "@types/node": "^20.19.25",
     "@types/oidc-provider": "^8.5.2",
-    "tsx": "^4.7.0",
-    "typescript": "~5.3.3"
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
