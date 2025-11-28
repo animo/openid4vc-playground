@@ -24,6 +24,14 @@ async function getProvider() {
     clientAuthMethods: ['client_secret_basic', 'client_secret_post', 'none'],
     clients: [
       {
+        client_id: 'id.animo.paradym',
+        client_secret: 'wallet',
+        grant_types: ['authorization_code'],
+        id_token_signed_response_alg: 'ES256',
+        redirect_uris: ['https://paradym.id/invitation/redirect'],
+        application_type: 'native'
+      },
+      {
         client_id: 'wallet',
         client_secret: 'wallet',
         grant_types: ['authorization_code'],

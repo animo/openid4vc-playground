@@ -136,7 +136,6 @@ async function run() {
   app.use('/api', apiRouter)
   app.use(async (request, _, next) => {
     if (request.path === '/provider/request' || request.path === '/provider/token') {
-      request.body.client_id = 'wallet'
       request.body.client_secret = 'wallet'
     }
 
