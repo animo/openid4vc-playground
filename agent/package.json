@@ -6,7 +6,7 @@
     "@animo-id/mdoc": "^0.5.2",
     "@credo-ts/askar": "0.6.0-alpha-20250324131619",
     "@credo-ts/core": "0.6.0-alpha-20250324131619",
-    "@credo-ts/node": "0.6.0-alpha-20250324131619",
+    "@credo-ts/node": "0.6.0-pr-2539-20251127092008",
     "@credo-ts/openid4vc": "0.6.0-alpha-20250324131619",
     "@openwallet-foundation/askar-nodejs": "^0.3.2",
     "@openwallet-foundation/askar-shared": "^0.3.2",
