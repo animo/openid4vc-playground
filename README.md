@@ -1,35 +1,50 @@
 <p align="center">
-  <br />
-<img src="./assets/preview.png" alt="screenshot-demo" height="878px" width="910px"/>
-
+  <picture>
+   <source media="(prefers-color-scheme: light)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656578320/animo-logo-light-no-text_ok9auy.svg">
+   <source media="(prefers-color-scheme: dark)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656578320/animo-logo-dark-no-text_fqqdq9.svg">
+   <img alt="Animo Logo" height="250px" />
+  </picture>
 </p>
 
-<h1 align="center"><b>Funke OpenID4VC Playground</b></h1>
-<div align="center">
-    <a
-    href="https://raw.githubusercontent.com/animo/openid4vc-playground/main/LICENSE"
-    ><img
-      alt="License"
-      src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
-  /></a>
-</div>
+<h1 align="center" ><b>OpenID4VC Playground</b></h1>
 
-> [!TIP]
-> Check out the demo at https://funke.animo.id
+Welcome to the repository of Animo's OpenID4VC Playground. This interactive playground demonstrates the use of OpenID4VC with different credential formats, such as SD-JWT VCs and mDOCs. This demo is built using [Credo](https://github.com/openwallet-foundation/credo-ts). Credo is a framework written in TypeScript for building decentralized identity services.
 
-## ✨ Hi there!
+<h4 align="center">Powered by &nbsp; 
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656579715/animo-logo-light-text_cma2yo.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656579715/animo-logo-dark-text_uccvqa.svg">
+    <img alt="Animo Logo" height="12px" />
+  </picture>
+</h4><br>
 
-Welcome to the repository of Animo's OpenID4VC Playground. This interactive playground demonstrates the use of OpenID4VC with different credential formats (such as SD-JWT VCs). This demo is built using [Credo](https://github.com/openwallet-foundation/credo-ts). Credo is a framework written in TypeScript for building decentralized identity services.
+<p align="center">
+  <a href="https://typescriptlang.org">
+    <img src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg" />
+  </a>
+  <a href="https://www.npmjs.com/package/@animo-id/mdoc">
+    <img src="https://img.shields.io/npm/v/@animo-id/mdoc" />
+  </a>
+</p>
 
-## 🛠️ Usage
+<p align="center">
+  <a href="#installation">Installation</a> 
+  &nbsp;|&nbsp;
+  <a href="#contributing">Contributing</a>
+  &nbsp;|&nbsp;
+  <a href="#license">License</a>
+</p>
+
+
+## Installation
 
 ### Prerequisites
 
-- [NodeJS](https://nodejs.org/en/) v18.X.X - Other versions may work, not tested
+- [NodeJS](https://nodejs.org/en/) v20.X.X - Other versions may work, not tested.
 - [pnpm](https://pnpm.io/installation)
-- [Git](https://git-scm.com/downloads) - You probably already have this
+- [Git](https://git-scm.com/downloads) - You probably already have this.
 
-### 🖥 App
+### App
 
 Copy the `.env.example` file to a `.env.local` file and set the environment variables. **This is not needed for development**.
 
@@ -42,7 +57,7 @@ cp .env.example .env
 | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | Used in the frontend application to connect with the backend. Default to `http://localhost:3001` for development. |
 
-### 🎛️ Agent
+### Agent
 
 Copy the `.env.example` file to a `.env.local` file and set the environment variables. **This is not needed for development**.
 
@@ -87,8 +102,13 @@ cd app
 pnpm dev
 ```
 
-## 🖇️ How To Contribute
+## Contributing
 
 You're welcome to contribute to this playground. Please make sure to open an issue first!
 
 This playground is open source and you're more than welcome to customize and use it to create your own OpenID4VC Playground. If you do, an attribution to [Animo](https://animo.id) would be very much appreciated!
+
+## License
+
+This project is licensed under the Apache License Version 2.0 (Apache-2.0).
+
