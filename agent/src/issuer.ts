@@ -251,6 +251,9 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         method: 'x5c',
         x5c: certificates,
       },
+      // NOTE: we should update to v1, but then we need to update all our presentation during issuance logic
+      // to work with DCQL instead
+      version: 'v1.draft24',
       presentationExchange:
         credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
         credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
