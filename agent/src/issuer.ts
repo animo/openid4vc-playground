@@ -329,8 +329,25 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
                       'nationality',
                     ],
                   }),
+                  {
+                    format: 'dc+sd-jwt',
+                    vcts: ['urn:eudi:pid:1'],
+                    fields: [
+                      'given_name',
+                      'family_name',
+                      'birthdate',
+                      'place_of_birth',
+                      'address',
+                      'nationalities',
+
+                      // Mandatory metadata
+                      'date_of_expiry',
+                      'issuing_country',
+                      'issuing_authority',
+                    ],
+                  },
                 ],
-                credential_sets: [[0, 1]],
+                credential_sets: [[0, 1, 2]],
               }),
             },
       responseMode: 'direct_post.jwt',
