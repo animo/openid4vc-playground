@@ -40,10 +40,11 @@ const healthIdPayload = {
 export const healthIdMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'health-id-mdoc',
   doctype: 'eu.europa.ec.eudi.hiid.1',
   display: [healthIdDisplay],
+  credential_metadata: { display: [healthIdDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -67,12 +68,13 @@ export const healthIdMdocData = {
 } satisfies StaticMdocSignInput
 
 export const healthIdSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'health-id-sd-jwt',
   vct: 'eu.europa.ec.eudi.hiid.1',
   display: [healthIdDisplay],
+  credential_metadata: { display: [healthIdDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -104,7 +106,7 @@ export const krankenkasseIssuer = {
   issuerId: 'a27a9f50-2b4d-4fac-99b6-9fd306641f9d',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: healthIdSdJwt,
         data: healthIdSdJwtData,
       },

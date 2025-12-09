@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { type FormEvent, useState } from 'react'
 import { addX509Certificate } from '../lib/api'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
@@ -35,21 +36,7 @@ export function X509Tab() {
 
   return (
     <Card className="p-6">
-      <Alert variant="default" className="mb-5">
-        <InfoCircledIcon className="h-4 w-4" />
-        <AlertTitle>Info</AlertTitle>
-        <AlertDescription>
-          This playground was built in the context for the{' '}
-          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
-            EUDI Wallet Prototype Funke
-          </a>
-          . It is only compatible with the current deployed version of{' '}
-          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo&apos;s EUDI Wallet Prototype
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+      <PlaygroundAlert />
       <form className="space-y-4" onSubmit={onSubmitX509Certificate}>
         <div className="space-y-2">
           <Label htmlFor="x509-certificate">X509 Certificate (PEM or Base64)</Label>

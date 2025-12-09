@@ -13,6 +13,7 @@ import {
 import { verifierTrustChains } from './verifiers'
 import { getAuthorityHints, isSubordinateTo } from './verifiers/trustChains'
 
+import { app } from './app'
 import * as certs from './iaca-x509-certs'
 
 process.on('unhandledRejection', (reason) => {
@@ -56,27 +57,27 @@ export const agent = new Agent({
       },
     }),
     openid4vc: new OpenId4VcModule({
+      app,
       issuer: {
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
-        router: openId4VciRouter,
         credentialRequestToCredentialMapper,
         deferredCredentialRequestToCredentialMapper,
         getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
       },
       verifier: {
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
-        router: openId4VpRouter,
         authorizationRequestExpirationInSeconds: 600,
-        federation: {
-          async getAuthorityHints(agentContext, { verifierId }) {
-            return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
-              joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
-            )
-          },
-          async isSubordinateEntity(agentContext, options) {
-            return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
-          },
-        },
+        // NOTE: add back when enabling federation support
+        // federation: {
+        //   async getAuthorityHints(agentContext, { verifierId }) {
+        //     return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
+        //       joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
+        //     )
+        //   },
+        //   async isSubordinateEntity(agentContext, options) {
+        //     return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
+        //   },
+        // },
       },
     }),
     x509: new X509Module({

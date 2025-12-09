@@ -6,7 +6,6 @@ import {
   Kms,
   type MdocSignOptions,
   type SdJwtVcSignOptions,
-  W3cCredential,
   parseDid,
 } from '@credo-ts/core'
 import {
@@ -21,7 +20,6 @@ import {
   type OpenId4VciSignCredentials,
   type OpenId4VciSignMdocCredentials,
   type OpenId4VciSignSdJwtCredentials,
-  type OpenId4VciSignW3cCredentials,
 } from '@credo-ts/openid4vc'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
@@ -34,11 +32,11 @@ import { eudiPidSdJwtData, nederlandenIssuer } from './issuers/nederlanden'
 import { steuernIssuer } from './issuers/steuern'
 import { telOrgIssuer } from './issuers/telOrg'
 import { getX509Certificates, getX509DcsCertificate } from './keyMethods'
-import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from './types'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
 import { bundesregierungVerifier } from './verifiers/bundesregierung'
-import { pidMdocCredential, pidSdJwtCredential, presentationDefinitionFromRequest } from './verifiers/util'
+import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util'
 
 export type CredentialConfigurationDisplay = NonNullable<
   NonNullable<OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata']>['display']
@@ -51,15 +49,21 @@ type IssuerDisplay = OpenId4VciCredentialIssuerMetadataDisplay & {
 export type MdocConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
   format: 'mso_mdoc'
   display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
-}
-export type LdpVcConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
-  format: 'ldp_vc'
-  display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+  credential_metadata: (OpenId4VciCredentialConfigurationSupportedWithFormats & {
+    format: 'mso_mdoc'
+  })['credential_metadata'] & {
+    display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+  }
 }
 
 export type SdJwtConfiguration = OpenId4VciCredentialConfigurationSupportedWithFormats & {
-  format: 'vc+sd-jwt'
+  format: 'dc+sd-jwt'
   display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+  credential_metadata: (OpenId4VciCredentialConfigurationSupportedWithFormats & {
+    format: 'dc+sd-jwt'
+  })['credential_metadata'] & {
+    display: [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+  }
 }
 
 export interface PlaygroundIssuerOptions
@@ -73,13 +77,9 @@ export interface PlaygroundIssuerOptions
       configuration: MdocConfiguration
       data: StaticMdocSignInput
     }
-    'vc+sd-jwt'?: {
+    'dc+sd-jwt'?: {
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
-    }
-    ldp_vc?: {
-      configuration: LdpVcConfiguration
-      data: StaticLdpVcSignInput
     }
   }>
 }
@@ -110,17 +110,7 @@ export type SerializableMdocSignOptions = Omit<OpenId4VciSignMdocCredentials, 't
   >
 }
 
-export type SerializableW3cSignOptions = Omit<OpenId4VciSignW3cCredentials, 'type' | 'credentials'> & {
-  credentials: Array<{
-    verificationMethod: string
-    credential: Record<string, unknown>
-  }>
-}
-
-export type SerializableSignCredentialOptions =
-  | SerializableSdJwtVcSignOptions
-  | SerializableMdocSignOptions
-  | SerializableW3cSignOptions
+export type SerializableSignCredentialOptions = SerializableSdJwtVcSignOptions | SerializableMdocSignOptions
 
 export interface IssuanceMetadata extends Record<string, unknown> {
   deferInterval?: number
@@ -172,18 +162,6 @@ export function serializableSignOptionsToSignOptions({
         })),
       } satisfies OpenId4VciSignMdocCredentials
 
-    case ClaimFormat.JwtVc:
-    case ClaimFormat.LdpVc:
-      return {
-        type: 'credentials',
-        format,
-        ...rest,
-        credentials: credentials.map((credential) => ({
-          verificationMethod: credential.verificationMethod,
-          credential: W3cCredential.fromJson(credential.credential),
-        })),
-      }
-
     default:
       throw new Error(`Unsupported claim format: ${format}`)
   }
@@ -216,9 +194,7 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
       .flatMap((a) =>
         Object.values(a).flatMap((b) => [
           b.data.credentialConfigurationId,
-          `${b.data.credentialConfigurationId}-dc-sd-jwt`,
           `${b.data.credentialConfigurationId}-key-attestations`,
-          `${b.data.credentialConfigurationId}-dc-sd-jwt-key-attestations`,
         ])
       )
       .includes(credentialConfigurationId)
@@ -239,8 +215,8 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
 
     const [credentialConfigurationId, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
 
-    if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'vc+sd-jwt') {
-      throw new Error('Presentation during issuance is only supported for mso_mdoc and vc+sd-jwt')
+    if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'dc+sd-jwt') {
+      throw new Error('Presentation during issuance is only supported for mso_mdoc and dc+sd-jwt')
     }
 
     const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
@@ -251,26 +227,16 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         method: 'x5c',
         x5c: certificates,
       },
-      // NOTE: we should update to v1, but then we need to update all our presentation during issuance logic
-      // to work with DCQL instead
-      version: 'v1.draft24',
-      presentationExchange:
+      version: 'v1',
+      dcql:
         credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
-        credentialConfigurationId ===
-          `${arfCompliantPidSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestations` ||
         credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-key-attestations` ||
         credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
-        credentialConfigurationId ===
-          `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestations` ||
         credentialConfigurationId === `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-key-attestations` ||
         credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-dc-sd-jwt` ||
-        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-dc-sd-jwt-key-attestaions` ||
         credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-key-attestations`
           ? {
-              definition: presentationDefinitionFromRequest({
+              query: dcqlQueryFromRequest({
                 name: 'Identity card',
                 purpose: 'To issue your ARF compliant PID we need to verify your german PID',
                 credentials: [
@@ -302,7 +268,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
               }),
             }
           : {
-              definition: presentationDefinitionFromRequest({
+              query: dcqlQueryFromRequest({
                 name: 'Identity card',
                 purpose: `To issue your ${credentialName} we need to verify your identity card`,
                 credentials: [
@@ -368,9 +334,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   verification,
   issuanceSession,
 }): Promise<OpenId4VciSignCredentials | OpenId4VciDeferredCredentials> => {
-  const normalizedCredentialConfigurationId = credentialConfigurationId
-    .replace('-dc-sd-jwt', '')
-    .replace('-key-attestations', '')
+  const normalizedCredentialConfigurationId = credentialConfigurationId.replace('-key-attestations', '')
   const credentialData = issuersCredentialsData[normalizedCredentialConfigurationId]
   if (!credentialData) {
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
@@ -379,205 +343,209 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   let signOptions: SerializableSignCredentialOptions | undefined
 
   if (issuanceSession.presentation?.required) {
-    const descriptor = verification?.presentationExchange?.descriptors[0]
+    const presentation = verification?.dcql?.presentations
+      ? Object.values(verification?.dcql?.presentations)[0]?.[0]
+      : undefined
 
     // We allow receiving the PID in both SD-JWT and mdoc when issuing in sd-jwt or mdoc format
-    if (descriptor?.claimFormat === ClaimFormat.SdJwtDc || descriptor?.claimFormat === ClaimFormat.MsoMdoc) {
+    if (presentation?.claimFormat === ClaimFormat.SdJwtDc || presentation?.claimFormat === ClaimFormat.MsoMdoc) {
       const driversLicenseClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              given_name: descriptor.credential.prettyClaims.given_name,
-              family_name: descriptor.credential.prettyClaims.family_name,
-              birth_date: descriptor.credential.prettyClaims.birthdate,
+              given_name: presentation.prettyClaims.given_name,
+              family_name: presentation.prettyClaims.family_name,
+              birth_date: presentation.prettyClaims.birthdate,
 
-              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+              issuing_authority: presentation.prettyClaims.issuing_authority,
 
               // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
               // We can request PID SD-JWT and issue mDOC drivers license, so to make it easier we
               // always set it
               issuing_country: 'NL',
-              // issuing_country: descriptor.credential.prettyClaims.issuing_country,
+              // issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              family_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+              given_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              family_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
 
               issuing_authority:
-                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
 
               // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
               issuing_country: 'NL',
-              // issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+              // issuing_country: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
       const taxIdClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              registered_given_name: descriptor.credential.prettyClaims.given_name,
-              registered_family_name: descriptor.credential.prettyClaims.family_name,
-              resident_address: `${(descriptor.credential.prettyClaims.address as Record<string, string>).street_address}, ${(descriptor.credential.prettyClaims.address as Record<string, string>).postal_code} ${(descriptor.credential.prettyClaims.address as Record<string, string>).locality}`,
-              birth_date: descriptor.credential.prettyClaims.birthdate,
+              registered_given_name: presentation.prettyClaims.given_name,
+              registered_family_name: presentation.prettyClaims.family_name,
+              resident_address: `${(presentation.prettyClaims.address as Record<string, string>).street_address}, ${(presentation.prettyClaims.address as Record<string, string>).postal_code} ${(presentation.prettyClaims.address as Record<string, string>).locality}`,
+              birth_date: presentation.prettyClaims.birthdate,
 
-              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
-              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+              issuing_authority: presentation.prettyClaims.issuing_authority,
+              issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              registered_given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              registered_given_name:
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
               registered_family_name:
-                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              resident_address: `${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
-              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              resident_address: `${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
+              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
               issuing_authority:
-                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
-              issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
+              issuing_country:
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
       const certificateOfResidenceClaims =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              family_name: descriptor.credential.prettyClaims.family_name,
-              given_name: descriptor.credential.prettyClaims.given_name,
-              resident_address: `${(descriptor.credential.prettyClaims.address as Record<string, string>).street_address}, ${(descriptor.credential.prettyClaims.address as Record<string, string>).postal_code} ${(descriptor.credential.prettyClaims.address as Record<string, string>).locality}`,
-              birth_date: descriptor.credential.prettyClaims.birthdate,
-              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
-              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
-              issuing_country: descriptor.credential.prettyClaims.issuing_country,
+              family_name: presentation.prettyClaims.family_name,
+              given_name: presentation.prettyClaims.given_name,
+              resident_address: `${(presentation.prettyClaims.address as Record<string, string>).street_address}, ${(presentation.prettyClaims.address as Record<string, string>).postal_code} ${(presentation.prettyClaims.address as Record<string, string>).locality}`,
+              birth_date: presentation.prettyClaims.birthdate,
+              birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
+              nationality: (presentation.prettyClaims.nationalities as string[])[0],
+              issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              family_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              resident_address: `${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
-              birth_date: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
-              birth_place: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_place,
-              nationality: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].nationality,
-              issuing_country: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+              given_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              family_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              resident_address: `${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
+              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+              birth_place: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_place,
+              nationality: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].nationality,
+              issuing_country:
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
             }
 
-      const healthIdClaims = descriptor.claimFormat === ClaimFormat.SdJwtDc ? {} : {}
+      const healthIdClaims = presentation.claimFormat === ClaimFormat.SdJwtDc ? {} : {}
 
       const msisdnClaimsData =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              registered_given_name: descriptor.credential.prettyClaims.given_name,
-              registered_family_name: descriptor.credential.prettyClaims.family_name,
+              registered_given_name: presentation.prettyClaims.given_name,
+              registered_family_name: presentation.prettyClaims.family_name,
             }
           : {
-              registered_given_name: descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
+              registered_given_name:
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
               registered_family_name:
-                descriptor.credential.issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
             }
 
       const arfCompliantPidData =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              family_name: descriptor.credential.prettyClaims.family_name,
-              given_name: descriptor.credential.prettyClaims.given_name,
-              birth_date: descriptor.credential.prettyClaims.birthdate,
-              age_over_18: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
+              family_name: presentation.prettyClaims.family_name,
+              given_name: presentation.prettyClaims.given_name,
+              birth_date: presentation.prettyClaims.birthdate,
+              age_over_18: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
 
               // Mandatory metadata
               issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
               expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
-              issuing_country: descriptor.credential.prettyClaims.issuing_country,
-              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+              issuing_country: presentation.prettyClaims.issuing_country,
+              issuing_authority: presentation.prettyClaims.issuing_authority,
 
               // Optional:
-              age_over_12: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
-              age_over_14: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
-              age_over_16: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
-              age_over_21: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
-              age_over_65: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
-              age_in_years: descriptor.credential.prettyClaims.age_in_years,
-              age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
-              family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
+              age_over_12: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
+              age_over_14: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
+              age_over_16: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
+              age_over_21: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
+              age_over_65: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
+              age_in_years: presentation.prettyClaims.age_in_years,
+              age_birth_year: presentation.prettyClaims.age_birth_year,
+              family_name_birth: presentation.prettyClaims.birth_family_name,
 
-              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+              birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
 
-              resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
-              resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
-              resident_postal_code: (descriptor.credential.prettyClaims.address as Record<string, string>).postal_code,
-              resident_street: (descriptor.credential.prettyClaims.address as Record<string, string>).street_address,
-              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
+              resident_country: (presentation.prettyClaims.address as Record<string, string>).country,
+              resident_city: (presentation.prettyClaims.address as Record<string, string>).locality,
+              resident_postal_code: (presentation.prettyClaims.address as Record<string, string>).postal_code,
+              resident_street: (presentation.prettyClaims.address as Record<string, string>).street_address,
+              nationality: (presentation.prettyClaims.nationalities as string[])[0],
             }
           : {}
 
       const nederlandenPidData =
-        descriptor.claimFormat === ClaimFormat.SdJwtDc
+        presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
-              family_name: descriptor.credential.prettyClaims.family_name,
-              given_name: descriptor.credential.prettyClaims.given_name,
-              birth_date: descriptor.credential.prettyClaims.birthdate,
-              age_over_18: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
+              family_name: presentation.prettyClaims.family_name,
+              given_name: presentation.prettyClaims.given_name,
+              birth_date: presentation.prettyClaims.birthdate,
+              age_over_18: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
 
               // Mandatory metadata
               issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
               expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
-              issuing_country: descriptor.credential.prettyClaims.issuing_country,
-              issuing_authority: descriptor.credential.prettyClaims.issuing_authority,
+              issuing_country: presentation.prettyClaims.issuing_country,
+              issuing_authority: presentation.prettyClaims.issuing_authority,
 
-              sex: descriptor.credential.prettyClaims.sex,
+              sex: presentation.prettyClaims.sex,
 
               // Optional:
-              age_over_12: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
-              age_over_14: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
-              age_over_16: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
-              age_over_21: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
-              age_over_65: (descriptor.credential.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
-              age_in_years: descriptor.credential.prettyClaims.age_in_years,
-              age_birth_year: descriptor.credential.prettyClaims.age_birth_year,
-              family_name_birth: descriptor.credential.prettyClaims.birth_family_name,
+              age_over_12: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
+              age_over_14: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
+              age_over_16: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
+              age_over_21: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
+              age_over_65: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
+              age_in_years: presentation.prettyClaims.age_in_years,
+              age_birth_year: presentation.prettyClaims.age_birth_year,
+              family_name_birth: presentation.prettyClaims.birth_family_name,
 
-              birth_place: (descriptor.credential.prettyClaims.place_of_birth as Record<string, string>).locality,
+              birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
 
-              resident_country: (descriptor.credential.prettyClaims.address as Record<string, string>).country,
-              resident_city: (descriptor.credential.prettyClaims.address as Record<string, string>).locality,
-              resident_postal_code: (descriptor.credential.prettyClaims.address as Record<string, string>).postal_code,
-              resident_street: (descriptor.credential.prettyClaims.address as Record<string, string>).street_address,
-              nationality: (descriptor.credential.prettyClaims.nationalities as string[])[0],
+              resident_country: (presentation.prettyClaims.address as Record<string, string>).country,
+              resident_city: (presentation.prettyClaims.address as Record<string, string>).locality,
+              resident_postal_code: (presentation.prettyClaims.address as Record<string, string>).postal_code,
+              resident_street: (presentation.prettyClaims.address as Record<string, string>).street_address,
+              nationality: (presentation.prettyClaims.nationalities as string[])[0],
             }
           : {}
 
       const formatSpecificClaims = Object.fromEntries(
         Object.entries({
-          [bdrIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [bdrIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             driversLicenseClaims,
           [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
             driversLicenseClaims,
 
-          [bdrIssuer.credentialConfigurationsSupported[1]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [bdrIssuer.credentialConfigurationsSupported[1]['dc+sd-jwt'].data.credentialConfigurationId]:
             arfCompliantPidData,
 
-          [bdrIssuer.credentialConfigurationsSupported[2]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [bdrIssuer.credentialConfigurationsSupported[2]['dc+sd-jwt'].data.credentialConfigurationId]:
             arfCompliantPidData,
 
           [nederlandenIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
             nederlandenPidData,
-          // @ts-expect-error Can be undefined because other configuration does not have vc+sd-jwt
-          [nederlandenIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          // @ts-expect-error Can be undefined because other configuration does not have dc+sd-jwt
+          [nederlandenIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             nederlandenPidData,
 
-          [krankenkasseIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [krankenkasseIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             healthIdClaims,
           [krankenkasseIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
             healthIdClaims,
 
-          [steuernIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]: taxIdClaims,
+          [steuernIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]: taxIdClaims,
           [steuernIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: taxIdClaims,
 
-          [kolnIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [kolnIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             certificateOfResidenceClaims,
           [kolnIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
             certificateOfResidenceClaims,
 
-          [telOrgIssuer.credentialConfigurationsSupported[0]['vc+sd-jwt'].data.credentialConfigurationId]:
+          [telOrgIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             msisdnClaimsData,
           [telOrgIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]: msisdnClaimsData,
         }).flatMap(([configurationId, data]) => [
           [configurationId, data],
           [`${configurationId}-key-attestations`, data],
-          [`${configurationId}-dc-sd-jwt`, data],
-          [`${configurationId}-dc-sd-jwt-key-attestations`, data],
         ])
       )
 
@@ -660,28 +628,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           holderKey: holderBinding.jwk.toJson(),
         })),
       } satisfies SerializableMdocSignOptions
-    } else if (credentialData.format === ClaimFormat.LdpVc) {
-      const { credential, ...restCredentialData } = credentialData
-
-      const didWeb = await getWebDidDocument()
-
-      signOptions = {
-        ...restCredentialData,
-        credentials: holderBinding.keys.map((holderBinding) => {
-          if (holderBinding.method !== 'did') {
-            throw new Error("Only 'did' holder binding supported for ldp vc")
-          }
-
-          const json = JsonTransformer.toJSON(credential.credential)
-          json.credentialSubject.id = parseDid(holderBinding.didUrl).did
-          json.issuer.id = didWeb.id
-
-          return {
-            verificationMethod: `${didWeb.id}#key-1`,
-            credential: json,
-          }
-        }),
-      } satisfies SerializableW3cSignOptions
     } else {
       throw new Error(`Unsupported credential ${credentialConfigurationId}`)
     }

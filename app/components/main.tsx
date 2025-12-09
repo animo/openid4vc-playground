@@ -46,7 +46,7 @@ export function Main() {
         </div>
         <footer className="flex items-center justify-center w-full p-4 gap-8">
           <p className="text-sm text-gray-500">
-            <a className="flex items-center gap-2" href="https://github.com/animo/openid4vc-playground-funke">
+            <a className="flex items-center gap-2" href="https://github.com/animo/openid4vc-playground">
               <GitHubLogoIcon /> Playground GitHub
             </a>
           </p>
@@ -58,7 +58,7 @@ export function Main() {
               className="flex items-center gap-2"
               href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid"
             >
-              <GitHubLogoIcon /> EUDI Wallet Protoype GitHub
+              <GitHubLogoIcon /> Paradym Wallet GitHub
             </a>
           </p>
         </footer>

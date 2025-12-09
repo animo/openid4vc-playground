@@ -1,15 +1,14 @@
-import { ClaimFormat, DateOnly, Kms, W3cCredential } from '@credo-ts/core'
+import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
 import { AGENT_HOST } from '../constants'
 import type {
   CredentialConfigurationDisplay,
-  LdpVcConfiguration,
   MdocConfiguration,
   PlaygroundIssuerOptions,
   SdJwtConfiguration,
 } from '../issuer'
-import type { StaticLdpVcSignInput, StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
 import {
   dateToSeconds,
   oneYearInMilliseconds,
@@ -78,86 +77,19 @@ const mobileDriversLicensePayload = {
 export const mobileDriversLicenseMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'mobile-drivers-license-mdoc',
   doctype: 'org.iso.18013.5.1.mDL',
   display: [mobileDriversLicenseDisplay],
+  credential_metadata: {
+    display: [mobileDriversLicenseDisplay],
+  },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
 } as const satisfies MdocConfiguration
-
-export const mobileDriversLicenseLdpVc = {
-  format: OpenId4VciCredentialFormatProfile.LdpVc,
-  cryptographic_binding_methods_supported: ['did:jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-  scope: 'mobile-drivers-license-ldp-vc',
-  credential_definition: {
-    '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vdl/v2'],
-    type: ['VerifiableCredential', 'Iso18013DriversLicenseCredential'],
-  },
-  display: [mobileDriversLicenseDisplay],
-  proof_types_supported: {
-    jwt: {
-      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.EdDSA, 'Ed25519Signature2020'],
-    },
-  },
-} as const satisfies LdpVcConfiguration
-
-export const mobileDriversLicenseLdpVcData = {
-  credentialConfigurationId: 'mobile-drivers-license-ldp-vc',
-  format: ClaimFormat.LdpVc,
-  credential: {
-    credential: W3cCredential.fromJson({
-      '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vdl/v2'],
-      type: ['VerifiableCredential', 'Iso18013DriversLicenseCredential'],
-      issuer: {
-        id: 'did:key:z6MkjxvA4FNrQUhr8f7xhdQuP1VPzErkcnfxsRaU5oFgy2E5',
-        name: 'Bundesdruckerei',
-        image: `${AGENT_HOST}/assets/issuers/bdr/issuer.png`,
-      },
-      issuanceDate: '2023-11-15T10:00:00-07:00',
-      expirationDate: '2028-11-15T12:00:00-06:00',
-      name: "Utopia Driver's License",
-      image: 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUg...kSuQmCC',
-      description: 'A license granting driving privileges in Utopia.',
-      credentialSubject: {
-        id: 'did:example:12347abcd',
-        type: 'LicensedDriver',
-        driversLicense: {
-          type: 'Iso18013DriversLicense',
-          document_number: '542426814',
-          family_name: 'TURNER',
-          given_name: 'SUSAN',
-          portrait: 'data:image/jpeg;base64,/9j/4AAQSkZJR...RSClooooP/2Q==',
-          birth_date: '1998-08-28',
-          issue_date: '2023-01-15T10:00:00-07:00',
-          expiry_date: '2028-08-27T12:00:00-06:00',
-          issuing_country: 'NL',
-          issuing_authority: 'NL',
-          driving_privileges: [
-            {
-              codes: [{ code: 'D' }],
-              vehicle_category_code: 'D',
-              issue_date: '2019-01-01',
-              expiry_date: '2027-01-01',
-            },
-            {
-              codes: [{ code: 'C' }],
-              vehicle_category_code: 'C',
-              issue_date: '2019-01-01',
-              expiry_date: '2017-01-01',
-            },
-          ],
-          un_distinguishing_sign: 'UTA',
-          sex: 2,
-        },
-      },
-    }),
-  },
-} satisfies StaticLdpVcSignInput
 
 export const mobileDriversLicenseMdocData = {
   credentialConfigurationId: 'mobile-drivers-license-mdoc',
@@ -180,12 +112,13 @@ export const mobileDriversLicenseMdocData = {
 } satisfies StaticMdocSignInput
 
 export const mobileDriversLicenseSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'mobile-drivers-license-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/mdl/1',
   display: [mobileDriversLicenseDisplay],
+  credential_metadata: { display: [mobileDriversLicenseDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -263,12 +196,13 @@ const arfCompliantPidUrnVctDisplay = {
 } satisfies CredentialConfigurationDisplay
 
 export const arfCompliantPidSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'arf-pid-sd-jwt',
   vct: 'eu.europa.ec.eudi.pid.1',
   display: [arfCompliantPidDisplay],
+  credential_metadata: { display: [arfCompliantPidDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -277,12 +211,13 @@ export const arfCompliantPidSdJwt = {
 } satisfies SdJwtConfiguration
 
 export const arfCompliantPidUrnVctSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'arf-pid-sd-jwt-urn-vct',
   vct: 'urn:eu.europa.ec.eudi:pid:1',
   display: [arfCompliantPidUrnVctDisplay],
+  credential_metadata: { display: [arfCompliantPidUrnVctDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -400,7 +335,7 @@ export const bdrIssuer = {
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: mobileDriversLicenseSdJwt,
         data: mobileDriversLicenseSdJwtData,
       },
@@ -408,19 +343,15 @@ export const bdrIssuer = {
         configuration: mobileDriversLicenseMdoc,
         data: mobileDriversLicenseMdocData,
       },
-      ldp_vc: {
-        configuration: mobileDriversLicenseLdpVc,
-        data: mobileDriversLicenseLdpVcData,
-      },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: arfCompliantPidSdJwt,
         data: arfCompliantPidSdJwtData,
       },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: arfCompliantPidUrnVctSdJwt,
         data: arfCompliantPidUrnVctSdJwtData,
       },
@@ -443,7 +374,6 @@ export const bdrIssuer = {
 export const bdrCredentialsData = {
   [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
-  [mobileDriversLicenseLdpVcData.credentialConfigurationId]: mobileDriversLicenseLdpVcData,
   [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
   [arfCompliantPidUrnVctSdJwtData.credentialConfigurationId]: arfCompliantPidUrnVctSdJwtData,
 }

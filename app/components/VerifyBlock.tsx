@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { CollapsibleSection } from './CollapsibleSection'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { X509Certificates } from './X509Certificates'
 import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
@@ -69,8 +70,6 @@ export const VerifyBlock: React.FC = () => {
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
-  const [requestVersion, setRequestVersion] = useState<'v1.draft21' | 'v1.draft24' | 'v1'>('v1')
-  const [queryLanguage, setQueryLanguage] = useState<'dcql' | 'pex'>('dcql')
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -89,8 +88,6 @@ export const VerifyBlock: React.FC = () => {
     if (requestScheme) params.set('requestScheme', requestScheme)
     if (purpose) params.set('purpose', purpose)
     if (requestSignerType) params.set('requestSignerType', requestSignerType)
-    if (requestVersion) params.set('requestVersion', requestVersion)
-    if (queryLanguage) params.set('queryLanguage', queryLanguage)
 
     const existingSearchParams = new URLSearchParams(searchParams.toString())
 
@@ -109,8 +106,6 @@ export const VerifyBlock: React.FC = () => {
     requestScheme,
     purpose,
     requestSignerType,
-    requestVersion,
-    queryLanguage,
     router,
     searchParams,
   ])
@@ -132,8 +127,6 @@ export const VerifyBlock: React.FC = () => {
       if (query.requestScheme) setRequestScheme(query.requestScheme as string)
       if (query.purpose) setPurpose(query.purpose as string)
       if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
-      if (query.requestVersion) setRequestVersion(query.requestVersion as 'v1.draft21' | 'v1.draft24' | 'v1')
-      if (query.queryLanguage) setQueryLanguage(query.queryLanguage as 'dcql' | 'pex')
     })
   }, [searchParams, verifier])
 
@@ -275,8 +268,6 @@ export const VerifyBlock: React.FC = () => {
         purpose: purpose && purpose !== '' ? purpose : undefined,
         requestSignerType,
         transactionAuthorizationType,
-        version: requestVersion,
-        queryLanguage,
       })
       if (responseMode.includes('direct_post')) {
         setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -319,29 +310,13 @@ export const VerifyBlock: React.FC = () => {
   useEffect(() => {
     if (!isInteropOpenIdInteropEventUseCase) return
 
-    if (requestVersion !== 'v1.draft24') setRequestVersion('v1.draft24')
     if (requestSignerType === 'openid-federation') setRequestSignerType('x5c')
-    if (queryLanguage !== 'dcql') setQueryLanguage('dcql')
     if (!responseMode.startsWith('dc_api')) setResponseMode('dc_api.jwt')
-  }, [isInteropOpenIdInteropEventUseCase, requestVersion, requestSignerType, queryLanguage, responseMode])
+  }, [isInteropOpenIdInteropEventUseCase, requestSignerType, responseMode])
 
   return (
     <Card className="p-6">
-      <Alert variant="default" className="mb-5">
-        <InfoCircledIcon className="h-4 w-4" />
-        <AlertTitle>Info</AlertTitle>
-        <AlertDescription>
-          This playground was built in the context for the{' '}
-          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
-            EUDI Wallet Prototype Funke
-          </a>
-          . It is only compatible with the current deployed version of{' '}
-          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo&apos;s EUDI Wallet Prototype
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+      <PlaygroundAlert />
       <div className="flex justify-between items-center mb-4">
         <TypographyH3>Verify</TypographyH3>
         <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
@@ -398,30 +373,6 @@ export const VerifyBlock: React.FC = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="request-draft-version">Request Draft Version</Label>
-
-          <RadioGroup
-            name="request-draft-version"
-            required
-            value={requestVersion}
-            onValueChange={(value) => {
-              setRequestVersion(value as 'v1.draft21' | 'v1.draft24' | 'v1')
-              if (value === 'v1.draft21') {
-                setResponseMode((r) => r.replace('dc_api', 'direct_post') as ResponseMode)
-                setRequestSignerType((r) => (r === 'none' ? 'x5c' : r))
-                setTransactionAuthorizationType('none')
-                setQueryLanguage('pex')
-              }
-            }}
-          >
-            {!isInteropOpenIdInteropEventUseCase && (
-              <MiniRadioItem key="v1.draft21" value="v1.draft21" label="Draft 21" />
-            )}
-            <MiniRadioItem key="v1.draft24" value="v1.draft24" label="Draft 24" />
-            <MiniRadioItem key="v1" value="v1" label="Version 1" />
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="initiation-method">Initiation Method</Label>
 
           <RadioGroup
@@ -438,24 +389,7 @@ export const VerifyBlock: React.FC = () => {
             }}
           >
             {!isInteropOpenIdInteropEventUseCase && <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />}
-            {requestVersion !== 'v1.draft21' && (
-              <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
-            )}
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="query-language">Query Language</Label>
-
-          <RadioGroup
-            name="query-language"
-            required
-            value={queryLanguage}
-            onValueChange={(value) => setQueryLanguage(value as 'pex' | 'dcql')}
-          >
-            {!isInteropOpenIdInteropEventUseCase && requestVersion !== 'v1' && (
-              <MiniRadioItem key="pex" value="pex" label="DIF Presentation Exchange" />
-            )}
-            {requestVersion !== 'v1.draft21' && <MiniRadioItem key="dcql" value="dcql" label="DCQL" />}
+            <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
           </RadioGroup>
         </div>
         {responseMode.includes('direct_post') && (
@@ -481,14 +415,14 @@ export const VerifyBlock: React.FC = () => {
             defaultValue="x5c"
           >
             <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            {!isInteropOpenIdInteropEventUseCase && (
+            {/* {!isInteropOpenIdInteropEventUseCase && (
               <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
-            )}
+            )} */}
             {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
           </RadioGroup>
         </div>
 
-        {requestVersion !== 'v1.draft21' && !isInteropOpenIdInteropEventUseCase && (
+        {!isInteropOpenIdInteropEventUseCase && (
           <div className="space-y-2">
             <Label htmlFor="presentation-type">Transaction Authorization</Label>
             <Select

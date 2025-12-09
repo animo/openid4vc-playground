@@ -15,24 +15,25 @@ const issuanceDate = new Date(serverStartupTimeInMilliseconds - tenDaysInMillise
 const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds)
 const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../../assets/erika.jpeg`)
 
+const arfCompliantPidSdJwtNoNonDisclosureDisplay = {
+  locale: 'en',
+  name: 'ARF 1.8 PID (No non-disclosure fields)',
+  text_color: '#2F3544',
+  background_color: '#F1F2F0',
+  background_image: {
+    url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+    uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+  },
+} as const
+
 export const arfCompliantPidSdJwtNoNonDisclosure = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'government-arf-18-pid-sd-jwt-no-non-disclosure',
   vct: 'urn:eudi:pid:1',
-  display: [
-    {
-      locale: 'en',
-      name: 'ARF 1.8 PID (No non-disclosure fields)',
-      text_color: '#2F3544',
-      background_color: '#F1F2F0',
-      background_image: {
-        url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-        uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-      },
-    },
-  ],
+  display: [arfCompliantPidSdJwtNoNonDisclosureDisplay],
+  credential_metadata: { display: [arfCompliantPidSdJwtNoNonDisclosureDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

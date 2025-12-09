@@ -1,43 +1,32 @@
 {
   "name": "agent",
-  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
   "dependencies": {
     "@animo-id/mdoc": "^0.5.2",
-    "@credo-ts/askar": "0.6.0-alpha-20250324131619",
-    "@credo-ts/core": "0.6.0-alpha-20250324131619",
-    "@credo-ts/node": "0.6.0-alpha-20250324131619",
-    "@credo-ts/openid4vc": "0.6.0-alpha-20250324131619",
-    "@openwallet-foundation/askar-nodejs": "^0.3.2",
-    "@openwallet-foundation/askar-shared": "^0.3.2",
+    "@credo-ts/askar": "0.6.1-alpha-20251209124855",
+    "@credo-ts/core": "0.6.1-alpha-20251209124855",
+    "@credo-ts/node": "0.6.1-alpha-20251209124855",
+    "@credo-ts/openid4vc": "0.6.1-alpha-20251209124855",
+    "@openwallet-foundation/askar-nodejs": "^0.4.3",
+    "@openwallet-foundation/askar-shared": "^0.4.3",
     "@peculiar/x509": "^1.14.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "oidc-provider": "^8.5.3",
-    "zod": "^3.25.76"
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "oidc-provider": "^9.6.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^4.17.25",
-    "@types/node": "^20.19.25",
-    "@types/oidc-provider": "^8.5.2",
-    "tsx": "^4.20.6",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
+    "@types/oidc-provider": "^9.5.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development"
-  },
-  "pnpm": {
-    "overrides": {
-      "@credo-ts/core": "npm:@animo-id/credo-ts-core@0.5.14-alpha-20251001132506",
-      "@credo-ts/node": "npm:@animo-id/credo-ts-node@0.5.14-alpha-20251001132506",
-      "@credo-ts/askar": "npm:@animo-id/credo-ts-askar@0.5.14-alpha-20251001132506",
-      "@credo-ts/openid4vc": "npm:@animo-id/credo-ts-openid4vc@0.5.14-alpha-20251001132506"
-    },
-    "patchedDependencies": {
-      "@animo-id/credo-ts-core": "patches/@animo-id__credo-ts-core.patch"
-    }
   }
 }

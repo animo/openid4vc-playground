@@ -22,7 +22,7 @@ export const openIdInteropEventGovernmentIssuer = {
       },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: arfCompliantPidSdJwt,
         data: arfCompliantPidSdJwtData,
       },
@@ -32,7 +32,7 @@ export const openIdInteropEventGovernmentIssuer = {
       },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: arfCompliantPidSdJwtNoNonDisclosure,
         data: arfCompliantPidSdJwtNoNonDisclosureData,
       },
@@ -44,13 +44,13 @@ export const openIdInteropEventGovernmentIssuer = {
       },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: openIdSdJwt,
         data: openIdSdJwtData,
       },
     },
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: ageSdJwt,
         data: ageSdJwtData,
       },
