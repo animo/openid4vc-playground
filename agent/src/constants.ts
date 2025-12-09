@@ -28,4 +28,3 @@ export {
 }
 
 export const ISSUER_CLIENT_SECRET = randomUUID()
-console.log('generating a client secret', ISSUER_CLIENT_SECRET)
