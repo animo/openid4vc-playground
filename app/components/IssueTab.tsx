@@ -213,7 +213,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                 credential={{
                   name: credential.display.name,
                   background_color: credential.display.background_color,
-                  background_image: credential.display.background_image.uri,
+                  background_image: credential.display.background_image?.uri,
                   text_color: credential.display.text_color,
                 }}
                 issuer={selectedIssuer}

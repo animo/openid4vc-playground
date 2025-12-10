@@ -15,7 +15,7 @@ const mobileDriversLicenseDisplay = {
   text_color: '#6F5C77',
   background_color: '#E6E2E7',
   background_image: {
-    url: `${AGENT_HOST}/assets/verfiers/bdr/credential.png`,
+    url: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
     uri: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
   },
 } satisfies CredentialConfigurationDisplay

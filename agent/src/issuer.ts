@@ -1,13 +1,6 @@
 import { randomUUID } from 'crypto'
 import { cborDecode, cborEncode } from '@animo-id/mdoc'
-import {
-  ClaimFormat,
-  JsonTransformer,
-  Kms,
-  type MdocSignOptions,
-  type SdJwtVcSignOptions,
-  parseDid,
-} from '@credo-ts/core'
+import { ClaimFormat, Kms, type MdocSignOptions, type NonEmptyArray, type SdJwtVcSignOptions } from '@credo-ts/core'
 import {
   OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
@@ -23,7 +16,6 @@ import {
 } from '@credo-ts/openid4vc'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
-import { getWebDidDocument } from './didWeb'
 import { issuers, issuersCredentialsData } from './issuers'
 import { arfCompliantPidSdJwtData, arfCompliantPidUrnVctSdJwtData, bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
@@ -41,6 +33,14 @@ import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './v
 export type CredentialConfigurationDisplay = NonNullable<
   NonNullable<OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata']>['display']
 >[number]
+
+export type CredentialConfigurationClaims = NonEmptyArray<
+  NonNullable<
+    NonNullable<
+      OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata'] & { format: 'mso_mdoc' }
+    >['claims']
+  >[number]
+>
 
 type IssuerDisplay = OpenId4VciCredentialIssuerMetadataDisplay & {
   logo: NonNullable<OpenId4VciCredentialIssuerMetadataDisplay['logo']> & { uri: string }

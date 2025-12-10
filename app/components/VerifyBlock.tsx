@@ -141,7 +141,7 @@ export const VerifyBlock: React.FC = () => {
     enabled,
   })
 
-  const initiateDc = async (request: CreateRequestResponse) => {
+  const initiateDc = async (request: CreateRequestResponse, isSigned: boolean) => {
     let credentialResponse: Credential | null | undefined = undefined
 
     try {
@@ -150,51 +150,19 @@ export const VerifyBlock: React.FC = () => {
         digital: {
           requests: [
             {
-              protocol: 'openid4vp',
+              protocol: isSigned ? 'openid4vp-v1-signed' : 'openid4vp-v1-unsigned',
               data: request.authorizationRequestObject,
             },
           ],
         },
       })
     } catch (error) {
-      if (error instanceof TypeError) {
-        console.error('Error triggering DC API with new strucutre', error)
-      } else {
-        setRequestStatus({
-          ...request,
-          responseStatus: 'Error',
-          error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-        })
-        return
-      }
-    }
-
-    // Try legacy structure
-    if (credentialResponse === undefined) {
-      try {
-        credentialResponse = await navigator.credentials.get({
-          // @ts-ignore
-          digital: {
-            providers: [
-              {
-                protocol: 'openid4vp',
-                request: request.authorizationRequestObject,
-              },
-            ],
-          },
-        })
-      } catch (error) {
-        if (error instanceof TypeError) {
-          console.error('Error triggering DC API with legacy strucutre', error)
-        } else {
-          setRequestStatus({
-            ...request,
-            responseStatus: 'Error',
-            error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-          })
-          return
-        }
-      }
+      setRequestStatus({
+        ...request,
+        responseStatus: 'Error',
+        error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
+      })
+      return
     }
 
     if (credentialResponse === undefined) {
@@ -217,18 +185,6 @@ export const VerifyBlock: React.FC = () => {
     if (credentialResponse.constructor.name === 'DigitalCredential') {
       // @ts-ignore
       const data = credentialResponse.data
-
-      setRequestStatus(
-        await verifyResponseDc({
-          verificationSessionId: request.verificationSessionId,
-          data,
-        })
-      )
-      return
-    }
-    if (credentialResponse.constructor.name === 'IdentityCredential') {
-      // @ts-ignore
-      const data = credentialResponse.token
 
       setRequestStatus(
         await verifyResponseDc({
@@ -275,12 +231,12 @@ export const VerifyBlock: React.FC = () => {
       setRequestStatus(request)
       setVerificationSessionId(request.verificationSessionId)
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : 'Unknown error occured')
+      setRequestError(error instanceof Error ? error.message : 'Unknown error occurred')
       return
     }
 
     if (responseMode.includes('dc_api')) {
-      await initiateDc(request)
+      await initiateDc(request, requestSignerType !== 'none')
     }
   }
 
@@ -304,15 +260,6 @@ export const VerifyBlock: React.FC = () => {
     Object.entries(groupedVerifier).find(([, requests]) =>
       requests.find((r) => r.id === presentationDefinitionId)
     )?.[0] ?? Object.keys(groupedVerifier)[0]
-
-  const isInteropOpenIdInteropEventUseCase = selectedUseCase === 'OpenID Foundation Interop Event April'
-
-  useEffect(() => {
-    if (!isInteropOpenIdInteropEventUseCase) return
-
-    if (requestSignerType === 'openid-federation') setRequestSignerType('x5c')
-    if (!responseMode.startsWith('dc_api')) setResponseMode('dc_api.jwt')
-  }, [isInteropOpenIdInteropEventUseCase, requestSignerType, responseMode])
 
   return (
     <Card className="p-6">
@@ -388,7 +335,7 @@ export const VerifyBlock: React.FC = () => {
               }
             }}
           >
-            {!isInteropOpenIdInteropEventUseCase && <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />}
+            <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
             <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
           </RadioGroup>
         </div>
@@ -415,35 +362,31 @@ export const VerifyBlock: React.FC = () => {
             defaultValue="x5c"
           >
             <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            {/* {!isInteropOpenIdInteropEventUseCase && (
-              <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
-            )} */}
+            {/* <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" /> */}
             {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
           </RadioGroup>
         </div>
 
-        {!isInteropOpenIdInteropEventUseCase && (
-          <div className="space-y-2">
-            <Label htmlFor="presentation-type">Transaction Authorization</Label>
-            <Select
-              name="transaction-data"
-              required
-              value={transactionAuthorizationType}
-              onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a transaction authorization type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-                <SelectItem value="payment" disabled>
-                  Payment
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="presentation-type">Transaction Authorization</Label>
+          <Select
+            name="transaction-data"
+            required
+            value={transactionAuthorizationType}
+            onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a transaction authorization type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
+              <SelectItem value="payment" disabled>
+                Payment
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="response-mode">Use Response Encryption</Label>
           <Switch
@@ -462,13 +405,11 @@ export const VerifyBlock: React.FC = () => {
             }
           />
         </div>
-        {!isInteropOpenIdInteropEventUseCase && (
-          <div className="space-y-2">
-            <Label htmlFor="request-purpose">Purpose</Label>
-            <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-            <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="request-purpose">Purpose</Label>
+          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
+          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
+        </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
             {authorizationRequestUriHasBeenFetched ? (
