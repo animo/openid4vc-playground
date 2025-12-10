@@ -11,24 +11,21 @@ import {
 
 const issuanceDate = new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds)
 const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds)
+const openIdSdJwtDisplay = {
+  locale: 'en',
+  name: 'OpenID ID',
+  text_color: '#2F3544',
+  background_color: '#F1F2F0',
+} as const
 
 export const openIdSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'openid-id-sd-jwt',
   vct: 'urn:openid:interop:id:1',
-  display: [
-    {
-      locale: 'en',
-      name: 'OpenID ID',
-      text_color: '#2F3544',
-      background_color: '#F1F2F0',
-      background_image: {
-        uri: '',
-      },
-    },
-  ],
+  display: [openIdSdJwtDisplay],
+  credential_metadata: { display: [openIdSdJwtDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

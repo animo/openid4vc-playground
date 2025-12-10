@@ -46,9 +46,10 @@ const msisdnPayload = {
 export const msisdnMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'msisdn-mdoc',
   doctype: 'eu.europa.ec.eudi.msisdn.1',
+  credential_metadata: { display: [msisdnDisplay] },
   display: [msisdnDisplay],
   proof_types_supported: {
     jwt: {
@@ -80,12 +81,13 @@ export const msisdnMdocData = {
 } satisfies StaticMdocSignInput
 
 export const msisdnSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'msisdn-sd-jwt',
   vct: 'eu.europa.ec.eudi.msisdn.1',
   display: [msisdnDisplay],
+  credential_metadata: { display: [msisdnDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -130,7 +132,7 @@ export const telOrgIssuer = {
   issuerId: 'a5292f18-3c9f-484a-8515-fb4ec4cb33e8',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: msisdnSdJwt,
         data: msisdnSdJwtData,
       },

@@ -1,10 +1,12 @@
+import '@openwallet-foundation/askar-nodejs'
 import path from 'path'
 import { Kms } from '@credo-ts/core'
-import cors from 'cors'
+
 import express from 'express'
 import type { Response } from 'express'
-import { agent, openId4VciRouter, openId4VpRouter } from './agent'
-import { AGENT_HOST } from './constants'
+import { agent } from './agent'
+import { app } from './app'
+import { AGENT_HOST, ISSUER_CLIENT_SECRET } from './constants'
 import { createDidWeb, getWebDidDocument } from './didWeb'
 import { apiRouter } from './endpoints'
 import { type PlaygroundIssuerOptions, createOrUpdateIssuer } from './issuer'
@@ -13,6 +15,7 @@ import { getCertificateRevocationList, setupX509Certificate } from './keyMethods
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
 import { createOrUpdateVerifier } from './verifier'
 import { verifiers } from './verifiers'
+
 async function run() {
   await agent.initialize()
 
@@ -28,14 +31,10 @@ async function run() {
               `${itemitem.data.credentialConfigurationId}-key-attestations`,
               { ...itemitem.configuration, proof_types_supported: {} },
             ],
-            ...(itemitem.configuration.format === 'vc+sd-jwt'
+            ...(itemitem.configuration.format === 'dc+sd-jwt'
               ? [
                   [
-                    `${itemitem.data.credentialConfigurationId}-dc-sd-jwt`,
-                    { ...itemitem.configuration, format: 'dc+sd-jwt' },
-                  ],
-                  [
-                    `${itemitem.data.credentialConfigurationId}-dc-sd-jwt-key-attestations`,
+                    `${itemitem.data.credentialConfigurationId}-key-attestations`,
                     {
                       ...itemitem.configuration,
                       format: 'dc+sd-jwt',
@@ -59,32 +58,28 @@ async function run() {
                   ],
                 ]
               : []),
-            ...(itemitem.configuration.format !== 'ldp_vc'
-              ? [
-                  [
-                    `${itemitem.data.credentialConfigurationId}-key-attestations`,
-                    {
-                      ...itemitem.configuration,
-                      proof_types_supported: {
-                        jwt: {
-                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-                          key_attestations_required: {
-                            user_authentication: ['iso_18045_high'],
-                            key_storage: ['iso_18045_high'],
-                          },
-                        },
-                        attestation: {
-                          proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-                          key_attestations_required: {
-                            user_authentication: ['iso_18045_high'],
-                            key_storage: ['iso_18045_high'],
-                          },
-                        },
-                      },
+            [
+              `${itemitem.data.credentialConfigurationId}-key-attestations`,
+              {
+                ...itemitem.configuration,
+                proof_types_supported: {
+                  jwt: {
+                    proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+                    key_attestations_required: {
+                      user_authentication: ['iso_18045_high'],
+                      key_storage: ['iso_18045_high'],
                     },
-                  ],
-                ]
-              : []),
+                  },
+                  attestation: {
+                    proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+                    key_attestations_required: {
+                      user_authentication: ['iso_18045_high'],
+                      key_storage: ['iso_18045_high'],
+                    },
+                  },
+                },
+              },
+            ],
           ])
         )
       ),
@@ -95,10 +90,17 @@ async function run() {
       },
       authorizationServerConfigs: [
         {
+          type: 'chained',
+          scopesMapping: Object.fromEntries(
+            credentialConfigurationsSupported.flatMap((c) =>
+              Object.values(c).map((cc) => [cc.configuration.scope, cc.configuration.scope])
+            )
+          ),
           issuer: oidcUrl,
           clientAuthentication: {
+            type: 'clientSecret',
             clientId: 'issuer-server',
-            clientSecret: 'issuer-server',
+            clientSecret: ISSUER_CLIENT_SECRET,
           },
         },
       ],
@@ -120,27 +122,13 @@ async function run() {
     await createDidWeb(Kms.PublicJwk.fromPublicJwk(publicJwk))
   })
 
-  const app = express()
-  app.use(cors({ origin: '*' }))
-  app.use(express.json())
-  app.use(express.urlencoded())
-
   // Hack for making images available
   if (AGENT_HOST.includes('ngrok') || AGENT_HOST.includes('.ts.net') || AGENT_HOST.includes('localhost')) {
     console.log(path.join(__dirname, '../../app/public/assets'))
     app.use('/assets', express.static(path.join(__dirname, '../../app/public/assets')))
   }
 
-  app.use('/oid4vci', openId4VciRouter)
-  app.use('/oid4vp', openId4VpRouter)
   app.use('/api', apiRouter)
-  app.use(async (request, _, next) => {
-    if (request.path === '/provider/request' || request.path === '/provider/token') {
-      request.body.client_secret = 'wallet'
-    }
-
-    next()
-  })
   app.use('/.well-known/did.json', async (_, response: Response) => {
     const didWeb = await getWebDidDocument()
     return response.json(didWeb.toJSON())

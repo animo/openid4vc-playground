@@ -48,10 +48,11 @@ const taxIdPayload = {
 export const taxIdMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'tax-id-mdoc',
   doctype: 'eu.europa.ec.eudi.taxid.1',
   display: [taxIdDisplay],
+  credential_metadata: { display: [taxIdDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -75,12 +76,13 @@ export const taxIdMdocData = {
 } satisfies StaticMdocSignInput
 
 export const taxIdSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'tax-id-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/tax-id/1',
   display: [taxIdDisplay],
+  credential_metadata: { display: [taxIdDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -128,7 +130,7 @@ export const steuernIssuer = {
   issuerId: '197625a0-b797-4559-80cc-bf5463b90dc3',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: taxIdSdJwt,
         data: taxIdSdJwtData,
       },

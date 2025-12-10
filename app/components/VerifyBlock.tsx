@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { CollapsibleSection } from './CollapsibleSection'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { X509Certificates } from './X509Certificates'
 import { HighLight } from './highLight'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
@@ -69,8 +70,6 @@ export const VerifyBlock: React.FC = () => {
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
-  const [requestVersion, setRequestVersion] = useState<'v1.draft21' | 'v1.draft24' | 'v1'>('v1')
-  const [queryLanguage, setQueryLanguage] = useState<'dcql' | 'pex'>('dcql')
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -89,8 +88,6 @@ export const VerifyBlock: React.FC = () => {
     if (requestScheme) params.set('requestScheme', requestScheme)
     if (purpose) params.set('purpose', purpose)
     if (requestSignerType) params.set('requestSignerType', requestSignerType)
-    if (requestVersion) params.set('requestVersion', requestVersion)
-    if (queryLanguage) params.set('queryLanguage', queryLanguage)
 
     const existingSearchParams = new URLSearchParams(searchParams.toString())
 
@@ -109,8 +106,6 @@ export const VerifyBlock: React.FC = () => {
     requestScheme,
     purpose,
     requestSignerType,
-    requestVersion,
-    queryLanguage,
     router,
     searchParams,
   ])
@@ -132,8 +127,6 @@ export const VerifyBlock: React.FC = () => {
       if (query.requestScheme) setRequestScheme(query.requestScheme as string)
       if (query.purpose) setPurpose(query.purpose as string)
       if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
-      if (query.requestVersion) setRequestVersion(query.requestVersion as 'v1.draft21' | 'v1.draft24' | 'v1')
-      if (query.queryLanguage) setQueryLanguage(query.queryLanguage as 'dcql' | 'pex')
     })
   }, [searchParams, verifier])
 
@@ -148,7 +141,7 @@ export const VerifyBlock: React.FC = () => {
     enabled,
   })
 
-  const initiateDc = async (request: CreateRequestResponse) => {
+  const initiateDc = async (request: CreateRequestResponse, isSigned: boolean) => {
     let credentialResponse: Credential | null | undefined = undefined
 
     try {
@@ -157,51 +150,19 @@ export const VerifyBlock: React.FC = () => {
         digital: {
           requests: [
             {
-              protocol: 'openid4vp',
+              protocol: isSigned ? 'openid4vp-v1-signed' : 'openid4vp-v1-unsigned',
               data: request.authorizationRequestObject,
             },
           ],
         },
       })
     } catch (error) {
-      if (error instanceof TypeError) {
-        console.error('Error triggering DC API with new strucutre', error)
-      } else {
-        setRequestStatus({
-          ...request,
-          responseStatus: 'Error',
-          error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-        })
-        return
-      }
-    }
-
-    // Try legacy structure
-    if (credentialResponse === undefined) {
-      try {
-        credentialResponse = await navigator.credentials.get({
-          // @ts-ignore
-          digital: {
-            providers: [
-              {
-                protocol: 'openid4vp',
-                request: request.authorizationRequestObject,
-              },
-            ],
-          },
-        })
-      } catch (error) {
-        if (error instanceof TypeError) {
-          console.error('Error triggering DC API with legacy strucutre', error)
-        } else {
-          setRequestStatus({
-            ...request,
-            responseStatus: 'Error',
-            error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-          })
-          return
-        }
-      }
+      setRequestStatus({
+        ...request,
+        responseStatus: 'Error',
+        error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
+      })
+      return
     }
 
     if (credentialResponse === undefined) {
@@ -224,18 +185,6 @@ export const VerifyBlock: React.FC = () => {
     if (credentialResponse.constructor.name === 'DigitalCredential') {
       // @ts-ignore
       const data = credentialResponse.data
-
-      setRequestStatus(
-        await verifyResponseDc({
-          verificationSessionId: request.verificationSessionId,
-          data,
-        })
-      )
-      return
-    }
-    if (credentialResponse.constructor.name === 'IdentityCredential') {
-      // @ts-ignore
-      const data = credentialResponse.token
 
       setRequestStatus(
         await verifyResponseDc({
@@ -275,8 +224,6 @@ export const VerifyBlock: React.FC = () => {
         purpose: purpose && purpose !== '' ? purpose : undefined,
         requestSignerType,
         transactionAuthorizationType,
-        version: requestVersion,
-        queryLanguage,
       })
       if (responseMode.includes('direct_post')) {
         setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -284,12 +231,12 @@ export const VerifyBlock: React.FC = () => {
       setRequestStatus(request)
       setVerificationSessionId(request.verificationSessionId)
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : 'Unknown error occured')
+      setRequestError(error instanceof Error ? error.message : 'Unknown error occurred')
       return
     }
 
     if (responseMode.includes('dc_api')) {
-      await initiateDc(request)
+      await initiateDc(request, requestSignerType !== 'none')
     }
   }
 
@@ -314,34 +261,9 @@ export const VerifyBlock: React.FC = () => {
       requests.find((r) => r.id === presentationDefinitionId)
     )?.[0] ?? Object.keys(groupedVerifier)[0]
 
-  const isInteropOpenIdInteropEventUseCase = selectedUseCase === 'OpenID Foundation Interop Event April'
-
-  useEffect(() => {
-    if (!isInteropOpenIdInteropEventUseCase) return
-
-    if (requestVersion !== 'v1.draft24') setRequestVersion('v1.draft24')
-    if (requestSignerType === 'openid-federation') setRequestSignerType('x5c')
-    if (queryLanguage !== 'dcql') setQueryLanguage('dcql')
-    if (!responseMode.startsWith('dc_api')) setResponseMode('dc_api.jwt')
-  }, [isInteropOpenIdInteropEventUseCase, requestVersion, requestSignerType, queryLanguage, responseMode])
-
   return (
     <Card className="p-6">
-      <Alert variant="default" className="mb-5">
-        <InfoCircledIcon className="h-4 w-4" />
-        <AlertTitle>Info</AlertTitle>
-        <AlertDescription>
-          This playground was built in the context for the{' '}
-          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
-            EUDI Wallet Prototype Funke
-          </a>
-          . It is only compatible with the current deployed version of{' '}
-          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo&apos;s EUDI Wallet Prototype
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+      <PlaygroundAlert />
       <div className="flex justify-between items-center mb-4">
         <TypographyH3>Verify</TypographyH3>
         <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
@@ -398,30 +320,6 @@ export const VerifyBlock: React.FC = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="request-draft-version">Request Draft Version</Label>
-
-          <RadioGroup
-            name="request-draft-version"
-            required
-            value={requestVersion}
-            onValueChange={(value) => {
-              setRequestVersion(value as 'v1.draft21' | 'v1.draft24' | 'v1')
-              if (value === 'v1.draft21') {
-                setResponseMode((r) => r.replace('dc_api', 'direct_post') as ResponseMode)
-                setRequestSignerType((r) => (r === 'none' ? 'x5c' : r))
-                setTransactionAuthorizationType('none')
-                setQueryLanguage('pex')
-              }
-            }}
-          >
-            {!isInteropOpenIdInteropEventUseCase && (
-              <MiniRadioItem key="v1.draft21" value="v1.draft21" label="Draft 21" />
-            )}
-            <MiniRadioItem key="v1.draft24" value="v1.draft24" label="Draft 24" />
-            <MiniRadioItem key="v1" value="v1" label="Version 1" />
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="initiation-method">Initiation Method</Label>
 
           <RadioGroup
@@ -437,25 +335,8 @@ export const VerifyBlock: React.FC = () => {
               }
             }}
           >
-            {!isInteropOpenIdInteropEventUseCase && <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />}
-            {requestVersion !== 'v1.draft21' && (
-              <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
-            )}
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="query-language">Query Language</Label>
-
-          <RadioGroup
-            name="query-language"
-            required
-            value={queryLanguage}
-            onValueChange={(value) => setQueryLanguage(value as 'pex' | 'dcql')}
-          >
-            {!isInteropOpenIdInteropEventUseCase && requestVersion !== 'v1' && (
-              <MiniRadioItem key="pex" value="pex" label="DIF Presentation Exchange" />
-            )}
-            {requestVersion !== 'v1.draft21' && <MiniRadioItem key="dcql" value="dcql" label="DCQL" />}
+            <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
+            <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
           </RadioGroup>
         </div>
         {responseMode.includes('direct_post') && (
@@ -481,35 +362,31 @@ export const VerifyBlock: React.FC = () => {
             defaultValue="x5c"
           >
             <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            {!isInteropOpenIdInteropEventUseCase && (
-              <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" />
-            )}
+            {/* <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" /> */}
             {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
           </RadioGroup>
         </div>
 
-        {requestVersion !== 'v1.draft21' && !isInteropOpenIdInteropEventUseCase && (
-          <div className="space-y-2">
-            <Label htmlFor="presentation-type">Transaction Authorization</Label>
-            <Select
-              name="transaction-data"
-              required
-              value={transactionAuthorizationType}
-              onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a transaction authorization type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-                <SelectItem value="payment" disabled>
-                  Payment
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="presentation-type">Transaction Authorization</Label>
+          <Select
+            name="transaction-data"
+            required
+            value={transactionAuthorizationType}
+            onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a transaction authorization type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
+              <SelectItem value="payment" disabled>
+                Payment
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="response-mode">Use Response Encryption</Label>
           <Switch
@@ -528,13 +405,11 @@ export const VerifyBlock: React.FC = () => {
             }
           />
         </div>
-        {!isInteropOpenIdInteropEventUseCase && (
-          <div className="space-y-2">
-            <Label htmlFor="request-purpose">Purpose</Label>
-            <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-            <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="request-purpose">Purpose</Label>
+          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
+          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
+        </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
             {authorizationRequestUriHasBeenFetched ? (

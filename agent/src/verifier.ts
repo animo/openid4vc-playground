@@ -4,7 +4,7 @@ import type { MdocCredential, SdJwtCredential } from './verifiers/util'
 
 export interface PlaygroundVerifierOptions {
   verifierId: string
-  clientMetadata?: OpenId4VpCreateVerifierOptions['clientMetadata']
+  clientMetadata?: OpenId4VpCreateVerifierOptions['clientMetadata'] & { [clientName: `client_name#${string}`]: string }
   requests: Array<{
     name: string
     purpose: string

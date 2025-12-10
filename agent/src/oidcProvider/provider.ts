@@ -1,5 +1,4 @@
-import * as express from 'express'
-import { AGENT_HOST } from '../constants'
+import { AGENT_HOST, ISSUER_CLIENT_SECRET } from '../constants'
 import { issuers as _issuers } from '../issuers'
 
 const issuers = _issuers.map((issuer) => ({
@@ -11,39 +10,18 @@ const issuers = _issuers.map((issuer) => ({
 }))
 
 const oidcRouterPath = '/provider'
-const oidcRouter = express.Router()
-
-// I can't figure out how to bind a custom request parameter to the session
-// so it can be bound to the access token. This is a very hacky 'global' issuer_state
-// and only works if only person is authenticating. Of course very unsecure, but it's a demo
-let issuer_state: string | undefined = undefined
 
 async function getProvider() {
-  const { Provider, errors } = await import('oidc-provider')
+  const { Provider } = await import('oidc-provider')
   const oidc = new Provider(`${AGENT_HOST}${oidcRouterPath}`, {
-    clientAuthMethods: ['client_secret_basic', 'client_secret_post', 'none'],
+    clientAuthMethods: ['client_secret_post'],
     clients: [
       {
-        client_id: 'id.animo.paradym',
-        client_secret: 'wallet',
-        grant_types: ['authorization_code'],
-        id_token_signed_response_alg: 'ES256',
-        redirect_uris: ['https://paradym.id/invitation/redirect'],
-        application_type: 'native',
-      },
-      {
-        client_id: 'wallet',
-        client_secret: 'wallet',
-        grant_types: ['authorization_code'],
-        id_token_signed_response_alg: 'ES256',
-        redirect_uris: ['io.mosip.residentapp.inji://oauthredirect'],
-        application_type: 'native',
-      },
-      {
         client_id: 'issuer-server',
-        client_secret: 'issuer-server',
+        client_secret: ISSUER_CLIENT_SECRET,
         id_token_signed_response_alg: 'ES256',
-        redirect_uris: [],
+        redirect_uris: issuers.map((i) => `${i.issuerUrl}/redirect`),
+        token_endpoint_auth_method: 'client_secret_post',
       },
     ],
     jwks: {
@@ -59,57 +37,21 @@ async function getProvider() {
         },
       ],
     },
-    scopes: [],
+    scopes: issuers.flatMap((i) => i.scopes),
     pkce: {
-      methods: ['S256'],
       required: () => true,
     },
-    extraTokenClaims: async (context, token) => {
-      if (token.kind === 'AccessToken') {
-        return {
-          issuer_state,
-        }
-      }
-      return undefined
-    },
     clientBasedCORS: () => true,
-    extraParams: {
-      issuer_state: (_, value) => {
-        issuer_state = value
-      },
-    },
     features: {
       dPoP: { enabled: true },
       pushedAuthorizationRequests: {
-        enabled: true,
-        requirePushedAuthorizationRequests: false,
-        allowUnregisteredRedirectUris: true,
+        enabled: false,
       },
       introspection: {
         enabled: true,
       },
       resourceIndicators: {
-        // TODO: default resource?
-        // defaultResource: () => issuers[0].issuerUrl,
         enabled: true,
-        getResourceServerInfo: (context, resourceIndicator) => {
-          const issuer = issuers.find((issuer) => issuer.issuerUrl === resourceIndicator)
-          if (!issuer) throw new errors.InvalidTarget()
-
-          return {
-            scope: issuer.scopes.join(' '),
-            accessTokenTTL: 5 * 60, // 5 minutes
-            accessTokenFormat: 'jwt',
-            // TODO: detect resource?
-            audience: issuer.issuerUrl,
-            jwt: {
-              sign: {
-                kid: 'first-key',
-                alg: 'ES256',
-              },
-            },
-          }
-        },
       },
     },
 
@@ -125,8 +67,12 @@ async function getProvider() {
 
   oidc.proxy = true
 
+  oidc.on('grant.error', (ctx, err) => console.error('err', err, ctx.body, ctx.headers))
+  oidc.on('introspection.error', (_, err) => console.error('err', err))
+  oidc.on('revocation.error', (_, err) => console.error('err', err))
+
   return oidc
 }
 
 const oidcUrl = `${AGENT_HOST}${oidcRouterPath}`
-export { oidcRouter, getProvider, oidcRouterPath, oidcUrl }
+export { getProvider, oidcRouterPath, oidcUrl }

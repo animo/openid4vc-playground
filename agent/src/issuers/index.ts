@@ -5,9 +5,9 @@ import { krankenkasseCredentialsData, krankenkasseIssuer } from './krankenkasse'
 import { mvrcCredentialsData, mvrcIssuer } from './mvrc'
 import { nederlandenCredentialsData } from './nederlanden'
 import { nederlandenIssuer } from './nederlanden'
-import { openIdInteropData, openIdInteropEventGovernmentIssuer } from './openIdInteropEvent'
 import { steuernCredentialsData, steuernIssuer } from './steuern'
 import { telOrgCredentialsData, telOrgIssuer } from './telOrg'
+import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment'
 import { vwsCredentialsData } from './vws'
 import { vwsIssuer } from './vws'
 
@@ -20,7 +20,7 @@ export const issuers: PlaygroundIssuerOptions[] = [
   nederlandenIssuer,
   mvrcIssuer,
   vwsIssuer,
-  openIdInteropEventGovernmentIssuer,
+  utopiaGovernmentIssuer,
 ]
 
 export const issuersCredentialsData = {
@@ -32,5 +32,5 @@ export const issuersCredentialsData = {
   ...nederlandenCredentialsData,
   ...mvrcCredentialsData,
   ...vwsCredentialsData,
-  ...openIdInteropData,
+  ...utopiaGovernmentData,
 }

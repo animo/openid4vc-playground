@@ -14,10 +14,6 @@ const eHealthDisplay = {
   name: 'Vaccination certificate',
   text_color: '#525C75',
   background_color: '#FFCE00',
-  background_image: {
-    url: '',
-    uri: '',
-  },
 } satisfies CredentialConfigurationDisplay
 
 const eHealthPayload = {
@@ -93,10 +89,11 @@ const eHealthPayload_2 = {
 export const eHealthMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'e-health-mdoc',
   doctype: 'org.micov.vtr.1.',
   display: [eHealthDisplay],
+  credential_metadata: { display: [eHealthDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

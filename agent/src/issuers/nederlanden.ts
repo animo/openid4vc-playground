@@ -21,10 +21,6 @@ const photoIdDisplay = {
   name: 'Photo ID',
   text_color: '#525C75',
   background_color: '#F5F7F8',
-  background_image: {
-    url: '',
-    uri: '',
-  },
 } satisfies CredentialConfigurationDisplay
 
 const photoIdPayload = {
@@ -77,10 +73,11 @@ const photoIdPayload_3 = {
 export const photoIdMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'photo-id-mdoc',
   doctype: 'org.iso.23220.photoID.1',
   display: [photoIdDisplay],
+  credential_metadata: { display: [photoIdDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -123,10 +120,6 @@ const eudiPidDisplay = {
   name: 'EU PID 1.5',
   text_color: '#525C75',
   background_color: '#EBF1F3',
-  background_image: {
-    url: '',
-    uri: '',
-  },
 } satisfies CredentialConfigurationDisplay
 
 const eudiPidPayload = {
@@ -162,10 +155,11 @@ const eudiPidPayload = {
 export const eudiPidMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'eudi-pid-mdoc',
   doctype: 'eu.europa.ec.eudi.pid.1',
   display: [eudiPidDisplay],
+  credential_metadata: { display: [eudiPidDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -196,12 +190,13 @@ export const eudiPidMdocData = {
 } satisfies StaticMdocSignInput
 
 export const eudiPidSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'eudi-pid-sd-jwt',
   vct: 'eu.europa.ec.eudi.pid.1',
   display: [eudiPidDisplay],
+  credential_metadata: { display: [eudiPidDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -262,7 +257,7 @@ export const nederlandenIssuer = {
   issuerId: '40adc717-933f-471c-ae42-0f5e92b3cca1',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: eudiPidSdJwt,
         data: eudiPidSdJwtData,
       },
