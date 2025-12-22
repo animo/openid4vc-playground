@@ -22,6 +22,7 @@ async function getProvider() {
         id_token_signed_response_alg: 'ES256',
         redirect_uris: issuers.map((i) => `${i.issuerUrl}/redirect`),
         token_endpoint_auth_method: 'client_secret_post',
+        application_type: 'native',
       },
     ],
     jwks: {
