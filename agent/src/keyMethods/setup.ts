@@ -8,9 +8,9 @@ import {
   createRootCertificate,
 } from './createSelfSignedCertificate'
 
-let x509RootCertificate: X509Certificate | undefined = undefined
-let x509DcsCertificate: X509Certificate | undefined = undefined
-let crl: Buffer | undefined = undefined
+let x509RootCertificate: X509Certificate | undefined
+let x509DcsCertificate: X509Certificate | undefined
+let crl: Buffer | undefined
 
 export async function setupX509Certificate() {
   const x509Record = await agent.genericRecords.findById('X509_CERTIFICATE')

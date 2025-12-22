@@ -37,7 +37,7 @@ export async function doesVerifierExist(verifierId: string) {
   try {
     await agent.openid4vc.verifier.getVerifierByVerifierId(verifierId)
     return true
-  } catch (error) {
+  } catch (_error) {
     return false
   }
 }

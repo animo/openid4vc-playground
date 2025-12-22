@@ -1,11 +1,11 @@
+import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import { type FormEvent, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { CheckboxIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
-import { type FormEvent, useState } from 'react'
 import { addX509Certificate } from '../lib/api'
-import { PlaygroundAlert } from './PlaygroundAlert'
 import { HighLight } from './highLight'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function X509Tab() {
@@ -25,7 +25,7 @@ export function X509Tab() {
       } else {
         setResponse({ success: false, error: await response.json().catch(() => 'Unkonwn parsing error') })
       }
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      // biome-ignore lint/suspicious/noExplicitAny: no explanation
     } catch (error: any) {
       setResponse({
         success: false,

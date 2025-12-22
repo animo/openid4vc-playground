@@ -1,15 +1,15 @@
 import '@openwallet-foundation/askar-nodejs'
-import path from 'path'
 import { Kms } from '@credo-ts/core'
+import type { Response } from 'express'
 
 import express from 'express'
-import type { Response } from 'express'
+import path from 'path'
 import { agent } from './agent'
 import { app } from './app'
 import { AGENT_HOST, ISSUER_CLIENT_SECRET } from './constants'
 import { createDidWeb, getWebDidDocument } from './didWeb'
 import { apiRouter } from './endpoints'
-import { type PlaygroundIssuerOptions, createOrUpdateIssuer } from './issuer'
+import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer'
 import { issuers } from './issuers'
 import { getCertificateRevocationList, setupX509Certificate } from './keyMethods'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
@@ -143,7 +143,7 @@ async function run() {
 
   app.listen(3001, () => agent.config.logger.info('app listening on port 3001'))
 
-  // @ts-ignore
+  // @ts-expect-error
   app.use((err, _, res, __) => {
     console.error(err.stack)
     res.status(500).send('Something broke!')

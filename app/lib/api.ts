@@ -166,7 +166,7 @@ export async function verifyResponseDc(data: {
           await response
             .json()
             .then((a) => ('error' in a ? a.error : JSON.stringify(a, null, 2)))
-            .catch((e) => response.clone().text())
+            .catch((_e) => response.clone().text())
         )}`
     )
   }
@@ -174,11 +174,7 @@ export async function verifyResponseDc(data: {
   return response.json()
 }
 
-export async function getRequestStatus({
-  verificationSessionId,
-}: {
-  verificationSessionId: string
-}) {
+export async function getRequestStatus({ verificationSessionId }: { verificationSessionId: string }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/${verificationSessionId}`, {
     method: 'GET',
     headers: {

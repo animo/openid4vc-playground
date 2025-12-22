@@ -1,16 +1,15 @@
-import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
-import { useInterval } from '@/lib/hooks'
-import { CheckIcon, CheckboxIcon, CopyIcon, ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
+import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
+import { useInterval } from '@/lib/hooks'
 import { CollapsibleSection } from './CollapsibleSection'
-import { PlaygroundAlert } from './PlaygroundAlert'
-import { X509Certificates } from './X509Certificates'
 import { HighLight } from './highLight'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -20,6 +19,7 @@ import { CardRadioItem, MiniRadioItem, RadioGroup } from './ui/radio'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
+import { X509Certificates } from './X509Certificates'
 
 export type CreateRequestOptions = Parameters<typeof createRequest>[0]
 export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
@@ -142,11 +142,11 @@ export const VerifyBlock: React.FC = () => {
   })
 
   const initiateDc = async (request: CreateRequestResponse, isSigned: boolean) => {
-    let credentialResponse: Credential | null | undefined = undefined
+    let credentialResponse: Credential | null | undefined
 
     try {
       credentialResponse = await navigator.credentials.get({
-        // @ts-ignore
+        // @ts-expect-error
         digital: {
           requests: [
             {
@@ -183,7 +183,7 @@ export const VerifyBlock: React.FC = () => {
       return
     }
     if (credentialResponse.constructor.name === 'DigitalCredential') {
-      // @ts-ignore
+      // @ts-expect-error
       const data = credentialResponse.data
 
       setRequestStatus(
@@ -424,7 +424,7 @@ export const VerifyBlock: React.FC = () => {
                       <QRCode size={256} value={authorizationRequestUri} />
                     </div>
                     <TooltipTrigger asChild>
-                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
                       <p
                         onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                         className="text-gray-500 break-all cursor-pointer"

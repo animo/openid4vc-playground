@@ -1,7 +1,3 @@
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CheckIcon, CopyIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
@@ -9,12 +5,16 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { type Issuers, createOffer, getIssuers } from '../lib/api'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { createOffer, getIssuers, type Issuers } from '../lib/api'
 import { PlaygroundAlert } from './PlaygroundAlert'
-import { X509Certificates } from './X509Certificates'
 import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
+import { X509Certificates } from './X509Certificates'
 
 const credentialFormatMap = {
   'dc+sd-jwt': 'SD-JWT VC (dc+sd-jwt)',
@@ -330,7 +330,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                     <QRCode size={256} value={credentialOfferUri} />
                   </div>
                   <TooltipTrigger asChild>
-                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
                     <p
                       onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                       className="text-gray-500 break-all cursor-pointer"

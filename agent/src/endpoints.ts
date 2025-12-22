@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -14,6 +13,7 @@ import {
   X509ModuleConfig,
 } from '@credo-ts/core'
 import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
+import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
@@ -22,12 +22,12 @@ import {
   funkeDeployedAccessCertificateRoot,
   funkeDeployedRegistrationCertificate,
 } from './eudiTrust'
-import { type IssuanceMetadata, getIssuerIdForCredentialConfigurationId } from './issuer'
+import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer'
 import { issuers } from './issuers'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
-import { type PlaygroundVerifierOptions, getVerifier } from './verifier'
+import { getVerifier, type PlaygroundVerifierOptions } from './verifier'
 import { verifiers } from './verifiers'
 import { dcqlQueryFromRequest } from './verifiers/util'
 
@@ -240,7 +240,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const [verifierId, requestIndex] = presentationDefinitionId.split('__')
     const verifier = await getVerifier(verifierId)
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: no explanation
     const definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)[
       requestIndex
     ] as PlaygroundVerifierOptions['requests'][number]

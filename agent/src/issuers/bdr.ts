@@ -165,7 +165,7 @@ export const mobileDriversLicenseSdJwtData = {
         'age_over_18',
       ],
       // TODO: fix array disclosures?
-      // @ts-ignore
+      // @ts-expect-error
       // driving_privileges: mobileDriversLicensePayload.driving_privileges.map((d) => ({
       //   _sd: ['vehicle_category_code', 'issue_date', 'expiry_date', 'codes'],
       // })),

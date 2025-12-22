@@ -1,8 +1,6 @@
-import { randomUUID } from 'crypto'
 import { cborDecode, cborEncode } from '@animo-id/mdoc'
 import { ClaimFormat, Kms, type MdocSignOptions, type NonEmptyArray, type SdJwtVcSignOptions } from '@credo-ts/core'
 import {
-  OpenId4VcVerifierApi,
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
   type OpenId4VciCredentialIssuerMetadataDisplay,
@@ -13,7 +11,9 @@ import {
   type OpenId4VciSignCredentials,
   type OpenId4VciSignMdocCredentials,
   type OpenId4VciSignSdJwtCredentials,
+  OpenId4VcVerifierApi,
 } from '@credo-ts/openid4vc'
+import { randomUUID } from 'crypto'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { issuers, issuersCredentialsData } from './issuers'
@@ -179,7 +179,7 @@ export async function doesIssuerExist(issuerId: string) {
   try {
     await agent.openid4vc.issuer.getIssuerByIssuerId(issuerId)
     return true
-  } catch (error) {
+  } catch (_error) {
     return false
   }
 }

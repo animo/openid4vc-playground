@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+
 if (
   !process.env.ROOT_P256_SEED ||
   !process.env.DCS_P256_SEED ||
