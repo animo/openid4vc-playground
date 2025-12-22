@@ -23,7 +23,7 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        `size-5 flex justify-center rounded-full border border-${tailwindColor} text-${tailwindColor} shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50`,
+        `size-5 flex justify-center rounded-full border border-${tailwindColor} text-${tailwindColor} shadow-sm focus:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50`,
         className
       )}
       {...props}
@@ -56,8 +56,8 @@ const CardRadioItem = React.forwardRef<
       <label
         htmlFor={props.id}
         className={cn(
-          'flex flex-col h-[100%] cursor-pointer hover:bg-gray-100 active:scale-98 duration-200 hover:shadow-sm gap-2 border border-gray-200 p-4 rounded-lg data-[state=checked]:border-accent',
-          'group-has-[[data-state=checked]]:border-accent group-has-[[data-state=checked]]:bg-accent/5',
+          'flex flex-col h-full cursor-pointer hover:bg-gray-100 active:scale-98 duration-200 hover:shadow-xs gap-2 border border-gray-200 p-4 rounded-lg data-[state=checked]:border-accent',
+          'group-has-data-[state=checked]:border-accent group-has-data-[state=checked]:bg-accent/5',
           className
         )}
       >
@@ -156,7 +156,7 @@ const MiniRadioItem = React.forwardRef<
       <RadioGroupPrimitive.Item
         ref={ref}
         className={cn(
-          'aspect-square h-5 w-5 rounded-full border border-accent text-accent shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+          'aspect-square h-5 w-5 rounded-full border border-accent text-accent shadow-sm focus:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         {...props}

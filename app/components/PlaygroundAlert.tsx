@@ -16,7 +16,7 @@ export function PlaygroundAlert() {
         <a
           target="_blank"
           href="https://linktr.ee/paradym_id"
-          className="inline-flex gap-1 pl-[1px] underline"
+          className="inline-flex gap-1 pl-px underline"
           rel="noreferrer"
         >
           <Image
