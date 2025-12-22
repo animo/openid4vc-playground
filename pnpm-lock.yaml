@@ -18,17 +18,17 @@ importers:
         specifier: ^0.5.2
         version: 0.5.2
       '@credo-ts/askar':
-        specifier: 0.6.1-alpha-20251209124855
-        version: 0.6.1-alpha-20251209124855(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251211125344
+        version: 0.6.2-alpha-20251211125344(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)
       '@credo-ts/core':
-        specifier: 0.6.1-alpha-20251209124855
-        version: 0.6.1-alpha-20251209124855(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251211125344
+        version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@credo-ts/node':
-        specifier: 0.6.1-alpha-20251209124855
-        version: 0.6.1-alpha-20251209124855(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251211125344
+        version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@credo-ts/openid4vc':
-        specifier: 0.6.1-alpha-20251209124855
-        version: 0.6.1-alpha-20251209124855(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251211125344
+        version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@openwallet-foundation/askar-nodejs':
         specifier: ^0.4.3
         version: 0.4.3
@@ -244,23 +244,23 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@credo-ts/askar@0.6.1-alpha-20251209124855':
-    resolution: {integrity: sha512-GBy2qdABBRPSsUljegK8YJGsmboenbUQPwOS+1MTzSecbokJ3s2ZN8J2a6h3hqGa9xKvyNLw43cKfVHtXOhQEg==}
+  '@credo-ts/askar@0.6.2-alpha-20251211125344':
+    resolution: {integrity: sha512-qUcEZ5rEaqB7WctOWoG+h6qJqZX5JDaFbHvcvnkMhcelbglF0cqxbb+BwyNbKA1SMK/tlwGf915Pg7bKTeSvYg==}
     peerDependencies:
       '@openwallet-foundation/askar-shared': ^0.4.3
 
-  '@credo-ts/core@0.6.1-alpha-20251209124855':
-    resolution: {integrity: sha512-cQ5YqV4jHGTJkyWJxgPIK00gfo1VCPA/dSplJiCwzhT2BybWTbob6oSH5XAdw6+32PVIPQeviJwGPtwmF3wI1w==}
+  '@credo-ts/core@0.6.2-alpha-20251211125344':
+    resolution: {integrity: sha512-gmUAE3MeWM6yCMNr4UY4M2XIgrvS848H3yadmP/2tLol3FhlwTxjlc/UYDSQ6hblLUExO8MVFQSGLSkzNTIqrg==}
 
-  '@credo-ts/didcomm@0.6.1-alpha-20251209124855':
-    resolution: {integrity: sha512-DgU9tkv9l+dFfSoitmutLEZIE7RVa23hcKYNr5Blq+4roZnvVyHOiTRgZVRTvZCqp0JrYEBcT/GVhWsOYy1YKg==}
+  '@credo-ts/didcomm@0.6.2-alpha-20251211125344':
+    resolution: {integrity: sha512-NsJO/QACoirvCADKjpGjOvWY+eeUvrTeX5La0TLr9XNydQLPxw9c9yWVaW6pLR9JjOAoKoDcgt2Yma7+gMDsIQ==}
 
-  '@credo-ts/node@0.6.1-alpha-20251209124855':
-    resolution: {integrity: sha512-QsnEw5YAt5K1pcREaXNa2GghlhHs+N/ZzWuXzFxFCmgUijcBSTorYT+Q7gYKVvhzT4sOK4r7Uc0mDwPBqOm4lw==}
+  '@credo-ts/node@0.6.2-alpha-20251211125344':
+    resolution: {integrity: sha512-h65yeQ4PIexjNnBKxhZar/A/UD+8zStSiZk6JD5sFupSgItF/EFHkLJjirK1B+SD+0bE+0cjDBd3kCElc9hZBA==}
     engines: {node: '>=20.19'}
 
-  '@credo-ts/openid4vc@0.6.1-alpha-20251209124855':
-    resolution: {integrity: sha512-WBYunoHNxPA+4oBSnh4fNvnu5JGjq1gQ1RiotHB+ErsyRevxWJPYPhzQuyhz4XGn7TT/PV3ZSj8FM+28TNhSAQ==}
+  '@credo-ts/openid4vc@0.6.2-alpha-20251211125344':
+    resolution: {integrity: sha512-obckJ2r7vTtPhcdFnuNmgr/GcQleCOYTbY1L72SJ4Sq69D0YN1e/h7yMgaQQt/SH4Z/GPEM9MxUXTSmfL6MGMA==}
 
   '@digitalbazaar/security-context@1.0.1':
     resolution: {integrity: sha512-0WZa6tPiTZZF8leBtQgYAfXQePFQp2z5ivpCEN/iZguYYZ0TB9qRmWtan5XH6mNFuusHtMcyIzAcReyE6rZPhA==}
@@ -623,17 +623,17 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@openid4vc/oauth2@0.4.1':
-    resolution: {integrity: sha512-x2y7VF0fc02LBHrJWeEtNIgfXDt9X6w0bKUhn/aJ8aKueE/E74n+aEpW5qRMMnAKlMCryCzs5MUaoBvELZ84Lw==}
+  '@openid4vc/oauth2@0.4.3':
+    resolution: {integrity: sha512-XIcb6TayV7TJkkpUvEVdY1rqtz6etXje0pRcJqV0H2FdXlU/TfMkcrZOniS9lmjUBQXDShHerMgVHxLREIiYrA==}
 
-  '@openid4vc/openid4vci@0.4.1':
-    resolution: {integrity: sha512-abmIdog9TtjejxpKCpxKMl47qHVUEI1RO3OG3NZwsItpAxDJCnQ8CTEYuleX7dTcAtRghc0V08rNgIo+6Pf4PA==}
+  '@openid4vc/openid4vci@0.4.3':
+    resolution: {integrity: sha512-/r3l5rAaMBs76UEjl5rg68yzLaBvQqx173/VZa8VZy751YDlcJiTbhyXyWz4GmmxyTt0blitAkMvTeDSn1DPaw==}
 
-  '@openid4vc/openid4vp@0.4.1':
-    resolution: {integrity: sha512-6d6GpoiyIRcTa+VOqZN8F4qw/jPLLeXRaCd/znlelMTWgb7wrf64WOzCy5mS7phw3SIDYPw7SDxeGKZ0Ek+OUQ==}
+  '@openid4vc/openid4vp@0.4.3':
+    resolution: {integrity: sha512-f9KKgeVekqpBwhHFmNc5V9n0kb0HvnmHcbMsqfWfMuJSc1VH8sibfYq2i7mUTdzdkCroO7iHrktI6CXGAkB4RA==}
 
-  '@openid4vc/utils@0.4.1':
-    resolution: {integrity: sha512-kxEtmnzjmq1TX+RtfFZ1myGIdOO9EgPKp7cRbnhzWus//dUa+qV5zhLzLZcK0S2r9IP9QpTEd8ilCUWh9Aia+g==}
+  '@openid4vc/utils@0.4.3':
+    resolution: {integrity: sha512-5HVZ30yWvZJk6k7cmIGuXlqdwzyVb23wosjLa7PDbjg3cU917zgAxgr/5ksiA3ny3huy3TEF3dTrfyTC5sjvYg==}
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -3474,9 +3474,9 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.4':
     optional: true
 
-  '@credo-ts/askar@0.6.1-alpha-20251209124855(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)':
+  '@credo-ts/askar@0.6.2-alpha-20251211125344(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.1-alpha-20251209124855(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@openwallet-foundation/askar-shared': 0.4.3
       class-transformer: 0.5.1
       class-validator: 0.14.1
@@ -3487,7 +3487,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/core@0.6.1-alpha-20251209124855(typescript@5.9.3)':
+  '@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3)':
     dependencies:
       '@animo-id/mdoc': 0.5.2
       '@animo-id/pex': 6.1.1
@@ -3536,9 +3536,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/didcomm@0.6.1-alpha-20251209124855(typescript@5.9.3)':
+  '@credo-ts/didcomm@0.6.2-alpha-20251211125344(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.1-alpha-20251209124855(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
       class-transformer: 0.5.1
       class-validator: 0.14.1
       luxon: 3.7.2
@@ -3549,10 +3549,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/node@0.6.1-alpha-20251209124855(typescript@5.9.3)':
+  '@credo-ts/node@0.6.2-alpha-20251211125344(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.1-alpha-20251209124855(typescript@5.9.3)
-      '@credo-ts/didcomm': 0.6.1-alpha-20251209124855(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
+      '@credo-ts/didcomm': 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@types/express': 5.0.6
       express: 5.2.1
       rxjs: 7.8.2
@@ -3564,13 +3564,13 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@credo-ts/openid4vc@0.6.1-alpha-20251209124855(typescript@5.9.3)':
+  '@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.1-alpha-20251209124855(typescript@5.9.3)
-      '@openid4vc/oauth2': 0.4.1
-      '@openid4vc/openid4vci': 0.4.1
-      '@openid4vc/openid4vp': 0.4.1
-      '@openid4vc/utils': 0.4.1
+      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
+      '@openid4vc/oauth2': 0.4.3
+      '@openid4vc/openid4vci': 0.4.3
+      '@openid4vc/openid4vp': 0.4.3
+      '@openid4vc/utils': 0.4.3
       '@types/express': 5.0.6
       class-transformer: 0.5.1
       express: 5.2.1
@@ -3851,24 +3851,24 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@openid4vc/oauth2@0.4.1':
+  '@openid4vc/oauth2@0.4.3':
     dependencies:
-      '@openid4vc/utils': 0.4.1
+      '@openid4vc/utils': 0.4.3
       zod: 4.1.13
 
-  '@openid4vc/openid4vci@0.4.1':
+  '@openid4vc/openid4vci@0.4.3':
     dependencies:
-      '@openid4vc/oauth2': 0.4.1
-      '@openid4vc/utils': 0.4.1
+      '@openid4vc/oauth2': 0.4.3
+      '@openid4vc/utils': 0.4.3
       zod: 4.1.13
 
-  '@openid4vc/openid4vp@0.4.1':
+  '@openid4vc/openid4vp@0.4.3':
     dependencies:
-      '@openid4vc/oauth2': 0.4.1
-      '@openid4vc/utils': 0.4.1
+      '@openid4vc/oauth2': 0.4.3
+      '@openid4vc/utils': 0.4.3
       zod: 4.1.13
 
-  '@openid4vc/utils@0.4.1':
+  '@openid4vc/utils@0.4.3':
     dependencies:
       buffer: 6.0.3
       zod: 4.1.13
@@ -5235,7 +5235,7 @@ snapshots:
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1)
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.2(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.0.0-canary-7118f5dd7-20230705(eslint@8.57.1)
@@ -5260,20 +5260,20 @@ snapshots:
       debug: 4.3.7
       enhanced-resolve: 5.17.1
       eslint: 8.57.1
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
       is-glob: 4.0.3
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
       - eslint-import-resolver-node
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -5284,7 +5284,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1):
+  eslint-plugin-import@2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.8
@@ -5295,7 +5295,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.57.1)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
