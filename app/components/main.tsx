@@ -32,10 +32,10 @@ export function Main() {
             <TabsTrigger value="x509">Manage Certificates</TabsTrigger>
           </TabsList>
           <TabsContent value="verify">
-            <VerifyBlock />
+            <VerifyBlock searchParams={searchParams} />
           </TabsContent>
           <TabsContent value="issue">
-            <IssueTab />
+            <IssueTab searchParams={searchParams} />
           </TabsContent>
           <TabsContent value="x509">
             <X509Tab />

@@ -2,7 +2,7 @@ import { CheckIcon, CopyIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,13 @@ const credentialFormatMap = {
   mso_mdoc: 'mDOC',
 }
 
-export function IssueTab({ disabled = false }: { disabled?: boolean }) {
+export function IssueTab({
+  disabled = false,
+  searchParams,
+}: {
+  disabled?: boolean
+  searchParams: ReadonlyURLSearchParams
+}) {
   const [credentialType, setCredentialType] = useState<number>(0)
   const [selectedIssuerId, setSelectedIssuerId] = useState<string>()
   const [issuers, setIssuers] = useState<Issuers>()
@@ -37,7 +43,6 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [userPin, setUserPin] = useState<string>()
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
-  const searchParams = useSearchParams()
   const router = useRouter()
   const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
   const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'

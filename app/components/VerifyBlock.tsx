@@ -2,7 +2,7 @@ import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@rad
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
@@ -37,7 +37,7 @@ type Verifier = {
   }>
 }
 
-export const VerifyBlock: React.FC = () => {
+export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchParams }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
   const [verificationSessionId, setVerificationSessionId] = useState<string>()
   const [requestStatus, setRequestStatus] = useState<{
@@ -70,7 +70,6 @@ export const VerifyBlock: React.FC = () => {
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
-  const searchParams = useSearchParams()
   const router = useRouter()
 
   const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
