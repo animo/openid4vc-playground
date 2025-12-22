@@ -350,9 +350,7 @@ export function IssueTab({
                       </Link>
                     </div>
                     <div>
-                      <Link
-                        href={credentialOfferUri.replace('openid-credential-offer://', 'https://paradym.id/invitation')}
-                      >
+                      <Link href={credentialOfferUri.replace('openid-credential-offer://', 'id.animo.paradym:')}>
                         <Button type="button">Open in Paradym Wallet</Button>
                       </Link>
                     </div>

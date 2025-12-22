@@ -439,7 +439,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                       </div>
                     </div>
                     <div>
-                      <Link href={authorizationRequestUri.replace('openid4vp://', 'https://paradym.id/invitation')}>
+                      <Link href={authorizationRequestUri.replace('openid4vp://', 'id.animo.paradym:')}>
                         <Button>Open in Paradym Wallet</Button>
                       </Link>
                     </div>
