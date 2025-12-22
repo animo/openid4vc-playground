@@ -15,7 +15,7 @@ const mobileDriversLicenseDisplay = {
   text_color: '#6F5C77',
   background_color: '#E6E2E7',
   background_image: {
-    url: `${AGENT_HOST}/assets/verfiers/bdr/credential.png`,
+    url: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
     uri: `${AGENT_HOST}/assets/issuers/bdr/credential.png`,
   },
 } satisfies CredentialConfigurationDisplay
@@ -67,10 +67,11 @@ const mobileDriversLicensePayload = {
 export const over70mDLMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'mdl-mdoc',
   doctype: 'org.iso.18013.5.1.mDL',
   display: [mobileDriversLicenseDisplay],
+  credential_metadata: { display: [mobileDriversLicenseDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

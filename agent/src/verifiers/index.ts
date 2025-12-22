@@ -6,13 +6,13 @@ import { europeanUnionVerifier } from './europeanUnion'
 import { farmatecVerifier } from './farmatec'
 import { kvkVerifier } from './kvk'
 import { openHorizonBankVerifier } from './openHorizonBank'
-import { openIdInteropVerifier } from './openIdInteropApril'
 import { pgeuVerifier } from './pgeu'
 import { potentialVerifier } from './potentialUc4InteropApril'
 import { redcarePharmacyVerifier } from './redcarePharmacy'
 import type { TrustChain } from './trustChains'
 import { trustPilotVerifier } from './trustPilot'
 import { turboKeysVerifier } from './turboKeys'
+import { utopiaGovernmentVerifier } from './utopiaGovernment'
 
 export const verifiers = [
   turboKeysVerifier,
@@ -27,7 +27,7 @@ export const verifiers = [
   pgeuVerifier,
   europeanUnionVerifier,
   potentialVerifier,
-  openIdInteropVerifier,
+  utopiaGovernmentVerifier,
 ]
 export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
   "files": {
     "maxSize": 10000000
   },
@@ -19,6 +19,11 @@
       "indentStyle": "space"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "json": {
     "parser": {
       "allowComments": true
@@ -29,12 +34,10 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
-    "ignore": ["__tests__/*.ts"],
+    "includes": ["**", "!**/__tests__/**/*.ts"],
     "rules": {
       "recommended": true,
       "performance": {

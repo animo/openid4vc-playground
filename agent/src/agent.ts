@@ -1,19 +1,17 @@
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, ConsoleLogger, LogLevel, X509Module, joinUriParts } from '@credo-ts/core'
+import { Agent, ConsoleLogger, joinUriParts, LogLevel, X509Module } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { Router } from 'express'
+import { app } from './app'
 import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
+import * as certs from './iaca-x509-certs'
 import {
   credentialRequestToCredentialMapper,
   deferredCredentialRequestToCredentialMapper,
   getVerificationSessionForIssuanceSession,
 } from './issuer'
-import { verifierTrustChains } from './verifiers'
-import { getAuthorityHints, isSubordinateTo } from './verifiers/trustChains'
-
-import * as certs from './iaca-x509-certs'
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)
@@ -56,31 +54,31 @@ export const agent = new Agent({
       },
     }),
     openid4vc: new OpenId4VcModule({
+      app,
       issuer: {
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
-        router: openId4VciRouter,
         credentialRequestToCredentialMapper,
         deferredCredentialRequestToCredentialMapper,
         getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
       },
       verifier: {
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
-        router: openId4VpRouter,
         authorizationRequestExpirationInSeconds: 600,
-        federation: {
-          async getAuthorityHints(agentContext, { verifierId }) {
-            return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
-              joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
-            )
-          },
-          async isSubordinateEntity(agentContext, options) {
-            return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
-          },
-        },
+        // NOTE: add back when enabling federation support
+        // federation: {
+        //   async getAuthorityHints(agentContext, { verifierId }) {
+        //     return getAuthorityHints(verifierTrustChains, verifierId).map((verifierId) =>
+        //       joinUriParts(AGENT_HOST, ['oid4vp', verifierId])
+        //     )
+        //   },
+        //   async isSubordinateEntity(agentContext, options) {
+        //     return isSubordinateTo(verifierTrustChains, options.verifierId, options.subjectEntityId).length > 0
+        //   },
+        // },
       },
     }),
     x509: new X509Module({
-      getTrustedCertificatesForVerification: (agentContext, { certificateChain }) => {
+      getTrustedCertificatesForVerification: (_agentContext, { certificateChain }) => {
         return [certificateChain[certificateChain.length - 1].toString('pem')]
       },
       trustedCertificates: [

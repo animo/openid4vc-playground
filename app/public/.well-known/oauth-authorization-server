@@ -1,7 +1,7 @@
 {
   "issuer": "https://funke.animo.id",
   "vp_formats_supported": {
-    "vc+sd-jwt": {
+    "dc+sd-jwt": {
       "sd-jwt_alg_values": [
         "ES256"
       ],
@@ -10,8 +10,13 @@
       ]
     },
     "mso_mdoc": {
-      "alg_values_supported": [
-        "ES256"
+      "issuerauth_alg_values": [
+        -65537,
+        -65538
+      ],
+      "deviceauth_alg_values": [
+        -65537,
+        -65538
       ]
     }
   },
@@ -19,7 +24,6 @@
   "response_types_supported": "vp_token",
   "client_id_schemes_supported": [
     "x509_san_dns",
-    "did",
-    "x509_san_uri"
+    "decentralized_identifier"
   ]
 }

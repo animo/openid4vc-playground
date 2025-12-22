@@ -44,10 +44,11 @@ const certificateOfResidencePayload = {
 export const certificateOfResidenceMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'certificate-of-residence-mdoc',
   doctype: 'eu.europa.ec.eudi.cor.1',
   display: [certificateOfResidenceDisplay],
+  credential_metadata: { display: [certificateOfResidenceDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -71,12 +72,13 @@ export const certificateOfResidenceMdocData = {
 } satisfies StaticMdocSignInput
 
 export const certificateOfResidenceSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtVc,
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
   cryptographic_binding_methods_supported: ['jwk'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'certificate-of-residence-sd-jwt',
   vct: 'https://example.eudi.ec.europa.eu/cor/1',
   display: [certificateOfResidenceDisplay],
+  credential_metadata: { display: [certificateOfResidenceDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -119,7 +121,7 @@ export const kolnIssuer = {
   issuerId: '832f1c72-817d-4a54-b0fc-9994ecaba291',
   credentialConfigurationsSupported: [
     {
-      'vc+sd-jwt': {
+      'dc+sd-jwt': {
         configuration: certificateOfResidenceSdJwt,
         data: certificateOfResidenceSdJwtData,
       },

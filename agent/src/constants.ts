@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 if (
   !process.env.ROOT_P256_SEED ||
   !process.env.DCS_P256_SEED ||
@@ -25,3 +27,5 @@ export {
   X509_DCS_CERTIFICATE,
   AGENT_DNS,
 }
+
+export const ISSUER_CLIENT_SECRET = randomUUID()

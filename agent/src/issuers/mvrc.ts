@@ -11,10 +11,6 @@ const mvrcDisplay = {
   name: 'Vehicle Registration',
   text_color: '#FFFFFF',
   background_color: '#CD3401',
-  background_image: {
-    url: '',
-    uri: '',
-  },
 } satisfies CredentialConfigurationDisplay
 
 const mvrcPayload = {
@@ -80,10 +76,11 @@ const mvrcPayload_2 = {
 export const mvrcMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'mvrc-mdoc',
   doctype: 'org.iso.7367.1.mVRC',
   display: [mvrcDisplay],
+  credential_metadata: { display: [mvrcDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

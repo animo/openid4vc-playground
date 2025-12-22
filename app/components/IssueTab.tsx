@@ -1,29 +1,33 @@
+import { CheckIcon, CopyIcon } from '@radix-ui/react-icons'
+import { RadioGroup } from '@radix-ui/react-radio-group'
+import Image from 'next/image'
+import Link from 'next/link'
+import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
+import { type FormEvent, useEffect, useState } from 'react'
+import QRCode from 'react-qr-code'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { CheckIcon, CopyIcon, InfoCircledIcon } from '@radix-ui/react-icons'
-import { RadioGroup } from '@radix-ui/react-radio-group'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { type FormEvent, useEffect, useState } from 'react'
-import QRCode from 'react-qr-code'
-import { type Issuers, createOffer, getIssuers } from '../lib/api'
-import { X509Certificates } from './X509Certificates'
-import { Alert, AlertDescription, AlertTitle } from './ui/alert'
+import { createOffer, getIssuers, type Issuers } from '../lib/api'
+import { PlaygroundAlert } from './PlaygroundAlert'
 import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
+import { X509Certificates } from './X509Certificates'
 
 const credentialFormatMap = {
-  'vc+sd-jwt': 'SD-JWT VC (vc+sd-jwt)',
   'dc+sd-jwt': 'SD-JWT VC (dc+sd-jwt)',
   mso_mdoc: 'mDOC',
-  ldp_vc: 'W3C 1.1 JSON-LD',
 }
 
-export function IssueTab({ disabled = false }: { disabled?: boolean }) {
+export function IssueTab({
+  disabled = false,
+  searchParams,
+}: {
+  disabled?: boolean
+  searchParams: ReadonlyURLSearchParams
+}) {
   const [credentialType, setCredentialType] = useState<number>(0)
   const [selectedIssuerId, setSelectedIssuerId] = useState<string>()
   const [issuers, setIssuers] = useState<Issuers>()
@@ -39,7 +43,6 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
   const [userPin, setUserPin] = useState<string>()
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
-  const searchParams = useSearchParams()
   const router = useRouter()
   const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
   const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
@@ -140,21 +143,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
 
   return (
     <Card className="p-6">
-      <Alert variant="default" className="mb-5">
-        <InfoCircledIcon className="h-4 w-4" />
-        <AlertTitle>Info</AlertTitle>
-        <AlertDescription>
-          This playground was built in the context for the{' '}
-          <a className="underline" href="https://www.sprind.org/en/challenges/eudi-wallet-prototypes/">
-            EUDI Wallet Prototype Funke
-          </a>
-          . It is only compatible with the current deployed version of{' '}
-          <a className="underline" href="https://github.com/animo/paradym-wallet/tree/main/apps/easypid">
-            Animo&apos;s EUDI Wallet Prototype
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+      <PlaygroundAlert />
       <div className="flex justify-between items-center mb-4">
         <TypographyH3>Issue</TypographyH3>
         <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
@@ -229,7 +218,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                 credential={{
                   name: credential.display.name,
                   background_color: credential.display.background_color,
-                  background_image: credential.display.background_image.uri,
+                  background_image: credential.display.background_image?.uri,
                   text_color: credential.display.text_color,
                 }}
                 issuer={selectedIssuer}
@@ -251,7 +240,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
             required
             value={selectedFormat}
             className="flex flex-row gap-4"
-            onValueChange={(value) => value !== '' && setSelectedFormat(value as 'vc+sd-jwt')}
+            onValueChange={(value) => value !== '' && setSelectedFormat(value as 'dc+sd-jwt')}
           >
             {Object.keys(selectedIssuer?.credentials[credentialType]?.formats ?? {}).map((format) => (
               <MiniRadioItem
@@ -346,7 +335,7 @@ export function IssueTab({ disabled = false }: { disabled?: boolean }) {
                     <QRCode size={256} value={credentialOfferUri} />
                   </div>
                   <TooltipTrigger asChild>
-                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
                     <p
                       onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
                       className="text-gray-500 break-all cursor-pointer"

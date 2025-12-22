@@ -1,4 +1,4 @@
-import { DidDocumentBuilder, type Kms, getEd25519VerificationKey2020 } from '@credo-ts/core'
+import { DidDocumentBuilder, getEd25519VerificationKey2020, type Kms } from '@credo-ts/core'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 

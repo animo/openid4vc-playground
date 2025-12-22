@@ -1,10 +1,17 @@
-import { type Kms, type X509Certificate, X509ExtendedKeyUsage, X509KeyUsage, X509Service } from '@credo-ts/core'
+import {
+  type AgentContext,
+  CredoWebCrypto,
+  CredoWebCryptoKey,
+  type Kms,
+  publicJwkToCryptoKeyAlgorithm,
+  type X509Certificate,
+  X509ExtendedKeyUsage,
+  X509KeyUsage,
+  X509Service,
+} from '@credo-ts/core'
+import * as x509 from '@peculiar/x509'
 import { agent } from '../agent'
 import { AGENT_DNS, AGENT_HOST } from '../constants'
-
-import { type AgentContext, CredoWebCrypto, CredoWebCryptoKey } from '@credo-ts/core'
-import { publicJwkToCryptoKeyAlgorithm } from '@credo-ts/core/build/crypto/webcrypto/utils/keyAlgorithmConversion'
-import * as x509 from '@peculiar/x509'
 import { tenDaysInMilliseconds } from '../utils/date'
 
 /**
@@ -133,7 +140,7 @@ export const createDocumentSignerCertificate = async (
         name: [{ type: 'dns', value: AGENT_DNS }],
       },
       issuerAlternativeName: {
-        // biome-ignore lint/style/noNonNullAssertion:
+        // biome-ignore lint/style/noNonNullAssertion: no explanation
         name: rootCertificate.issuerAlternativeNames!,
       },
       extendedKeyUsage: {

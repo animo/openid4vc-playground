@@ -6,7 +6,7 @@ import { openIdSdJwt } from '../issuers/credentials/openIDSdJwt'
 import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc'
 
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { type MdocCredential, type SdJwtCredential, pidMdocCredential } from './util'
+import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util'
 
 const pidSdJwtVcNames = {
   format: 'dc+sd-jwt',
@@ -107,18 +107,25 @@ const photoIdPostalCode = {
   fields: [{ path: 'resident_postal_code', values: ['90210'] }],
 } satisfies MdocCredential
 
-export const openIdInteropVerifier = {
+export const utopiaGovernmentVerifier = {
   verifierId: '8caaebcc-d48c-471b-86b0-a534e15c4774',
   useCase: {
-    name: 'OpenID Foundation Interop Event April',
+    name: 'Utopia Government',
     icon: 'interop',
-    tags: ['Digital Credentials API', 'OpenID4VP Draft 24', 'mDOC', 'SD-JWT VC'],
+    tags: ['Digital Credentials API', 'mDOC', 'SD-JWT VC'],
   },
 
   clientMetadata: {
-    logo_uri: `${AGENT_HOST}/assets/verifiers/animo/verifier.png`,
-    client_name: 'Animo',
-  },
+    logo_uri: `${AGENT_HOST}/assets/verifiers/government.png`,
+    client_name: 'Utopia Government',
+    'client_name#nl': 'Utopia Overheid',
+    'client_name#en': 'Utopia Government',
+    'client_name#fi': 'Utopian hallitus',
+    'client_name#sv': 'Utopia regering',
+    'client_name#de': 'Utopia Regierung',
+    'client_name#sq': 'Qeveria e Utopisë',
+    'client_name#pt': 'Governo da Utopia',
+  } as const,
 
   requests: [
     {

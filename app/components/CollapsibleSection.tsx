@@ -1,7 +1,7 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { TypographyH4, TypographyP } from '@/components/ui/typography'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import React, { type PropsWithChildren } from 'react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { TypographyH4 } from '@/components/ui/typography'
 
 export const CollapsibleSection = ({
   title,

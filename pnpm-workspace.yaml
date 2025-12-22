@@ -1,3 +1,13 @@
 packages:
   - agent
   - app
+
+ignoredBuiltDependencies:
+  - es5-ext
+  - esbuild
+
+onlyBuiltDependencies:
+  - '@2060.io/ffi-napi'
+  - '@2060.io/ref-napi'
+  - '@biomejs/biome'
+  - '@openwallet-foundation/askar-nodejs'

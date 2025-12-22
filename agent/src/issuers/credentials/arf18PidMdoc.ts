@@ -38,24 +38,25 @@ const arfPidPayload = {
   age_birth_year: 1986,
 }
 
+const arfPidMdocDisplay = {
+  locale: 'en',
+  name: 'ARF 1.8 PID',
+  text_color: '#2F3544',
+  background_color: '#F1F2F0',
+  background_image: {
+    url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+    uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
+  },
+} as const
+
 export const arfPidMdoc = {
   format: OpenId4VciCredentialFormatProfile.MsoMdoc,
   cryptographic_binding_methods_supported: ['cose_key'],
-  cryptographic_suites_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+  credential_signing_alg_values_supported: [Kms.KnownCoseSignatureAlgorithms.ESP256],
   scope: 'government-arf-18-pid-mdoc',
   doctype: 'eu.europa.ec.eudi.pid.1',
-  display: [
-    {
-      locale: 'en',
-      name: 'ARF 1.8 PID',
-      text_color: '#2F3544',
-      background_color: '#F1F2F0',
-      background_image: {
-        url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-        uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-      },
-    },
-  ],
+  display: [arfPidMdocDisplay],
+  credential_metadata: { display: [arfPidMdocDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],

@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -8,13 +7,13 @@ import {
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
-  W3cV2JwtVerifiableCredential,
   W3cV2JwtVerifiablePresentation,
   W3cV2SdJwtVerifiablePresentation,
   X509Certificate,
   X509ModuleConfig,
 } from '@credo-ts/core'
 import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
+import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent'
@@ -23,14 +22,14 @@ import {
   funkeDeployedAccessCertificateRoot,
   funkeDeployedRegistrationCertificate,
 } from './eudiTrust'
-import { type IssuanceMetadata, getIssuerIdForCredentialConfigurationId } from './issuer'
+import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer'
 import { issuers } from './issuers'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
 import { oidcUrl } from './oidcProvider/provider'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
-import { type PlaygroundVerifierOptions, getVerifier } from './verifier'
+import { getVerifier, type PlaygroundVerifierOptions } from './verifier'
 import { verifiers } from './verifiers'
-import { dcqlQueryFromRequest, presentationDefinitionFromRequest } from './verifiers/util'
+import { dcqlQueryFromRequest } from './verifiers/util'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -75,7 +74,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   const offer = await agent.openid4vc.issuer.createCredentialOffer({
     issuerId,
     credentialConfigurationIds: [configurationId],
-    version: 'v1.draft15',
+    version: 'v1',
     authorization: {
       requireDpop: createOfferRequest.requireDpop,
       requireWalletAttestation: createOfferRequest.requireWalletAttestation,
@@ -155,11 +154,9 @@ apiRouter.get('/issuers', async (_, response: Response) => {
           return {
             display: first.configuration.display[0],
             formats: Object.fromEntries(
-              Object.entries(values).flatMap(([format, configuration]) => [
-                [format, configuration.data.credentialConfigurationId],
-                ...(format === 'vc+sd-jwt'
-                  ? [['dc+sd-jwt', `${configuration.data.credentialConfigurationId}-dc-sd-jwt`]]
-                  : []),
+              Object.entries(values).map(([format, configuration]) => [
+                format,
+                configuration.data.credentialConfigurationId,
               ])
             ),
           }
@@ -181,46 +178,44 @@ apiRouter.get('/verifier', async (_, response: Response) => {
   })
 })
 
-apiRouter.post('/trust-chains', async (request: Request, response: Response) => {
-  const parseResult = await z
-    .object({
-      entityId: z.string(),
-      trustAnchorEntityIds: z.array(z.string()).nonempty(),
-    })
-    .safeParseAsync(request.body)
+// apiRouter.post('/trust-chains', async (request: Request, response: Response) => {
+//   const parseResult = await z
+//     .object({
+//       entityId: z.string(),
+//       trustAnchorEntityIds: z.array(z.string()).nonempty(),
+//     })
+//     .safeParseAsync(request.body)
 
-  if (!parseResult.success) {
-    return response.status(400).json({
-      error: parseResult.error.message,
-      details: parseResult.error.issues,
-    })
-  }
+//   if (!parseResult.success) {
+//     return response.status(400).json({
+//       error: parseResult.error.message,
+//       details: parseResult.error.issues,
+//     })
+//   }
 
-  const { entityId, trustAnchorEntityIds } = parseResult.data
+//   const { entityId, trustAnchorEntityIds } = parseResult.data
 
-  const chains = await agent.openid4vc.holder.resolveOpenIdFederationChains({
-    entityId,
-    trustAnchorEntityIds,
-  })
+//   const chains = await agent.openid4vc.holder.resolveOpenIdFederationChains({
+//     entityId,
+//     trustAnchorEntityIds,
+//   })
 
-  return response.json(chains)
-})
+//   return response.json(chains)
+// })
 
 const zCreatePresentationRequestBody = z.object({
-  requestSignerType: z.enum(['none', 'x5c', 'openid-federation']),
+  requestSignerType: z.enum(['none', 'x5c' /* 'openid-federation' */]),
   presentationDefinitionId: z.string(),
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
   transactionAuthorizationType: z.enum(['none', 'qes']),
-  version: z.enum(['v1.draft21', 'v1.draft24', 'v1']).default('v1'),
-  queryLanguage: z.enum(['pex', 'dcql']).default('dcql'),
-  redirectUriBase: z.string().url().optional(),
+  redirectUriBase: z.url().optional(),
 })
 
 const zReceiveDcResponseBody = z.object({
   verificationSessionId: z.string(),
-  data: z.union([z.string(), z.record(z.unknown())]),
+  data: z.union([z.string(), z.record(z.string(), z.unknown())]),
 })
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
@@ -231,9 +226,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       presentationDefinitionId,
       requestScheme,
       responseMode,
-      version,
       purpose,
-      queryLanguage,
       redirectUriBase,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
@@ -247,7 +240,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const [verifierId, requestIndex] = presentationDefinitionId.split('__')
     const verifier = await getVerifier(verifierId)
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: no explanation
     const definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)[
       requestIndex
     ] as PlaygroundVerifierOptions['requests'][number]
@@ -259,15 +252,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
 
-    const queryLanguageDefinition =
-      queryLanguage === 'pex'
-        ? presentationDefinitionFromRequest(definition, purpose)
-        : dcqlQueryFromRequest(definition, purpose)
-
-    const credentialIds =
-      'input_descriptors' in queryLanguageDefinition
-        ? queryLanguageDefinition.input_descriptors.map((descriptor) => descriptor.id)
-        : queryLanguageDefinition.credentials.map((query) => query.id)
+    const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
+    const credentialIds = queryLanguageDefinition.credentials.map((query) => query.id)
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
@@ -289,24 +275,19 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         requestSigner:
           requestSignerType === 'none'
             ? { method: 'none' }
-            : requestSignerType === 'x5c'
-              ? // Include the certificate from the german registrar
-                isEudiAuthorization
-                ? {
-                    method: 'x5c',
-                    x5c: [
-                      funkeDcsAccessCertificate,
-                      X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot),
-                    ],
-                  }
-                : {
-                    method: 'x5c',
-                    x5c: [x509DcsCertificate, x509RootCertificate],
-                  }
+            : // Include the certificate from the german registrar
+              isEudiAuthorization
+              ? {
+                  method: 'x5c',
+                  x5c: [
+                    funkeDcsAccessCertificate,
+                    X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot),
+                  ],
+                }
               : {
-                  method: 'federation',
+                  method: 'x5c',
+                  x5c: [x509DcsCertificate, x509RootCertificate],
                 },
-
         transactionData:
           transactionAuthorizationType === 'qes'
             ? [
@@ -325,20 +306,11 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 },
               ]
             : undefined,
-        presentationExchange:
-          'input_descriptors' in queryLanguageDefinition
-            ? {
-                definition: queryLanguageDefinition,
-              }
-            : undefined,
-        dcql:
-          'credentials' in queryLanguageDefinition
-            ? {
-                query: queryLanguageDefinition,
-              }
-            : undefined,
+        dcql: {
+          query: queryLanguageDefinition,
+        },
         responseMode,
-        version,
+        version: 'v1',
         expectedOrigins:
           requestSignerType !== 'none' && responseMode.includes('dc_api')
             ? [request.headers.origin as string]
@@ -354,7 +326,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       : undefined
     const authorizationRequestPayload = verificationSession.requestPayload
     const dcqlQuery = authorizationRequestPayload.dcql_query
-    const presentationDefinition = authorizationRequestPayload.presentation_definition
     const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
 
     console.log(JSON.stringify(authorizationRequestObject, null, 2))
@@ -364,7 +335,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       verificationSessionId: verificationSession.id,
       responseStatus: verificationSession.state,
       dcqlQuery,
-      definition: presentationDefinition,
       transactionData,
       authorizationRequest: authorizationRequestJwt
         ? {
@@ -391,17 +361,15 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     header: authorizationRequestJwt?.header,
   }
   const dcqlQuery = authorizationRequestPayload.dcql_query
-  const presentationDefinition = authorizationRequestPayload.presentation_definition
 
   const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
 
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
     const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)
-    console.log(verified.presentationExchange?.presentations)
     console.log(verified.dcql?.presentationResult)
 
     const presentations = await Promise.all(
-      (verified.presentationExchange?.presentations ?? Object.values(verified.dcql?.presentations ?? {}))
+      Object.values(verified.dcql?.presentations ?? {})
         .flat()
         .map(async (presentation) => {
           if (presentation instanceof W3cJsonLdVerifiablePresentation) {
@@ -476,9 +444,6 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
       authorizationRequest,
 
       presentations: presentations,
-
-      submission: verified.presentationExchange?.submission,
-      definition: verified.presentationExchange?.definition,
       transactionDataSubmission: verified.transactionData,
 
       dcqlQuery,
@@ -493,7 +458,6 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     responseStatus: verificationSession.state,
     error: verificationSession.errorMessage,
     authorizationRequest,
-    definition: presentationDefinition,
     transactionData,
     dcqlQuery,
   }
