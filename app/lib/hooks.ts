@@ -11,7 +11,7 @@ export const useInterval = ({
   interval: number
   enabled?: boolean
 }) => {
-  const savedCallback = useRef<Callback>()
+  const savedCallback = useRef<Callback>(undefined)
 
   useEffect(() => {
     savedCallback.current = callback
