@@ -355,8 +355,6 @@ export const mobileDriversLicenseMdoc = {
   claims: mobileDriversLicenseClaims,
   credential_metadata: {
     display: mobileDriversLicenseDisplays,
-    // https://github.com/openwallet-foundation-labs/oid4vc-ts/pull/163
-    // @ts-expect-error
     claims: mobileDriversLicenseClaims,
   },
   proof_types_supported: {
