@@ -5,7 +5,7 @@
     "@credo-ts/askar": "0.6.2-alpha-20251211125344",
     "@credo-ts/core": "0.6.2-alpha-20251211125344",
     "@credo-ts/node": "0.6.2-alpha-20251211125344",
-    "@credo-ts/openid4vc": "0.6.2-alpha-20251211125344",
+    "@credo-ts/openid4vc": "0.6.2-alpha-20251222120740",
     "@openwallet-foundation/askar-nodejs": "^0.4.3",
     "@openwallet-foundation/askar-shared": "^0.4.3",
     "@peculiar/x509": "^1.14.2",
