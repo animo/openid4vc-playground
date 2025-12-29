@@ -24,8 +24,8 @@ importers:
         specifier: 0.6.2-alpha-20251211125344
         version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@credo-ts/node':
-        specifier: 0.6.2-alpha-20251211125344
-        version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251222120740
+        version: 0.6.2-alpha-20251222120740(typescript@5.9.3)
       '@credo-ts/openid4vc':
         specifier: 0.6.2-alpha-20251211125344
         version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
@@ -246,11 +246,14 @@ packages:
   '@credo-ts/core@0.6.2-alpha-20251211125344':
     resolution: {integrity: sha512-gmUAE3MeWM6yCMNr4UY4M2XIgrvS848H3yadmP/2tLol3FhlwTxjlc/UYDSQ6hblLUExO8MVFQSGLSkzNTIqrg==}
 
-  '@credo-ts/didcomm@0.6.2-alpha-20251211125344':
-    resolution: {integrity: sha512-NsJO/QACoirvCADKjpGjOvWY+eeUvrTeX5La0TLr9XNydQLPxw9c9yWVaW6pLR9JjOAoKoDcgt2Yma7+gMDsIQ==}
+  '@credo-ts/core@0.6.2-alpha-20251222120740':
+    resolution: {integrity: sha512-GCvyqtgvB0m1d4QJfC5veaCKq8Kcv3toQh/+dHk6rtmUxc/DbZMQZtoWNoM1K5gNlP3kuL+GpDXNCMRlp6IWPw==}
 
-  '@credo-ts/node@0.6.2-alpha-20251211125344':
-    resolution: {integrity: sha512-h65yeQ4PIexjNnBKxhZar/A/UD+8zStSiZk6JD5sFupSgItF/EFHkLJjirK1B+SD+0bE+0cjDBd3kCElc9hZBA==}
+  '@credo-ts/didcomm@0.6.2-alpha-20251222120740':
+    resolution: {integrity: sha512-9imQvIaP6Yt+cdm0a2ExC4Sq72pxMmd9NIwbQT0MKZdkpGbqwPydibS1/qkUQAUGLhMdf/xLZtDi0EuUbyVXSQ==}
+
+  '@credo-ts/node@0.6.2-alpha-20251222120740':
+    resolution: {integrity: sha512-iCeeApRky/U+/U0Dq1pfGlqRZ3QsE9MA7ixWE3KPTCnKW0/bPLc9nWe5CTkIVYN4pj+Kc9TL8gqi11eCb6YvWA==}
     engines: {node: '>=20.19'}
 
   '@credo-ts/openid4vc@0.6.2-alpha-20251211125344':
@@ -2604,9 +2607,58 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/didcomm@0.6.2-alpha-20251211125344(typescript@5.9.3)':
+  '@credo-ts/core@0.6.2-alpha-20251222120740(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
+      '@animo-id/mdoc': 0.5.2
+      '@animo-id/pex': 6.1.1
+      '@astronautlabs/jsonpath': 1.1.2
+      '@digitalcredentials/jsonld': 9.0.0
+      '@digitalcredentials/jsonld-signatures': 12.0.1
+      '@digitalcredentials/vc': 10.0.2
+      '@multiformats/base-x': 4.0.1
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@peculiar/asn1-ecc': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/x509': 1.14.2
+      '@sd-jwt/core': 0.17.0
+      '@sd-jwt/decode': 0.17.0
+      '@sd-jwt/jwt-status-list': 0.17.1
+      '@sd-jwt/present': 0.17.0
+      '@sd-jwt/sd-jwt-vc': 0.17.1
+      '@sd-jwt/types': 0.17.0
+      '@sd-jwt/utils': 0.17.0
+      '@sphereon/pex-models': 2.3.2
+      '@sphereon/ssi-types': 0.33.0
+      '@stablelib/ed25519': 2.0.2
+      '@types/ws': 8.18.1
+      buffer: 6.0.3
+      class-transformer: 0.5.1
+      class-validator: 0.14.3
+      dcql: 3.0.0(typescript@5.9.3)
+      did-resolver: 4.1.0
+      ec-compression: 0.0.1-alpha.12
+      lru_map: 0.4.1
+      make-error: 1.3.6
+      object-inspect: 1.13.4
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tsyringe: 4.10.0
+      uuid: 13.0.0
+      varint: 6.0.0
+      web-did-resolver: 2.0.32
+      webcrypto-core: 1.8.1
+      zod: 4.2.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+      - typescript
+
+  '@credo-ts/didcomm@0.6.2-alpha-20251222120740(typescript@5.9.3)':
+    dependencies:
+      '@credo-ts/core': 0.6.2-alpha-20251222120740(typescript@5.9.3)
       class-transformer: 0.5.1
       class-validator: 0.14.3
       luxon: 3.7.2
@@ -2617,10 +2669,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/node@0.6.2-alpha-20251211125344(typescript@5.9.3)':
+  '@credo-ts/node@0.6.2-alpha-20251222120740(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
-      '@credo-ts/didcomm': 0.6.2-alpha-20251211125344(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-alpha-20251222120740(typescript@5.9.3)
+      '@credo-ts/didcomm': 0.6.2-alpha-20251222120740(typescript@5.9.3)
       '@types/express': 5.0.6
       express: 5.2.1
       rxjs: 7.8.2
