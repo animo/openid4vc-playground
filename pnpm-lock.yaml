@@ -18,8 +18,8 @@ importers:
         specifier: ^0.5.2
         version: 0.5.2
       '@credo-ts/askar':
-        specifier: 0.6.2-alpha-20251211125344
-        version: 0.6.2-alpha-20251211125344(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)
+        specifier: 0.6.2-alpha-20251222120740
+        version: 0.6.2-alpha-20251222120740(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)
       '@credo-ts/core':
         specifier: 0.6.2-alpha-20251211125344
         version: 0.6.2-alpha-20251211125344(typescript@5.9.3)
@@ -238,13 +238,16 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@credo-ts/askar@0.6.2-alpha-20251211125344':
-    resolution: {integrity: sha512-qUcEZ5rEaqB7WctOWoG+h6qJqZX5JDaFbHvcvnkMhcelbglF0cqxbb+BwyNbKA1SMK/tlwGf915Pg7bKTeSvYg==}
+  '@credo-ts/askar@0.6.2-alpha-20251222120740':
+    resolution: {integrity: sha512-MfI68Z3Z91mQ2abpIoA3nZebnf5DXSPqJ+cTbeSJtHU9DoHg006chqDSncgv6HhZEYMwS+a0kAnd2dghHgceBQ==}
     peerDependencies:
       '@openwallet-foundation/askar-shared': ^0.4.3
 
   '@credo-ts/core@0.6.2-alpha-20251211125344':
     resolution: {integrity: sha512-gmUAE3MeWM6yCMNr4UY4M2XIgrvS848H3yadmP/2tLol3FhlwTxjlc/UYDSQ6hblLUExO8MVFQSGLSkzNTIqrg==}
+
+  '@credo-ts/core@0.6.2-alpha-20251222120740':
+    resolution: {integrity: sha512-GCvyqtgvB0m1d4QJfC5veaCKq8Kcv3toQh/+dHk6rtmUxc/DbZMQZtoWNoM1K5gNlP3kuL+GpDXNCMRlp6IWPw==}
 
   '@credo-ts/didcomm@0.6.2-alpha-20251211125344':
     resolution: {integrity: sha512-NsJO/QACoirvCADKjpGjOvWY+eeUvrTeX5La0TLr9XNydQLPxw9c9yWVaW6pLR9JjOAoKoDcgt2Yma7+gMDsIQ==}
@@ -2542,9 +2545,9 @@ snapshots:
   '@biomejs/cli-win32-x64@2.3.10':
     optional: true
 
-  '@credo-ts/askar@0.6.2-alpha-20251211125344(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)':
+  '@credo-ts/askar@0.6.2-alpha-20251222120740(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-alpha-20251222120740(typescript@5.9.3)
       '@openwallet-foundation/askar-shared': 0.4.3
       class-transformer: 0.5.1
       class-validator: 0.14.3
@@ -2556,6 +2559,55 @@ snapshots:
       - typescript
 
   '@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3)':
+    dependencies:
+      '@animo-id/mdoc': 0.5.2
+      '@animo-id/pex': 6.1.1
+      '@astronautlabs/jsonpath': 1.1.2
+      '@digitalcredentials/jsonld': 9.0.0
+      '@digitalcredentials/jsonld-signatures': 12.0.1
+      '@digitalcredentials/vc': 10.0.2
+      '@multiformats/base-x': 4.0.1
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@peculiar/asn1-ecc': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/x509': 1.14.2
+      '@sd-jwt/core': 0.17.0
+      '@sd-jwt/decode': 0.17.0
+      '@sd-jwt/jwt-status-list': 0.17.1
+      '@sd-jwt/present': 0.17.0
+      '@sd-jwt/sd-jwt-vc': 0.17.1
+      '@sd-jwt/types': 0.17.0
+      '@sd-jwt/utils': 0.17.0
+      '@sphereon/pex-models': 2.3.2
+      '@sphereon/ssi-types': 0.33.0
+      '@stablelib/ed25519': 2.0.2
+      '@types/ws': 8.18.1
+      buffer: 6.0.3
+      class-transformer: 0.5.1
+      class-validator: 0.14.3
+      dcql: 3.0.0(typescript@5.9.3)
+      did-resolver: 4.1.0
+      ec-compression: 0.0.1-alpha.12
+      lru_map: 0.4.1
+      make-error: 1.3.6
+      object-inspect: 1.13.4
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tsyringe: 4.10.0
+      uuid: 13.0.0
+      varint: 6.0.0
+      web-did-resolver: 2.0.32
+      webcrypto-core: 1.8.1
+      zod: 4.2.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+      - typescript
+
+  '@credo-ts/core@0.6.2-alpha-20251222120740(typescript@5.9.3)':
     dependencies:
       '@animo-id/mdoc': 0.5.2
       '@animo-id/pex': 6.1.1

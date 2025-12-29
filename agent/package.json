@@ -2,7 +2,7 @@
   "name": "agent",
   "dependencies": {
     "@animo-id/mdoc": "^0.5.2",
-    "@credo-ts/askar": "0.6.2-alpha-20251211125344",
+    "@credo-ts/askar": "0.6.2-alpha-20251222120740",
     "@credo-ts/core": "0.6.2-alpha-20251211125344",
     "@credo-ts/node": "0.6.2-alpha-20251211125344",
     "@credo-ts/openid4vc": "0.6.2-alpha-20251211125344",
