@@ -1,21 +1,16 @@
 import { AGENT_HOST } from '../constants'
-import { arfCompliantPidSdJwt, arfCompliantPidUrnVctSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util'
+import { mdlMdocCredential, pidMdocCredential, pidSdJwtCredential } from './util'
 
-const pidSdJwtVcNames = {
-  format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
+const pidSdJwtVcNames = pidSdJwtCredential({
   fields: [
     // Mandatory
     'family_name',
     'given_name',
   ],
-} satisfies SdJwtCredential
+})
 
-const pidSdJwtVcMandatory = {
-  format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
+const pidSdJwtVcMandatory = pidSdJwtCredential({
   fields: [
     // Mandatory
     'family_name',
@@ -29,7 +24,7 @@ const pidSdJwtVcMandatory = {
     'issuing_country',
     'issuing_authority',
   ],
-} satisfies SdJwtCredential
+})
 
 const pidMdocMandatory = pidMdocCredential({
   fields: [
@@ -51,10 +46,7 @@ const pidMdocNames = pidMdocCredential({
   fields: ['family_name', 'given_name'],
 })
 
-const mDLMandatory = {
-  format: 'mso_mdoc',
-  doctype: mobileDriversLicenseMdoc.doctype,
-  namespace: 'org.iso.18013.5.1',
+const mDLMandatory = mdlMdocCredential({
   fields: [
     'given_name',
     'family_name',
@@ -66,21 +58,15 @@ const mDLMandatory = {
     'issuing_authority',
     'driving_privileges',
   ],
-} satisfies MdocCredential
+})
 
-const mdlNames = {
-  format: 'mso_mdoc',
-  doctype: mobileDriversLicenseMdoc.doctype,
-  namespace: 'org.iso.18013.5.1',
+const mdlNames = mdlMdocCredential({
   fields: ['given_name', 'family_name'],
-} satisfies MdocCredential
+})
 
-const mdlAgeOver18 = {
-  format: 'mso_mdoc',
-  doctype: mobileDriversLicenseMdoc.doctype,
-  namespace: 'org.iso.18013.5.1',
+const mdlAgeOver18 = mdlMdocCredential({
   fields: ['age_over_18'],
-} satisfies MdocCredential
+})
 
 export const potentialVerifier = {
   verifierId: '826fc673-6c8b-4189-a5ec-0ed408f4e6a2',

@@ -1,8 +1,7 @@
 import { AGENT_HOST } from '../constants'
-import { arfCompliantPidSdJwt, arfCompliantPidUrnVctSdJwt, mobileDriversLicenseMdoc } from '../issuers/bdr'
 import { taxIdMdoc, taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidMdocCredential, pidSdJwtCredential } from './util'
+import { mdlMdocCredential, pidMdocCredential, pidSdJwtCredential } from './util'
 
 export const bundesregierungVerifier = {
   verifierId: '019368ed-3787-7669-b7f4-8c012238e90d',
@@ -22,10 +21,7 @@ export const bundesregierungVerifier = {
       name: 'MDL (mdoc)',
       purpose: 'Authorize to the government using your mobile drivers license',
       credentials: [
-        {
-          format: 'mso_mdoc',
-          doctype: mobileDriversLicenseMdoc.doctype,
-          namespace: 'org.iso.18013.5.1',
+        mdlMdocCredential({
           fields: [
             'given_name',
             'family_name',
@@ -37,7 +33,7 @@ export const bundesregierungVerifier = {
             'issuing_authority',
             'driving_privileges',
           ],
-        },
+        }),
       ],
     },
     {
@@ -61,9 +57,7 @@ export const bundesregierungVerifier = {
       name: 'ARF PID (sd-jwt vc) - Most',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
       credentials: [
-        {
-          format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
+        pidSdJwtCredential({
           fields: [
             // Mandatory
             'family_name',
@@ -93,7 +87,7 @@ export const bundesregierungVerifier = {
             'resident_street',
             'nationality',
           ],
-        },
+        }),
       ],
     },
     {
@@ -101,9 +95,7 @@ export const bundesregierungVerifier = {
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
-        {
-          format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
+        pidSdJwtCredential({
           fields: [
             // Mandatory
             'family_name',
@@ -117,7 +109,7 @@ export const bundesregierungVerifier = {
             'issuing_country',
             'issuing_authority',
           ],
-        },
+        }),
       ],
     },
 
@@ -135,15 +127,13 @@ export const bundesregierungVerifier = {
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
-        {
-          format: 'dc+sd-jwt',
-          vcts: [arfCompliantPidSdJwt.vct, arfCompliantPidUrnVctSdJwt.vct],
+        pidSdJwtCredential({
           fields: [
             // Mandatory
             'family_name',
             'given_name',
           ],
-        },
+        }),
       ],
     },
     {
@@ -224,10 +214,7 @@ export const bundesregierungVerifier = {
       name: 'mDL (mdoc) - Mandatory',
       purpose: 'To grant you access we need to verify your drivers license',
       credentials: [
-        {
-          format: 'mso_mdoc',
-          doctype: mobileDriversLicenseMdoc.doctype,
-          namespace: 'org.iso.18013.5.1',
+        mdlMdocCredential({
           fields: [
             'given_name',
             'family_name',
@@ -239,31 +226,22 @@ export const bundesregierungVerifier = {
             'issuing_authority',
             'driving_privileges',
           ],
-        },
+        }),
       ],
     },
     {
       name: 'mDL (mdoc) - Names',
       purpose: 'To grant you access we need to verify your drivers license',
-      credentials: [
-        {
-          format: 'mso_mdoc',
-          doctype: mobileDriversLicenseMdoc.doctype,
-          namespace: 'org.iso.18013.5.1',
-          fields: ['given_name', 'family_name'],
-        },
-      ],
+      credentials: [mdlMdocCredential({ fields: ['given_name', 'family_name'] })],
     },
     {
       name: 'ARF 1.8 PID (sd-jwt-vc) - Names',
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
-        {
-          format: 'dc+sd-jwt',
-          vcts: ['urn:eudi:pid:1'],
+        pidSdJwtCredential({
           fields: ['family_name', 'given_name'],
-        },
+        }),
       ],
     },
     {
@@ -271,9 +249,7 @@ export const bundesregierungVerifier = {
       purpose: 'To grant you access we need to verify your ARF compliant PID',
 
       credentials: [
-        {
-          format: 'dc+sd-jwt',
-          vcts: ['urn:eudi:pid:1'],
+        pidSdJwtCredential({
           fields: [
             // Mandatory
             'family_name',
@@ -287,7 +263,7 @@ export const bundesregierungVerifier = {
             'issuing_country',
             'issuing_authority',
           ],
-        },
+        }),
       ],
     },
   ],

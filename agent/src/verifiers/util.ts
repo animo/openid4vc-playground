@@ -1,4 +1,5 @@
 import type { DcqlQuery } from '@credo-ts/core'
+import { mobileDriversLicenseMdoc } from '../issuers/bdr'
 import type { PlaygroundVerifierOptions } from '../verifier'
 
 export interface SdJwtCredential {
@@ -31,16 +32,21 @@ export function pidMdocCredential({ fields, field_options }: Pick<MdocCredential
   } satisfies MdocCredential
 }
 
+export function mdlMdocCredential({ fields, field_options }: Pick<MdocCredential, 'fields' | 'field_options'>) {
+  return {
+    format: 'mso_mdoc',
+    fields,
+    doctype: mobileDriversLicenseMdoc.doctype,
+    namespace: 'org.iso.18013.5.1',
+    field_options,
+  } satisfies MdocCredential
+}
+
 export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) {
   return {
     format: 'dc+sd-jwt',
     fields,
-    vcts: ['https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
-    // issuers: [
-    //   'https://demo.pid-issuer.bundesdruckerei.de/c',
-    //   'https://demo.pid-issuer.bundesdruckerei.de/c1',
-    //   'https://demo.pid-issuer.bundesdruckerei.de/b1',
-    // ],
+    vcts: ['urn:eudi:pid:1'],
   } satisfies SdJwtCredential
 }
 

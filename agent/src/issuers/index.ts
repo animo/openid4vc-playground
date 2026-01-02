@@ -8,6 +8,7 @@ import { steuernCredentialsData, steuernIssuer } from './steuern'
 import { telOrgCredentialsData, telOrgIssuer } from './telOrg'
 import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment'
 import { vwsCredentialsData, vwsIssuer } from './vws'
+import { weroCredentialsData, weroIssuer } from './wero'
 
 export const issuers: PlaygroundIssuerOptions[] = [
   bdrIssuer,

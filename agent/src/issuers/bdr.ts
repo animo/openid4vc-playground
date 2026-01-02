@@ -111,81 +111,9 @@ export const mobileDriversLicenseMdocData = {
   },
 } satisfies StaticMdocSignInput
 
-export const mobileDriversLicenseSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
-  cryptographic_binding_methods_supported: ['jwk'],
-  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-  scope: 'mobile-drivers-license-sd-jwt',
-  vct: 'https://example.eudi.ec.europa.eu/mdl/1',
-  display: [mobileDriversLicenseDisplay],
-  credential_metadata: { display: [mobileDriversLicenseDisplay] },
-  proof_types_supported: {
-    jwt: {
-      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-    },
-  },
-} as const satisfies SdJwtConfiguration
-
-export const mobileDriversLicenseSdJwtData = {
-  credentialConfigurationId: 'mobile-drivers-license-sd-jwt',
-  format: ClaimFormat.SdJwtDc,
-  credential: {
-    payload: {
-      ...mobileDriversLicensePayload,
-      birth_date: mobileDriversLicensePayload.birth_date.toISOString(),
-      nbf: dateToSeconds(mobileDriversLicensePayload.issue_date),
-      exp: dateToSeconds(mobileDriversLicensePayload.expiry_date),
-      issue_date: mobileDriversLicensePayload.issue_date.toISOString(),
-      expiry_date: mobileDriversLicensePayload.expiry_date.toISOString(),
-      vct: mobileDriversLicenseSdJwt.vct,
-      portrait: `data:image/jpeg;base64,${erikaPortrait.toString('base64')}`,
-      signature_usual_mark: `data:image/jpeg;base64,${erikaSignature.toString('base64')}`,
-      driving_privileges: [
-        {
-          ...mobileDriversLicensePayload.driving_privileges[0],
-          issue_date: mobileDriversLicensePayload.driving_privileges[0].issue_date.toISOString(),
-          expiry_date: mobileDriversLicensePayload.driving_privileges[0].expiry_date.toISOString(),
-        },
-      ],
-    },
-    disclosureFrame: {
-      _sd: [
-        'given_name',
-        'family_name',
-        'birth_date',
-        'document_number',
-        'portrait',
-        'un_distinguishing_sign',
-        'issuing_authority',
-        'issue_date',
-        'expiry_date',
-        'issuing_country',
-        'driving_privileges',
-        'signature_usual_mark',
-        'age_over_18',
-      ],
-      // TODO: fix array disclosures?
-      // driving_privileges: mobileDriversLicensePayload.driving_privileges.map((d) => ({
-      //   _sd: ['vehicle_category_code', 'issue_date', 'expiry_date', 'codes'],
-      // })),
-    },
-  },
-} satisfies StaticSdJwtSignInput
-
 const arfCompliantPidDisplay = {
   locale: 'en',
   name: 'PID (ARF)',
-  text_color: '#2F3544',
-  background_color: '#F1F2F0',
-  background_image: {
-    url: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-    uri: `${AGENT_HOST}/assets/issuers/bdr/pid-credential.png`,
-  },
-} satisfies CredentialConfigurationDisplay
-
-const arfCompliantPidUrnVctDisplay = {
-  locale: 'en',
-  name: 'PID (ARF, urn: vct)',
   text_color: '#2F3544',
   background_color: '#F1F2F0',
   background_image: {
@@ -199,24 +127,9 @@ export const arfCompliantPidSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'arf-pid-sd-jwt',
-  vct: 'eu.europa.ec.eudi.pid.1',
+  vct: 'urn:eudi:pid:1',
   display: [arfCompliantPidDisplay],
   credential_metadata: { display: [arfCompliantPidDisplay] },
-  proof_types_supported: {
-    jwt: {
-      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-    },
-  },
-} satisfies SdJwtConfiguration
-
-export const arfCompliantPidUrnVctSdJwt = {
-  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
-  cryptographic_binding_methods_supported: ['jwk'],
-  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
-  scope: 'arf-pid-sd-jwt-urn-vct',
-  vct: 'urn:eu.europa.ec.eudi:pid:1',
-  display: [arfCompliantPidUrnVctDisplay],
-  credential_metadata: { display: [arfCompliantPidUrnVctDisplay] },
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
@@ -316,28 +229,12 @@ export const arfCompliantPidSdJwtData = {
   },
 } satisfies StaticSdJwtSignInput
 
-export const arfCompliantPidUrnVctSdJwtData = {
-  ...arfCompliantPidSdJwtData,
-  credentialConfigurationId: 'arf-pid-sd-jwt-urn-vct',
-  credential: {
-    ...arfCompliantPidSdJwtData.credential,
-    payload: {
-      ...arfCompliantPidSdJwtData.credential.payload,
-      vct: arfCompliantPidUrnVctSdJwt.vct,
-    },
-  },
-} satisfies StaticSdJwtSignInput
-
 // https://animosolutions.getoutline.com/doc/certificate-of-residence-attestation-KjzG4n9VG0
 export const bdrIssuer = {
   tags: [mobileDriversLicenseDisplay.name, 'ARF 1.5 PID (SD-JWT VC)'],
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
   credentialConfigurationsSupported: [
     {
-      'dc+sd-jwt': {
-        configuration: mobileDriversLicenseSdJwt,
-        data: mobileDriversLicenseSdJwtData,
-      },
       mso_mdoc: {
         configuration: mobileDriversLicenseMdoc,
         data: mobileDriversLicenseMdocData,
@@ -347,12 +244,6 @@ export const bdrIssuer = {
       'dc+sd-jwt': {
         configuration: arfCompliantPidSdJwt,
         data: arfCompliantPidSdJwtData,
-      },
-    },
-    {
-      'dc+sd-jwt': {
-        configuration: arfCompliantPidUrnVctSdJwt,
-        data: arfCompliantPidUrnVctSdJwtData,
       },
     },
   ] as const,
@@ -371,8 +262,6 @@ export const bdrIssuer = {
 } satisfies PlaygroundIssuerOptions
 
 export const bdrCredentialsData = {
-  [mobileDriversLicenseSdJwtData.credentialConfigurationId]: mobileDriversLicenseSdJwtData,
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
   [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
-  [arfCompliantPidUrnVctSdJwtData.credentialConfigurationId]: arfCompliantPidUrnVctSdJwtData,
 }

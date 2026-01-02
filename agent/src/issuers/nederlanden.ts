@@ -194,7 +194,7 @@ export const eudiPidSdJwt = {
   cryptographic_binding_methods_supported: ['jwk'],
   credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   scope: 'eudi-pid-sd-jwt',
-  vct: 'eu.europa.ec.eudi.pid.1',
+  vct: 'urn:eudi:pid:1',
   display: [eudiPidDisplay],
   credential_metadata: { display: [eudiPidDisplay] },
   proof_types_supported: {
