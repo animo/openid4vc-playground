@@ -31,16 +31,19 @@ export function pidMdocCredential({ fields, field_options }: Pick<MdocCredential
   } satisfies MdocCredential
 }
 
-export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) {
+export function legacyDePidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) {
   return {
     format: 'dc+sd-jwt',
     fields,
     vcts: ['https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
-    // issuers: [
-    //   'https://demo.pid-issuer.bundesdruckerei.de/c',
-    //   'https://demo.pid-issuer.bundesdruckerei.de/c1',
-    //   'https://demo.pid-issuer.bundesdruckerei.de/b1',
-    // ],
+  } satisfies SdJwtCredential
+}
+
+export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) {
+  return {
+    format: 'dc+sd-jwt',
+    fields,
+    vcts: ['urn:eudi:pid:1'],
   } satisfies SdJwtCredential
 }
 

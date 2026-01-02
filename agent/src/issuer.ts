@@ -17,18 +17,22 @@ import { randomUUID } from 'crypto'
 import { agent } from './agent'
 import { AGENT_HOST } from './constants'
 import { issuers, issuersCredentialsData } from './issuers'
-import { arfCompliantPidSdJwtData, arfCompliantPidUrnVctSdJwtData, bdrIssuer } from './issuers/bdr'
+import { bdrIssuer } from './issuers/bdr'
 import { kolnIssuer } from './issuers/koln'
 import { krankenkasseIssuer } from './issuers/krankenkasse'
-import { eudiPidSdJwtData, nederlandenIssuer } from './issuers/nederlanden'
 import { steuernIssuer } from './issuers/steuern'
 import { telOrgIssuer } from './issuers/telOrg'
 import { getX509Certificates, getX509DcsCertificate } from './keyMethods'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
-import { bundesregierungVerifier } from './verifiers/bundesregierung'
-import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util'
+import {
+  dcqlQueryFromRequest,
+  legacyDePidSdJwtCredential,
+  pidMdocCredential,
+  pidSdJwtCredential,
+} from './verifiers/util'
+import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment'
 
 export type CredentialConfigurationDisplay = NonNullable<
   NonNullable<OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata']>['display']
@@ -209,18 +213,17 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
   async ({ agentContext, scopes, requestedCredentialConfigurations }) => {
-    const verifier = await getVerifier(bundesregierungVerifier.verifierId)
+    const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
     const certificates = getX509Certificates()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
-    const [credentialConfigurationId, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
+    const [, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
 
     if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'dc+sd-jwt') {
       throw new Error('Presentation during issuance is only supported for mso_mdoc and dc+sd-jwt')
     }
 
     const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
-
     const authorizationRequest = await verifierApi.createAuthorizationRequest({
       verifierId: verifier.verifierId,
       requestSigner: {
@@ -228,97 +231,57 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
         x5c: certificates,
       },
       version: 'v1',
-      dcql:
-        credentialConfigurationId === arfCompliantPidSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${arfCompliantPidSdJwtData.credentialConfigurationId}-key-attestations` ||
-        credentialConfigurationId === arfCompliantPidUrnVctSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${arfCompliantPidUrnVctSdJwtData.credentialConfigurationId}-key-attestations` ||
-        credentialConfigurationId === eudiPidSdJwtData.credentialConfigurationId ||
-        credentialConfigurationId === `${eudiPidSdJwtData.credentialConfigurationId}-key-attestations`
-          ? {
-              query: dcqlQueryFromRequest({
-                name: 'Identity card',
-                purpose: 'To issue your ARF compliant PID we need to verify your german PID',
-                credentials: [
-                  pidSdJwtCredential({
-                    fields: [
-                      'issuing_country',
-                      'issuing_authority',
-                      'family_name',
-                      'birthdate',
-                      'age_birth_year',
-                      'age_in_years',
-                      'given_name',
-                      'birth_family_name',
-                      'place_of_birth.locality',
-                      'address.country',
-                      'address.postal_code',
-                      'address.locality',
-                      'address.street_address',
-                      'age_equal_or_over.12',
-                      'age_equal_or_over.14',
-                      'age_equal_or_over.16',
-                      'age_equal_or_over.18',
-                      'age_equal_or_over.21',
-                      'age_equal_or_over.65',
-                      'nationalities',
-                    ],
-                  }),
-                ],
-              }),
-            }
-          : {
-              query: dcqlQueryFromRequest({
-                name: 'Identity card',
-                purpose: `To issue your ${credentialName} we need to verify your identity card`,
-                credentials: [
-                  pidSdJwtCredential({
-                    fields: [
-                      'given_name',
-                      'family_name',
-                      'birthdate',
-                      'issuing_authority',
-                      'issuing_country',
-                      'address',
-                      'place_of_birth',
-                      'nationalities',
-                    ],
-                  }),
-                  pidMdocCredential({
-                    fields: [
-                      'given_name',
-                      'family_name',
-                      'birth_date',
-                      'issuing_country',
-                      'issuing_authority',
-                      'resident_street',
-                      'resident_postal_code',
-                      'resident_city',
-                      'birth_place',
-                      'nationality',
-                    ],
-                  }),
-                  {
-                    format: 'dc+sd-jwt',
-                    vcts: ['urn:eudi:pid:1'],
-                    fields: [
-                      'given_name',
-                      'family_name',
-                      'birthdate',
-                      'place_of_birth',
-                      'address',
-                      'nationalities',
+      dcql: {
+        // User needs to present either german PID in SD-JWT, or EUDI PID in SD-JWT/mDOC
+        query: dcqlQueryFromRequest({
+          name: 'Identity card',
+          purpose: `To issue your ${credentialName} we need to verify your identity card`,
+          credentials: [
+            legacyDePidSdJwtCredential({
+              fields: [
+                'given_name',
+                'family_name',
+                'birthdate',
+                'issuing_authority',
+                'issuing_country',
+                'address',
+                'place_of_birth',
+                'nationalities',
+              ],
+            }),
+            pidMdocCredential({
+              fields: [
+                'given_name',
+                'family_name',
+                'birth_date',
+                'issuing_country',
+                'issuing_authority',
+                'resident_street',
+                'resident_postal_code',
+                'resident_city',
+                'birth_place',
+                'nationality',
+              ],
+            }),
+            pidSdJwtCredential({
+              fields: [
+                'given_name',
+                'family_name',
+                'birthdate',
+                'place_of_birth',
+                'address',
+                'nationalities',
 
-                      // Mandatory metadata
-                      'date_of_expiry',
-                      'issuing_country',
-                      'issuing_authority',
-                    ],
-                  },
-                ],
-                credential_sets: [[0, 1, 2]],
-              }),
-            },
+                // Mandatory metadata
+                'date_of_expiry',
+                'issuing_country',
+                'issuing_authority',
+              ],
+            }),
+          ],
+          credential_sets: [[0, 1, 2]],
+        }),
+      },
       responseMode: 'direct_post.jwt',
     })
 
@@ -438,13 +401,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
                 presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
             }
 
-      const arfCompliantPidData =
+      const eudiPidData =
         presentation.claimFormat === ClaimFormat.SdJwtDc
           ? {
               family_name: presentation.prettyClaims.family_name,
               given_name: presentation.prettyClaims.given_name,
               birth_date: presentation.prettyClaims.birthdate,
-              age_over_18: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
 
               // Mandatory metadata
               issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
@@ -452,50 +414,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               issuing_country: presentation.prettyClaims.issuing_country,
               issuing_authority: presentation.prettyClaims.issuing_authority,
 
-              // Optional:
-              age_over_12: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
-              age_over_14: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
-              age_over_16: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
-              age_over_21: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
-              age_over_65: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
-              age_in_years: presentation.prettyClaims.age_in_years,
-              age_birth_year: presentation.prettyClaims.age_birth_year,
-              family_name_birth: presentation.prettyClaims.birth_family_name,
-
-              birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
-
-              resident_country: (presentation.prettyClaims.address as Record<string, string>).country,
-              resident_city: (presentation.prettyClaims.address as Record<string, string>).locality,
-              resident_postal_code: (presentation.prettyClaims.address as Record<string, string>).postal_code,
-              resident_street: (presentation.prettyClaims.address as Record<string, string>).street_address,
-              nationality: (presentation.prettyClaims.nationalities as string[])[0],
-            }
-          : {}
-
-      const nederlandenPidData =
-        presentation.claimFormat === ClaimFormat.SdJwtDc
-          ? {
-              family_name: presentation.prettyClaims.family_name,
-              given_name: presentation.prettyClaims.given_name,
-              birth_date: presentation.prettyClaims.birthdate,
-              age_over_18: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['18'],
-
-              // Mandatory metadata
-              issuance_date: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
-              expiry_date: new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds),
-              issuing_country: presentation.prettyClaims.issuing_country,
-              issuing_authority: presentation.prettyClaims.issuing_authority,
-
-              sex: presentation.prettyClaims.sex,
-
-              // Optional:
-              age_over_12: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['12'],
-              age_over_14: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['14'],
-              age_over_16: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['16'],
-              age_over_21: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['21'],
-              age_over_65: (presentation.prettyClaims.age_equal_or_over as Record<string, boolean>)['65'],
-              age_in_years: presentation.prettyClaims.age_in_years,
-              age_birth_year: presentation.prettyClaims.age_birth_year,
               family_name_birth: presentation.prettyClaims.birth_family_name,
 
               birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
@@ -510,22 +428,11 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
       const formatSpecificClaims = Object.fromEntries(
         Object.entries({
-          [bdrIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
-            driversLicenseClaims,
           [bdrIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
             driversLicenseClaims,
 
-          [bdrIssuer.credentialConfigurationsSupported[1]['dc+sd-jwt'].data.credentialConfigurationId]:
-            arfCompliantPidData,
-
-          [bdrIssuer.credentialConfigurationsSupported[2]['dc+sd-jwt'].data.credentialConfigurationId]:
-            arfCompliantPidData,
-
-          [nederlandenIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
-            nederlandenPidData,
-          // @ts-expect-error Can be undefined because other configuration does not have dc+sd-jwt
-          [nederlandenIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
-            nederlandenPidData,
+          [bdrIssuer.credentialConfigurationsSupported[1]['dc+sd-jwt'].data.credentialConfigurationId]: eudiPidData,
+          [bdrIssuer.credentialConfigurationsSupported[1].mso_mdoc.data.credentialConfigurationId]: eudiPidData,
 
           [krankenkasseIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             healthIdClaims,

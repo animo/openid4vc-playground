@@ -1,14 +1,13 @@
 import { AGENT_HOST } from '../constants'
 import type { PlaygroundIssuerOptions } from '../issuer'
-import { ageSdJwt, ageSdJwtData } from './credentials/ageSdJwt'
-import { arfPidMdoc, arfPidMdocData } from './credentials/arf18PidMdoc'
-import { arfCompliantPidSdJwt, arfCompliantPidSdJwtData } from './credentials/arf18PidSdJwt'
+import { eudiAgeMdoc, eudiAgeMdocData } from './credentials/eudiAgeMdoc'
+import { eudiPidMdoc, eudiPidMdocData } from './credentials/eudiPidMdoc'
+import { eudiPidSdJwt, eudiPidSdJwtData } from './credentials/eudiPidSdJwt'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
-import { openIdSdJwt, openIdSdJwtData } from './credentials/openIDSdJwt'
 import { photoIdMdoc, photoIdMdocData } from './credentials/photoIdMdoc'
 
 export const utopiaGovernmentIssuer = {
-  tags: ['mDL', 'ARF 1.8 PID', 'Photo ID', 'OpenID', 'Age'],
+  tags: ['mDL', 'EUDI PID', 'Photo ID', 'EUDI Age'],
   issuerId: 'b39e71cf-9cf1-4723-a9cd-66f42a510b36',
   credentialConfigurationsSupported: [
     {
@@ -19,12 +18,12 @@ export const utopiaGovernmentIssuer = {
     },
     {
       'dc+sd-jwt': {
-        configuration: arfCompliantPidSdJwt,
-        data: arfCompliantPidSdJwtData,
+        configuration: eudiPidSdJwt,
+        data: eudiPidSdJwtData,
       },
       mso_mdoc: {
-        configuration: arfPidMdoc,
-        data: arfPidMdocData,
+        configuration: eudiPidMdoc,
+        data: eudiPidMdocData,
       },
     },
     {
@@ -34,28 +33,21 @@ export const utopiaGovernmentIssuer = {
       },
     },
     {
-      'dc+sd-jwt': {
-        configuration: openIdSdJwt,
-        data: openIdSdJwtData,
-      },
-    },
-    {
-      'dc+sd-jwt': {
-        configuration: ageSdJwt,
-        data: ageSdJwtData,
+      mso_mdoc: {
+        configuration: eudiAgeMdoc,
+        data: eudiAgeMdocData,
       },
     },
   ] as const,
   batchCredentialIssuance: {
     batchSize: 10,
   },
-  playgroundDisplayName: 'Utopia Government (OpenID Interop Event)',
+  playgroundDisplayName: 'Utopia Government',
   display: [
     {
       locale: 'en',
       name: 'Utopia Government',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -63,7 +55,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'nl',
       name: 'Utopia Overheid',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -71,7 +62,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'fi',
       name: 'Utopian hallitus',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -79,7 +69,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'sv',
       name: 'Utopia regering',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -87,7 +76,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'de',
       name: 'Utopia Regierung',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -95,7 +83,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'sq',
       name: 'Qeveria e Utopisë',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -103,7 +90,6 @@ export const utopiaGovernmentIssuer = {
       locale: 'pt',
       name: 'Governo da Utopia',
       logo: {
-        url: `${AGENT_HOST}/assets/verifiers/government.png`,
         uri: `${AGENT_HOST}/assets/verifiers/government.png`,
       },
     },
@@ -112,9 +98,8 @@ export const utopiaGovernmentIssuer = {
 
 export const utopiaGovernmentData = {
   [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
-  [arfCompliantPidSdJwtData.credentialConfigurationId]: arfCompliantPidSdJwtData,
-  [arfPidMdocData.credentialConfigurationId]: arfPidMdocData,
+  [eudiPidSdJwtData.credentialConfigurationId]: eudiPidSdJwtData,
+  [eudiPidMdocData.credentialConfigurationId]: eudiPidMdocData,
   [photoIdMdocData.credentialConfigurationId]: photoIdMdocData,
-  [openIdSdJwtData.credentialConfigurationId]: openIdSdJwtData,
-  [ageSdJwtData.credentialConfigurationId]: ageSdJwtData,
+  [eudiAgeMdocData.credentialConfigurationId]: eudiAgeMdocData,
 }

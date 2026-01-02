@@ -1,14 +1,14 @@
 import { AGENT_HOST } from '../constants'
 import { healthIdSdJwt } from '../issuers/krankenkasse'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidSdJwtCredential } from './util'
+import { legacyDePidSdJwtCredential } from './util'
 
 export const redcarePharmacyVerifier = {
   verifierId: '01936901-2390-722e-b9f1-bf42db4db7ca',
   useCase: {
     name: 'Get an ePrescription',
     icon: 'health',
-    tags: ['Federation support', 'QEAA', 'DCQL'],
+    tags: [],
   },
   clientMetadata: {
     logo_uri: `${AGENT_HOST}/assets/verifiers/redcare.png`,
@@ -17,7 +17,7 @@ export const redcarePharmacyVerifier = {
 
   requests: [
     {
-      name: 'Receive your prescription (sd-jwt vc)',
+      name: 'Verify Health ID (sd-jwt vc)',
       purpose: 'To receive your prescription and finalize the transaction, we require the following attributes',
       credentials: [
         {
@@ -28,10 +28,10 @@ export const redcarePharmacyVerifier = {
       ],
     },
     {
-      name: 'PID and Health-ID (sd-jwt vc)',
+      name: 'Verify DE PID (not ARF compliant) and Health-ID (sd-jwt vc)',
       purpose: 'To give your medicine we need to verify your identity and prescription.',
       credentials: [
-        pidSdJwtCredential({
+        legacyDePidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate'],
         }),
         {

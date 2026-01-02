@@ -3,14 +3,14 @@ import { certificateOfResidenceSdJwt } from '../issuers/koln'
 import { healthIdSdJwt } from '../issuers/krankenkasse'
 import { taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidSdJwtCredential } from './util'
+import { legacyDePidSdJwtCredential } from './util'
 
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
   useCase: {
     name: 'Open a bank account',
     icon: 'bank',
-    tags: ['Federation support', 'Smart AI warnings', 'multi-credentials', 'mixed-credentials'],
+    tags: [],
   },
 
   clientMetadata: {
@@ -19,7 +19,7 @@ export const openHorizonBankVerifier = {
   },
   requests: [
     {
-      name: 'PID and MDL (sd-jwt vc)',
+      name: 'DE PID (not ARF compliant), MDL (sd-jwt vc), Tax ID, and Certificate of Residence',
       purpose:
         'To open an Open Horizon Bank account, we need to verify your name, date of birth, country of residence and nationality',
       credentials: [
@@ -30,7 +30,7 @@ export const openHorizonBankVerifier = {
           vcts: [healthIdSdJwt.vct],
           fields: ['health_insurance_id', 'affiliation_country', 'matching_institution_id'],
         },
-        pidSdJwtCredential({
+        legacyDePidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate', 'address.country', 'nationalities'],
         }),
       ],

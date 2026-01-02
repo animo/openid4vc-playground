@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Playground | Animo',
   description:
-    'This playground implements OpenID4VC 1.0, OpenID4VP 1.0, SD-JWT VC, mDOC, and most of the High Assurance Interop Profile (full supporting pending).',
+    'This playground implements OpenID4VC 1.0, OpenID4VP 1.0, SD-JWT VC, mDOC, and most of the High Assurance Interop Profile (full support pending).',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

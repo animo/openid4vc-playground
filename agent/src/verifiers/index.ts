@@ -1,13 +1,9 @@
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { bundesregierungVerifier } from './bundesregierung'
-import { cheapCarsVerifier } from './cheapCars'
-import { deineBankVerifier } from './deineBank'
 import { europeanUnionVerifier } from './europeanUnion'
 import { farmatecVerifier } from './farmatec'
 import { kvkVerifier } from './kvk'
 import { openHorizonBankVerifier } from './openHorizonBank'
 import { pgeuVerifier } from './pgeu'
-import { potentialVerifier } from './potentialUc4InteropApril'
 import { redcarePharmacyVerifier } from './redcarePharmacy'
 import type { TrustChain } from './trustChains'
 import { trustPilotVerifier } from './trustPilot'
@@ -15,19 +11,15 @@ import { turboKeysVerifier } from './turboKeys'
 import { utopiaGovernmentVerifier } from './utopiaGovernment'
 
 export const verifiers = [
+  utopiaGovernmentVerifier,
   turboKeysVerifier,
   kvkVerifier,
   trustPilotVerifier,
   openHorizonBankVerifier,
-  deineBankVerifier,
-  bundesregierungVerifier,
-  cheapCarsVerifier,
   redcarePharmacyVerifier,
   farmatecVerifier,
   pgeuVerifier,
   europeanUnionVerifier,
-  potentialVerifier,
-  utopiaGovernmentVerifier,
 ]
 export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 
@@ -49,12 +41,6 @@ export const verifierTrustChains = [
     leaf: trustPilotVerifier.verifierId,
     trustAnchor: kvkVerifier.verifierId,
   },
-  // --- Open horizon bank ---
-  {
-    // Open horizon bank is trusted by bundesregierung
-    leaf: openHorizonBankVerifier.verifierId,
-    trustAnchor: bundesregierungVerifier.verifierId,
-  },
   // --- Redcare pharmacy ---
   {
     // Redcare pharmacy is trusted by kvk
@@ -75,12 +61,6 @@ export const verifierTrustChains = [
   {
     // Pgeu is trusted by european union
     leaf: pgeuVerifier.verifierId,
-    trustAnchor: europeanUnionVerifier.verifierId,
-  },
-  // --- Bundesregierung ---
-  {
-    // Bundesregierung is trusted by european union
-    leaf: bundesregierungVerifier.verifierId,
     trustAnchor: europeanUnionVerifier.verifierId,
   },
 ] as const satisfies Array<TrustChain>

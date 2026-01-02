@@ -1,8 +1,7 @@
 import { AGENT_HOST } from '../constants'
-import { ageSdJwt } from '../issuers/credentials/ageSdJwt'
-import { arfCompliantPidSdJwt } from '../issuers/credentials/arf18PidSdJwt'
+import { eudiAgeMdoc } from '../issuers/credentials/eudiAgeMdoc'
+import { eudiPidSdJwt } from '../issuers/credentials/eudiPidSdJwt'
 import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc'
-import { openIdSdJwt } from '../issuers/credentials/openIDSdJwt'
 import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc'
 
 import type { PlaygroundVerifierOptions } from '../verifier'
@@ -10,7 +9,7 @@ import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './
 
 const pidSdJwtVcNames = {
   format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct],
+  vcts: [eudiPidSdJwt.vct],
   fields: [
     // Mandatory
     'family_name',
@@ -18,46 +17,18 @@ const pidSdJwtVcNames = {
   ],
 } satisfies SdJwtCredential
 
-const pidSdJwtVcAge = {
-  format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct],
-  fields: [{ path: 'age_equal_or_over.18', values: [true] }],
-} satisfies SdJwtCredential
-
 const pidSdJwtVcPostalCodeOrResidentCity = {
   format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct],
+  vcts: [eudiPidSdJwt.vct],
   fields: ['address.postal_code', 'address.locality', 'address.region'],
   field_options: [['address.postal_code'], ['address.locality', 'address.region']],
 } satisfies SdJwtCredential
 
 const pidSdJwtVcPostalCode = {
   format: 'dc+sd-jwt',
-  vcts: [arfCompliantPidSdJwt.vct],
+  vcts: [eudiPidSdJwt.vct],
   fields: [{ path: 'address.postal_code', values: ['90210'] }],
 } satisfies SdJwtCredential
-
-const ageSdJwtVcAge = {
-  format: 'dc+sd-jwt',
-  vcts: [ageSdJwt.vct],
-  fields: [{ path: 'age_over_18', values: [true] }],
-} satisfies SdJwtCredential
-
-const openidSdJwtVcAge = {
-  format: 'dc+sd-jwt',
-  vcts: [openIdSdJwt.vct],
-  fields: [{ path: 'age_over_18', values: [true] }],
-} satisfies SdJwtCredential
-
-const openidSdJwtVcNames = {
-  format: 'dc+sd-jwt',
-  vcts: [openIdSdJwt.vct],
-  fields: ['given_name', 'family_name'],
-} satisfies SdJwtCredential
-
-const pidMdocAge = pidMdocCredential({
-  fields: [{ path: 'age_over_18', values: [true] }],
-})
 
 const pidMdocNames = pidMdocCredential({
   fields: ['given_name', 'family_name'],
@@ -83,6 +54,13 @@ const mdlAge = {
   format: 'mso_mdoc',
   doctype: mobileDriversLicenseMdoc.doctype,
   namespace: 'org.iso.18013.5.1',
+  fields: [{ path: 'age_over_18', values: [true] }],
+} satisfies MdocCredential
+
+const mdocAge = {
+  format: 'mso_mdoc',
+  doctype: eudiAgeMdoc.doctype,
+  namespace: eudiAgeMdoc.doctype,
   fields: [{ path: 'age_over_18', values: [true] }],
 } satisfies MdocCredential
 
@@ -112,7 +90,7 @@ export const utopiaGovernmentVerifier = {
   useCase: {
     name: 'Utopia Government',
     icon: 'interop',
-    tags: ['Digital Credentials API', 'mDOC', 'SD-JWT VC'],
+    tags: [],
   },
 
   clientMetadata: {
@@ -129,77 +107,59 @@ export const utopiaGovernmentVerifier = {
 
   requests: [
     {
-      name: '#1 - mDL (mdoc) - Names',
-      purpose: '#1 - mDL (mdoc) - Names',
+      name: 'mDL (mdoc) - Names',
+      purpose: 'mDL (mdoc) - Names',
       credentials: [mdlNames],
     },
     {
-      name: '#2 - PID (sd-jwt-vc) - Names',
-      purpose: '#2 - PID (sd-jwt-vc) - Names',
+      name: 'EUDI PID (sd-jwt-vc) - Names',
+      purpose: 'EUDI PID (sd-jwt-vc) - Names',
       credentials: [pidSdJwtVcNames],
     },
     {
-      name: '#3 - PID (mdoc) - Names',
-      purpose: '#3 - PID (mdoc) - Names',
+      name: 'EUDI PID (mdoc) - Names',
+      purpose: 'EUDI PID (mdoc) - Names',
       credentials: [pidMdocNames],
     },
     {
-      name: '#4 - OpenID (sd-jwt-vc) - Names',
-      purpose: '#4 - OpenID (sd-jwt-vc) - Names',
-      credentials: [pidMdocNames],
-    },
-    {
-      name: '#5 - Names - PID or mDL (mdoc)',
-      purpose: '#5 - Names - PID or mDL (mdoc)',
+      name: 'Names - PID or mDL (mdoc)',
+      purpose: 'Names - PID or mDL (mdoc)',
       credentials: [pidMdocNames, mdlNames],
       credential_sets: [[0, 1]],
     },
     {
-      name: '#6 - Names - PID or OpenID (sd-jwt-vc)',
-      purpose: '#6 - Names - PID or OpenID (sd-jwt-vc)',
-      credentials: [pidSdJwtVcNames, openidSdJwtVcNames],
-      credential_sets: [[0, 1]],
-    },
-    {
-      name: '#7 - PID - postal code or resident city (mdoc)',
-      purpose: '#7 - PID - postal code or resident city (mdoc)',
+      name: 'PID - postal code or resident city (mdoc)',
+      purpose: 'PID - postal code or resident city (mdoc)',
       credentials: [pidMdocPostalCodeOrResidentCity],
     },
     {
-      name: '#8 - PID - postal code or resident city (sd-jwt-vc)',
-      purpose: '#8 - PID - postal code or resident city (sd-jwt-vc)',
+      name: 'PID - postal code or resident city (sd-jwt-vc)',
+      purpose: 'PID - postal code or resident city (sd-jwt-vc)',
       credentials: [pidSdJwtVcPostalCodeOrResidentCity],
     },
     {
-      name: '#9 - Age over 18 - PID or mDL or PhotoID (mdoc)',
-      purpose: '#9 - Age over 18 - PID or mDL or PhotoID (mdoc)',
+      name: 'Age over 18 - Age or mDL or PhotoID (mdoc)',
+      purpose: 'Age over 18 - PID or mDL or PhotoID (mdoc)',
 
-      credentials: [pidMdocAge, mdlAge, photoIdAge],
+      credentials: [mdocAge, mdlAge, photoIdAge],
       credential_sets: [[0, 1, 2]],
     },
     {
-      name: '#10 - Postal code 90210 - PID or mDL or PhotoID (mdoc)',
-      purpose: '#10 - Postal code 90210 - PID or mDL or PhotoID (mdoc)',
+      name: 'Postal code 90210 - PID or mDL or PhotoID (mdoc)',
+      purpose: 'Postal code 90210 - PID or mDL or PhotoID (mdoc)',
 
       credentials: [pidMdocPostalCode, mdlPostalCode, photoIdPostalCode],
       credential_sets: [[0, 1, 2]],
     },
     {
-      name: '#11 - Age over 18 - PID or Age or OpenID (sd-jwt-vc)',
-      purpose: '#11 - Age over 18 - PID or Age or OpenID (sd-jwt-vc)',
-
-      credentials: [pidSdJwtVcAge, ageSdJwtVcAge, openidSdJwtVcAge],
-      credential_sets: [[0, 1, 2]],
-    },
-    {
-      name: '#12 - Postal code 90210 - PID (sd-jwt-vc)',
-      purpose: '#12 - Postal code 90210 - PID (sd-jwt-vc)',
+      name: 'Postal code 90210 - PID (sd-jwt-vc)',
+      purpose: 'Postal code 90210 - PID (sd-jwt-vc)',
 
       credentials: [pidSdJwtVcPostalCode],
     },
     {
-      name: '#13 - Names - mDL (mdoc) or PID (sd-jwt-vc)',
-      purpose: '#13 - Names - mDL (mdoc) or PID (sd-jwt-vc)',
+      name: 'Names - mDL (mdoc) or PID (sd-jwt-vc)',
+      purpose: 'Names - mDL (mdoc) or PID (sd-jwt-vc)',
 
       credentials: [mdlNames, pidSdJwtVcNames],
       credential_sets: [[0, 1]],

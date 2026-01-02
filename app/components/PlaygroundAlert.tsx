@@ -9,7 +9,7 @@ export function PlaygroundAlert() {
       <AlertTitle>Info</AlertTitle>
       <AlertDescription>
         This playground implements <code>OpenID4VC 1.0</code>, <code>OpenID4VP 1.0</code>, <code>SD-JWT VC</code>,{' '}
-        <code>mDOC</code>, and most of the <code>High Assurance Interop Profile</code> (full supporting pending).
+        <code>mDOC</code>, and most of the <code>High Assurance Interop Profile</code> (full support pending).
         <br />
         <br />
         You can use it with the{' '}
