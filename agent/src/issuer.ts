@@ -26,12 +26,7 @@ import { getX509Certificates, getX509DcsCertificate } from './keyMethods'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
 import { getVerifier } from './verifier'
-import {
-  dcqlQueryFromRequest,
-  legacyDePidSdJwtCredential,
-  pidMdocCredential,
-  pidSdJwtCredential,
-} from './verifiers/util'
+import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util'
 import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment'
 
 export type CredentialConfigurationDisplay = NonNullable<
@@ -237,7 +232,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
           name: 'Identity card',
           purpose: `To issue your ${credentialName} we need to verify your identity card`,
           credentials: [
-            legacyDePidSdJwtCredential({
+            pidSdJwtCredential({
               fields: [
                 'given_name',
                 'family_name',

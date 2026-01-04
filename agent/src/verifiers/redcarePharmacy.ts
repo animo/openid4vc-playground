@@ -1,7 +1,7 @@
 import { AGENT_HOST } from '../constants'
 import { healthIdSdJwt } from '../issuers/krankenkasse'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { legacyDePidSdJwtCredential } from './util'
+import { pidSdJwtCredential } from './util'
 
 export const redcarePharmacyVerifier = {
   verifierId: '01936901-2390-722e-b9f1-bf42db4db7ca',
@@ -31,7 +31,7 @@ export const redcarePharmacyVerifier = {
       name: 'Verify DE PID (not ARF compliant) and Health-ID (sd-jwt vc)',
       purpose: 'To give your medicine we need to verify your identity and prescription.',
       credentials: [
-        legacyDePidSdJwtCredential({
+        pidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate'],
         }),
         {
