@@ -51,8 +51,8 @@ importers:
         specifier: ^9.6.0
         version: 9.6.0
       zod:
-        specifier: ^4.2.1
-        version: 4.2.1
+        specifier: ^4.3.5
+        version: 4.3.5
     devDependencies:
       '@types/cors':
         specifier: ^2.8.19
@@ -2455,8 +2455,8 @@ packages:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
     engines: {node: '>=18'}
 
-  zod@4.2.1:
-    resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
+  zod@4.3.5:
+    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
 
 snapshots:
 
@@ -2598,7 +2598,7 @@ snapshots:
       varint: 6.0.0
       web-did-resolver: 2.0.32
       webcrypto-core: 1.8.1
-      zod: 4.2.1
+      zod: 4.3.5
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -2643,7 +2643,7 @@ snapshots:
       class-transformer: 0.5.1
       express: 5.2.1
       rxjs: 7.8.2
-      zod: 4.2.1
+      zod: 4.3.5
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -2962,24 +2962,24 @@ snapshots:
   '@openid4vc/oauth2@0.4.3':
     dependencies:
       '@openid4vc/utils': 0.4.3
-      zod: 4.2.1
+      zod: 4.3.5
 
   '@openid4vc/openid4vci@0.4.3':
     dependencies:
       '@openid4vc/oauth2': 0.4.3
       '@openid4vc/utils': 0.4.3
-      zod: 4.2.1
+      zod: 4.3.5
 
   '@openid4vc/openid4vp@0.4.3':
     dependencies:
       '@openid4vc/oauth2': 0.4.3
       '@openid4vc/utils': 0.4.3
-      zod: 4.2.1
+      zod: 4.3.5
 
   '@openid4vc/utils@0.4.3':
     dependencies:
       buffer: 6.0.3
-      zod: 4.2.1
+      zod: 4.3.5
 
   '@openwallet-foundation/askar-nodejs@0.4.3':
     dependencies:
@@ -4793,4 +4793,4 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  zod@4.2.1: {}
+  zod@4.3.5: {}
