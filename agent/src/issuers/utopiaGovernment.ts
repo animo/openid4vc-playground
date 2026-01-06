@@ -6,6 +6,27 @@ import { eudiPidSdJwt, eudiPidSdJwtData } from './credentials/eudiPidSdJwt'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
 import { photoIdMdoc, photoIdMdocData } from './credentials/photoIdMdoc'
 
+const mobileDriversLicenseMdocDataUtopia = {
+  ...mobileDriversLicenseMdocData,
+  credentialConfigurationId: `${mobileDriversLicenseMdocData.credentialConfigurationId}-utopia`,
+}
+const eudiPidMdocDataUtopia = {
+  ...eudiPidMdocData,
+  credentialConfigurationId: `${eudiPidMdocData.credentialConfigurationId}-utopia`,
+}
+const eudiPidSdJwtDataUtopia = {
+  ...eudiPidSdJwtData,
+  credentialConfigurationId: `${eudiPidSdJwtData.credentialConfigurationId}-utopia`,
+}
+const eudiAgeMdocDataUtopia = {
+  ...eudiAgeMdocData,
+  credentialConfigurationId: `${eudiAgeMdocData.credentialConfigurationId}-utopia`,
+}
+const photoIdMdocDataUtopia = {
+  ...photoIdMdocData,
+  credentialConfigurationId: `${photoIdMdocData.credentialConfigurationId}-utopia`,
+}
+
 export const utopiaGovernmentIssuer = {
   tags: ['mDL', 'EUDI PID', 'Photo ID', 'EUDI Age'],
   issuerId: 'b39e71cf-9cf1-4723-a9cd-66f42a510b36',
@@ -13,29 +34,29 @@ export const utopiaGovernmentIssuer = {
     {
       mso_mdoc: {
         configuration: mobileDriversLicenseMdoc,
-        data: mobileDriversLicenseMdocData,
+        data: mobileDriversLicenseMdocDataUtopia,
       },
     },
     {
       'dc+sd-jwt': {
         configuration: eudiPidSdJwt,
-        data: eudiPidSdJwtData,
+        data: eudiPidSdJwtDataUtopia,
       },
       mso_mdoc: {
         configuration: eudiPidMdoc,
-        data: eudiPidMdocData,
+        data: eudiPidMdocDataUtopia,
       },
     },
     {
       mso_mdoc: {
         configuration: photoIdMdoc,
-        data: photoIdMdocData,
+        data: photoIdMdocDataUtopia,
       },
     },
     {
       mso_mdoc: {
         configuration: eudiAgeMdoc,
-        data: eudiAgeMdocData,
+        data: eudiAgeMdocDataUtopia,
       },
     },
   ] as const,
@@ -97,9 +118,9 @@ export const utopiaGovernmentIssuer = {
 } satisfies PlaygroundIssuerOptions
 
 export const utopiaGovernmentData = {
-  [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
-  [eudiPidSdJwtData.credentialConfigurationId]: eudiPidSdJwtData,
-  [eudiPidMdocData.credentialConfigurationId]: eudiPidMdocData,
-  [photoIdMdocData.credentialConfigurationId]: photoIdMdocData,
-  [eudiAgeMdocData.credentialConfigurationId]: eudiAgeMdocData,
+  [mobileDriversLicenseMdocDataUtopia.credentialConfigurationId]: mobileDriversLicenseMdocDataUtopia,
+  [eudiPidSdJwtDataUtopia.credentialConfigurationId]: eudiPidSdJwtDataUtopia,
+  [eudiPidMdocDataUtopia.credentialConfigurationId]: eudiPidMdocDataUtopia,
+  [photoIdMdocDataUtopia.credentialConfigurationId]: photoIdMdocDataUtopia,
+  [eudiAgeMdocDataUtopia.credentialConfigurationId]: eudiAgeMdocDataUtopia,
 }

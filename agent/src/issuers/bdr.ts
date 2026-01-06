@@ -5,6 +5,23 @@ import { eudiPidMdoc, eudiPidMdocData } from './credentials/eudiPidMdoc'
 import { eudiPidSdJwt, eudiPidSdJwtData } from './credentials/eudiPidSdJwt'
 import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
 
+const mobileDriversLicenseMdocDataBdr = {
+  ...mobileDriversLicenseMdocData,
+  credentialConfigurationId: `${mobileDriversLicenseMdocData.credentialConfigurationId}-bdr`,
+}
+const eudiPidMdocDataBdr = {
+  ...eudiPidMdocData,
+  credentialConfigurationId: `${eudiPidMdocData.credentialConfigurationId}-bdr`,
+}
+const eudiPidSdJwtDataBdr = {
+  ...eudiPidSdJwtData,
+  credentialConfigurationId: `${eudiPidSdJwtData.credentialConfigurationId}-bdr`,
+}
+const eudiAgeMdocDataBdr = {
+  ...eudiAgeMdocData,
+  credentialConfigurationId: `${eudiAgeMdocData.credentialConfigurationId}-bdr`,
+}
+
 export const bdrIssuer = {
   tags: ['mDL', 'EUDI PID'],
   issuerId: '188e2459-6da8-4431-9062-2fcdac274f41',
@@ -12,23 +29,23 @@ export const bdrIssuer = {
     {
       mso_mdoc: {
         configuration: mobileDriversLicenseMdoc,
-        data: mobileDriversLicenseMdocData,
+        data: mobileDriversLicenseMdocDataBdr,
       },
     },
     {
       'dc+sd-jwt': {
         configuration: eudiPidSdJwt,
-        data: eudiPidSdJwtData,
+        data: eudiPidSdJwtDataBdr,
       },
       mso_mdoc: {
         configuration: eudiPidMdoc,
-        data: eudiPidMdocData,
+        data: eudiPidMdocDataBdr,
       },
     },
     {
       mso_mdoc: {
         configuration: eudiAgeMdoc,
-        data: eudiAgeMdocData,
+        data: eudiAgeMdocDataBdr,
       },
     },
   ] as const,
@@ -47,8 +64,8 @@ export const bdrIssuer = {
 } satisfies PlaygroundIssuerOptions
 
 export const bdrCredentialsData = {
-  [mobileDriversLicenseMdocData.credentialConfigurationId]: mobileDriversLicenseMdocData,
-  [eudiPidSdJwtData.credentialConfigurationId]: eudiPidSdJwtData,
-  [eudiPidMdocData.credentialConfigurationId]: eudiPidMdocData,
-  [eudiAgeMdocData.credentialConfigurationId]: eudiAgeMdocData,
+  [mobileDriversLicenseMdocDataBdr.credentialConfigurationId]: mobileDriversLicenseMdocDataBdr,
+  [eudiPidSdJwtDataBdr.credentialConfigurationId]: eudiPidSdJwtDataBdr,
+  [eudiPidMdocDataBdr.credentialConfigurationId]: eudiPidMdocDataBdr,
+  [eudiAgeMdocDataBdr.credentialConfigurationId]: eudiAgeMdocDataBdr,
 }
