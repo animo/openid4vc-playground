@@ -3,7 +3,7 @@ import { certificateOfResidenceSdJwt } from '../issuers/koln'
 import { healthIdSdJwt } from '../issuers/krankenkasse'
 import { taxIdSdJwt } from '../issuers/steuern'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { legacyDePidSdJwtCredential } from './util'
+import { pidSdJwtCredential } from './util'
 
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
@@ -30,7 +30,7 @@ export const openHorizonBankVerifier = {
           vcts: [healthIdSdJwt.vct],
           fields: ['health_insurance_id', 'affiliation_country', 'matching_institution_id'],
         },
-        legacyDePidSdJwtCredential({
+        pidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate', 'address.country', 'nationalities'],
         }),
       ],

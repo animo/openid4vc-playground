@@ -1,7 +1,7 @@
 import { AGENT_HOST } from '../constants'
 import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc'
 import type { PlaygroundVerifierOptions } from '../verifier'
-import { legacyDePidSdJwtCredential, pidMdocCredential } from './util'
+import { pidMdocCredential, pidSdJwtCredential } from './util'
 
 export const turboKeysVerifier = {
   verifierId: 'c01ea0f3-34df-41d5-89d1-50ef3d181855',
@@ -35,7 +35,7 @@ export const turboKeysVerifier = {
             'driving_privileges',
           ],
         },
-        legacyDePidSdJwtCredential({
+        pidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate'],
         }),
         pidMdocCredential({
