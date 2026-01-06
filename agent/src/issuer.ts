@@ -14,20 +14,20 @@ import {
   OpenId4VcVerifierApi,
 } from '@credo-ts/openid4vc'
 import { randomUUID } from 'crypto'
-import { agent } from './agent'
-import { AGENT_HOST } from './constants'
-import { issuers, issuersCredentialsData } from './issuers'
-import { bdrIssuer } from './issuers/bdr'
-import { kolnIssuer } from './issuers/koln'
-import { krankenkasseIssuer } from './issuers/krankenkasse'
-import { steuernIssuer } from './issuers/steuern'
-import { telOrgIssuer } from './issuers/telOrg'
-import { getX509Certificates, getX509DcsCertificate } from './keyMethods'
-import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date'
-import { getVerifier } from './verifier'
-import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util'
-import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment'
+import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
+import { bdrIssuer } from './issuers/bdr.js'
+import { issuers, issuersCredentialsData } from './issuers/index.js'
+import { kolnIssuer } from './issuers/koln.js'
+import { krankenkasseIssuer } from './issuers/krankenkasse.js'
+import { steuernIssuer } from './issuers/steuern.js'
+import { telOrgIssuer } from './issuers/telOrg.js'
+import { getX509Certificates, getX509DcsCertificate } from './keyMethods/index.js'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
+import { getVerifier } from './verifier.js'
+import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util.js'
+import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment.js'
 
 export type CredentialConfigurationDisplay = NonNullable<
   NonNullable<OpenId4VciCredentialConfigurationSupportedWithFormats['credential_metadata']>['display']
@@ -498,6 +498,11 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
             holderKey: holderBinding.jwk.toJson(),
           })),
         } satisfies SerializableMdocSignOptions
+
+        console.log(
+          'decoded',
+          cborDecode(Buffer.from(signOptions.credentials[0].namespaces, 'base64url'), { mapsAsObjects: true })
+        )
       }
     }
   }

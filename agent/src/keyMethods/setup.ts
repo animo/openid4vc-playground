@@ -1,12 +1,12 @@
 import { Kms, X509Certificate, X509Service } from '@credo-ts/core'
-import { agent } from '../agent'
-import { X509_DCS_CERTIFICATE, X509_ROOT_CERTIFICATE } from '../constants'
-import { createKeys } from './createKeys'
+import { agent } from '../agent.js'
+import { X509_DCS_CERTIFICATE, X509_ROOT_CERTIFICATE } from '../constants.js'
+import { createKeys } from './createKeys.js'
 import {
   createCertificateRevocationList,
   createDocumentSignerCertificate,
   createRootCertificate,
-} from './createSelfSignedCertificate'
+} from './createSelfSignedCertificate.js'
 
 let x509RootCertificate: X509Certificate | undefined
 let x509DcsCertificate: X509Certificate | undefined

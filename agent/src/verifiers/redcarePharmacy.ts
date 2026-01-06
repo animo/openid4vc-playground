@@ -1,7 +1,7 @@
-import { AGENT_HOST } from '../constants'
-import { healthIdSdJwt } from '../issuers/krankenkasse'
-import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidSdJwtCredential } from './util'
+import { AGENT_HOST } from '../constants.js'
+import { healthIdSdJwt } from '../issuers/krankenkasse.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
+import { pidSdJwtCredential } from './util.js'
 
 export const redcarePharmacyVerifier = {
   verifierId: '01936901-2390-722e-b9f1-bf42db4db7ca',

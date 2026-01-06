@@ -10,9 +10,9 @@ import {
   X509Service,
 } from '@credo-ts/core'
 import * as x509 from '@peculiar/x509'
-import { agent } from '../agent'
-import { AGENT_DNS, AGENT_HOST } from '../constants'
-import { tenDaysInMilliseconds } from '../utils/date'
+import { agent } from '../agent.js'
+import { AGENT_DNS, AGENT_HOST } from '../constants.js'
+import { tenDaysInMilliseconds } from '../utils/date.js'
 
 /**
  * Creates a Certificate Revocation List (CRL) for the agent.

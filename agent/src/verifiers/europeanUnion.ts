@@ -1,5 +1,5 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export const europeanUnionVerifier = {
   verifierId: '01936907-56a3-7007-a61f-44bff8b5d175',

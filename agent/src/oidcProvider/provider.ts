@@ -1,5 +1,5 @@
-import { AGENT_HOST, ISSUER_CLIENT_SECRET } from '../constants'
-import { issuers as _issuers } from '../issuers'
+import { AGENT_HOST, ISSUER_CLIENT_SECRET } from '../constants.js'
+import { issuers as _issuers } from '../issuers/index.js'
 
 const issuers = _issuers.map((issuer) => ({
   ...issuer,

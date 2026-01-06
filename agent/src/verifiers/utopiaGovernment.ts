@@ -1,11 +1,11 @@
-import { AGENT_HOST } from '../constants'
-import { eudiAgeMdoc } from '../issuers/credentials/eudiAgeMdoc'
-import { eudiPidSdJwt } from '../issuers/credentials/eudiPidSdJwt'
-import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc'
-import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc'
+import { AGENT_HOST } from '../constants.js'
+import { eudiAgeMdoc } from '../issuers/credentials/eudiAgeMdoc.js'
+import { eudiPidSdJwt } from '../issuers/credentials/eudiPidSdJwt.js'
+import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc.js'
+import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc.js'
 
-import type { PlaygroundVerifierOptions } from '../verifier'
-import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
+import { type MdocCredential, pidMdocCredential, type SdJwtCredential } from './util.js'
 
 const pidSdJwtVcNames = {
   format: 'dc+sd-jwt',

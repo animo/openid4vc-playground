@@ -1,13 +1,13 @@
 import { ClaimFormat, DateOnly, Kms, type NonEmptyArray } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import { AGENT_HOST } from '../../constants'
-import type { CredentialConfigurationClaims, CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer'
-import type { StaticMdocSignInput } from '../../types'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date'
-import { loadJPEGBufferSync } from '../../utils/image'
+import { AGENT_HOST } from '../../constants.js'
+import type { CredentialConfigurationClaims, CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer.js'
+import type { StaticMdocSignInput } from '../../types.js'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date.js'
+import { loadJPEGBufferSync } from '../../utils/image.js'
 
-const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../../assets/erika.jpeg`)
-const erikaSignature = loadJPEGBufferSync(`${__dirname}/../../../assets/signature.jpeg`)
+const erikaPortrait = loadJPEGBufferSync(`${import.meta.dirname}/../../../assets/erika.jpeg`)
+const erikaSignature = loadJPEGBufferSync(`${import.meta.dirname}/../../../assets/signature.jpeg`)
 
 const mobileDriversLicenseDisplays = [
   {

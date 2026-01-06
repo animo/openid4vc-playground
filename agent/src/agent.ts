@@ -4,14 +4,14 @@ import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { Router } from 'express'
-import { app } from './app'
-import { AGENT_HOST, AGENT_WALLET_KEY } from './constants'
-import * as certs from './iaca-x509-certs'
+import { app } from './app.js'
+import { AGENT_HOST, AGENT_WALLET_KEY } from './constants.js'
+import * as certs from './iaca-x509-certs.js'
 import {
   credentialRequestToCredentialMapper,
   deferredCredentialRequestToCredentialMapper,
   getVerificationSessionForIssuanceSession,
-} from './issuer'
+} from './issuer.js'
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)

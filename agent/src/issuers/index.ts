@@ -1,11 +1,11 @@
-import type { PlaygroundIssuerOptions } from '../issuer'
-import { bdrCredentialsData, bdrIssuer } from './bdr'
-import { kolnCredentialsData, kolnIssuer } from './koln'
-import { krankenkasseCredentialsData, krankenkasseIssuer } from './krankenkasse'
-import { mvrcCredentialsData, mvrcIssuer } from './mvrc'
-import { steuernCredentialsData, steuernIssuer } from './steuern'
-import { telOrgCredentialsData, telOrgIssuer } from './telOrg'
-import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment'
+import type { PlaygroundIssuerOptions } from '../issuer.js'
+import { bdrCredentialsData, bdrIssuer } from './bdr.js'
+import { kolnCredentialsData, kolnIssuer } from './koln.js'
+import { krankenkasseCredentialsData, krankenkasseIssuer } from './krankenkasse.js'
+import { mvrcCredentialsData, mvrcIssuer } from './mvrc.js'
+import { steuernCredentialsData, steuernIssuer } from './steuern.js'
+import { telOrgCredentialsData, telOrgIssuer } from './telOrg.js'
+import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment.js'
 
 export const issuers: PlaygroundIssuerOptions[] = [
   bdrIssuer,

@@ -1,9 +1,9 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundIssuerOptions } from '../issuer'
-import { eudiAgeMdoc, eudiAgeMdocData } from './credentials/eudiAgeMdoc'
-import { eudiPidMdoc, eudiPidMdocData } from './credentials/eudiPidMdoc'
-import { eudiPidSdJwt, eudiPidSdJwtData } from './credentials/eudiPidSdJwt'
-import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundIssuerOptions } from '../issuer.js'
+import { eudiAgeMdoc, eudiAgeMdocData } from './credentials/eudiAgeMdoc.js'
+import { eudiPidMdoc, eudiPidMdocData } from './credentials/eudiPidMdoc.js'
+import { eudiPidSdJwt, eudiPidSdJwtData } from './credentials/eudiPidSdJwt.js'
+import { mobileDriversLicenseMdoc, mobileDriversLicenseMdocData } from './credentials/mDLMdoc.js'
 
 const mobileDriversLicenseMdocDataBdr = {
   ...mobileDriversLicenseMdocData,

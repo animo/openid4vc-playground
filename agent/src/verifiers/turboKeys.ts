@@ -1,7 +1,7 @@
-import { AGENT_HOST } from '../constants'
-import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc'
-import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidMdocCredential, pidSdJwtCredential } from './util'
+import { AGENT_HOST } from '../constants.js'
+import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
+import { pidMdocCredential, pidSdJwtCredential } from './util.js'
 
 export const turboKeysVerifier = {
   verifierId: 'c01ea0f3-34df-41d5-89d1-50ef3d181855',

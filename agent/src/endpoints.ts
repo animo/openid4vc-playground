@@ -16,20 +16,20 @@ import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionSt
 import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
-import { agent } from './agent'
+import { agent } from './agent.js'
 import {
   funkeDeployedAccessCertificate,
   funkeDeployedAccessCertificateRoot,
   funkeDeployedRegistrationCertificate,
-} from './eudiTrust'
-import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer'
-import { issuers } from './issuers'
-import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods'
-import { oidcUrl } from './oidcProvider/provider'
-import { LimitedSizeCollection } from './utils/LimitedSizeCollection'
-import { getVerifier, type PlaygroundVerifierOptions } from './verifier'
-import { verifiers } from './verifiers'
-import { dcqlQueryFromRequest } from './verifiers/util'
+} from './eudiTrust.js'
+import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
+import { issuers } from './issuers/index.js'
+import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
+import { oidcUrl } from './oidcProvider/provider.js'
+import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
+import { getVerifier, type PlaygroundVerifierOptions } from './verifier.js'
+import { verifiers } from './verifiers/index.js'
+import { dcqlQueryFromRequest } from './verifiers/util.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -166,7 +166,7 @@ apiRouter.get('/issuers', async (_, response: Response) => {
   )
 })
 
-apiRouter.get('/verifier', async (_, response: Response) => {
+apiRouter.get('/verifier.js', async (_, response: Response) => {
   return response.json({
     presentationRequests: verifiers.flatMap((verifier) =>
       verifier.requests.map((c, index) => ({
@@ -326,7 +326,10 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       : undefined
     const authorizationRequestPayload = verificationSession.requestPayload
     const dcqlQuery = authorizationRequestPayload.dcql_query
-    const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
+    const transactionData = authorizationRequestPayload.verifier_info?.map((e) => ({
+      ...e,
+      data: typeof e.data === 'string' ? JsonEncoder.fromBase64(e.data) : e.data,
+    }))
 
     console.log(JSON.stringify(authorizationRequestObject, null, 2))
     return response.json({
@@ -362,7 +365,10 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
   }
   const dcqlQuery = authorizationRequestPayload.dcql_query
 
-  const transactionData = authorizationRequestPayload.transaction_data?.map((e) => JsonEncoder.fromBase64(e))
+  const transactionData = authorizationRequestPayload.verifier_info?.map((e) => ({
+    ...e,
+    data: typeof e.data === 'string' ? JsonEncoder.fromBase64(e.data) : e.data,
+  }))
 
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
     const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)

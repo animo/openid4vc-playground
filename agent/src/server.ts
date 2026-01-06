@@ -4,17 +4,19 @@ import type { Response } from 'express'
 
 import express from 'express'
 import path from 'path'
-import { agent } from './agent'
-import { app } from './app'
-import { AGENT_HOST, ISSUER_CLIENT_SECRET } from './constants'
-import { createDidWeb, getWebDidDocument } from './didWeb'
-import { apiRouter } from './endpoints'
-import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer'
-import { issuers } from './issuers'
-import { getCertificateRevocationList, setupX509Certificate } from './keyMethods'
-import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider'
-import { createOrUpdateVerifier } from './verifier'
-import { verifiers } from './verifiers'
+import { agent } from './agent.js'
+import { app } from './app.js'
+import { AGENT_HOST, ISSUER_CLIENT_SECRET } from './constants.js'
+import { createDidWeb, getWebDidDocument } from './didWeb.js'
+import { apiRouter } from './endpoints.js'
+import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer.js'
+import { issuers } from './issuers/index.js'
+import { getCertificateRevocationList, setupX509Certificate } from './keyMethods/index.js'
+import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider.js'
+import { createOrUpdateVerifier } from './verifier.js'
+import { verifiers } from './verifiers/index.js'
+
+const dirname = import.meta.dirname
 
 async function run() {
   await agent.initialize()
@@ -124,8 +126,8 @@ async function run() {
 
   // Hack for making images available
   if (AGENT_HOST.includes('ngrok') || AGENT_HOST.includes('.ts.net') || AGENT_HOST.includes('localhost')) {
-    console.log(path.join(__dirname, '../../app/public/assets'))
-    app.use('/assets', express.static(path.join(__dirname, '../../app/public/assets')))
+    console.log(path.join(dirname, '../../app/public/assets'))
+    app.use('/assets', express.static(path.join(dirname, '../../app/public/assets')))
   }
 
   app.use('/api', apiRouter)

@@ -1,9 +1,9 @@
-import { AGENT_HOST } from '../constants'
-import { certificateOfResidenceSdJwt } from '../issuers/koln'
-import { healthIdSdJwt } from '../issuers/krankenkasse'
-import { taxIdSdJwt } from '../issuers/steuern'
-import type { PlaygroundVerifierOptions } from '../verifier'
-import { pidSdJwtCredential } from './util'
+import { AGENT_HOST } from '../constants.js'
+import { certificateOfResidenceSdJwt } from '../issuers/koln.js'
+import { healthIdSdJwt } from '../issuers/krankenkasse.js'
+import { taxIdSdJwt } from '../issuers/steuern.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
+import { pidSdJwtCredential } from './util.js'
 
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
