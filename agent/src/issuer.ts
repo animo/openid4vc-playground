@@ -254,7 +254,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
                 'resident_street',
                 'resident_postal_code',
                 'resident_city',
-                'birth_place',
+                'place_of_birth',
                 'nationality',
               ],
             }),
@@ -375,7 +375,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               family_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
               resident_address: `${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
               birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
-              birth_place: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_place,
+              birth_place: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].place_of_birth,
               nationality: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].nationality,
               issuing_country:
                 presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
@@ -411,7 +411,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
               family_name_birth: presentation.prettyClaims.birth_family_name,
 
-              birth_place: (presentation.prettyClaims.place_of_birth as Record<string, string>).locality,
+              place_of_birth: presentation.prettyClaims.place_of_birth,
 
               resident_country: (presentation.prettyClaims.address as Record<string, string>).country,
               resident_city: (presentation.prettyClaims.address as Record<string, string>).locality,
