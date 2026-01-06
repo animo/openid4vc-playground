@@ -1,20 +1,20 @@
 import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 
-import { AGENT_HOST } from '../constants'
+import { AGENT_HOST } from '../constants.js'
 import type {
   CredentialConfigurationDisplay,
   MdocConfiguration,
   PlaygroundIssuerOptions,
   SdJwtConfiguration,
-} from '../issuer'
-import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types'
+} from '../issuer.js'
+import type { StaticMdocSignInput, StaticSdJwtSignInput } from '../types.js'
 import {
   dateToSeconds,
   oneYearInMilliseconds,
   serverStartupTimeInMilliseconds,
   tenDaysInMilliseconds,
-} from '../utils/date'
+} from '../utils/date.js'
 
 const certificateOfResidenceDisplay = {
   locale: 'en',

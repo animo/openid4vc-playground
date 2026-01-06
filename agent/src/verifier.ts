@@ -1,6 +1,6 @@
 import type { OpenId4VpCreateVerifierOptions } from '@credo-ts/openid4vc'
-import { agent } from './agent'
-import type { MdocCredential, SdJwtCredential } from './verifiers/util'
+import { agent } from './agent.js'
+import type { MdocCredential, SdJwtCredential } from './verifiers/util.js'
 
 export interface PlaygroundVerifierOptions {
   verifierId: string

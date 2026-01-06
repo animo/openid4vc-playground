@@ -1,19 +1,19 @@
 import { ClaimFormat, Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import { AGENT_HOST } from '../../constants'
-import type { SdJwtConfiguration } from '../../issuer'
-import type { StaticSdJwtSignInput } from '../../types'
+import { AGENT_HOST } from '../../constants.js'
+import type { SdJwtConfiguration } from '../../issuer.js'
+import type { StaticSdJwtSignInput } from '../../types.js'
 import {
   dateToSeconds,
   oneYearInMilliseconds,
   serverStartupTimeInMilliseconds,
   tenDaysInMilliseconds,
-} from '../../utils/date'
-import { loadJPEGBufferSync } from '../../utils/image'
+} from '../../utils/date.js'
+import { loadJPEGBufferSync } from '../../utils/image.js'
 
 const issuanceDate = new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds)
 const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds)
-const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../../assets/erika.jpeg`)
+const erikaPortrait = loadJPEGBufferSync(`${import.meta.dirname}/../../../assets/erika.jpeg`)
 
 const eudiPidSdJwtDisplay = {
   locale: 'en',

@@ -1,5 +1,5 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export const kvkVerifier = {
   verifierId: '0193687b-0c27-7b82-a686-ff857dc6bbb3',

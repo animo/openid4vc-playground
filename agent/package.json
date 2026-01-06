@@ -1,5 +1,6 @@
 {
   "name": "agent",
+  "type": "module",
   "dependencies": {
     "@animo-id/mdoc": "^0.5.2",
     "@credo-ts/askar": "0.6.2-alpha-20251211125344",
@@ -18,7 +19,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^24.10.1",
+    "@types/node": "^22.19.3",
     "@types/oidc-provider": "^9.5.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

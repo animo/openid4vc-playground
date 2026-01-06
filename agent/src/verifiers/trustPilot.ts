@@ -1,5 +1,5 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export const trustPilotVerifier = {
   verifierId: '0193687f-20d8-720a-9139-ed939ba510fa',

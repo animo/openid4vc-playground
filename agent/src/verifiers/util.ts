@@ -1,5 +1,5 @@
 import type { DcqlQuery } from '@credo-ts/core'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export interface SdJwtCredential {
   format: 'dc+sd-jwt'

@@ -1,11 +1,12 @@
 import { ClaimFormat, DateOnly, Kms } from '@credo-ts/core'
-import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import type { CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer'
-import type { StaticMdocSignInput } from '../../types'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../../utils/date'
-import { loadJPEGBufferSync } from '../../utils/image'
 
-const erikaPortrait = loadJPEGBufferSync(`${__dirname}/../../../assets/erika.jpeg`)
+import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
+import type { CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer.js'
+import type { StaticMdocSignInput } from '../../types.js'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../../utils/date.js'
+import { loadJPEGBufferSync } from '../../utils/image.js'
+
+const erikaPortrait = loadJPEGBufferSync(`${import.meta.dirname}/../../../assets/erika.jpeg`)
 
 const photoIdDisplay = {
   locale: 'en',

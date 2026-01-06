@@ -1,8 +1,8 @@
 import { ClaimFormat, Kms, type NonEmptyArray } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import type { CredentialConfigurationClaims, CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer'
-import type { StaticMdocSignInput } from '../../types'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date'
+import type { CredentialConfigurationClaims, CredentialConfigurationDisplay, MdocConfiguration } from '../../issuer.js'
+import type { StaticMdocSignInput } from '../../types.js'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../../utils/date.js'
 
 const issuanceDate = new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds)
 const expirationDate = new Date(serverStartupTimeInMilliseconds + oneYearInMilliseconds)

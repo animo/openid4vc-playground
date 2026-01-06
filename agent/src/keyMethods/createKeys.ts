@@ -1,7 +1,7 @@
 import { transformSeedToPrivateJwk } from '@credo-ts/askar'
 import { Kms, TypedArrayEncoder } from '@credo-ts/core'
-import { agent } from '../agent'
-import { DCS_P256_SEED, ROOT_P256_SEED } from '../constants'
+import { agent } from '../agent.js'
+import { DCS_P256_SEED, ROOT_P256_SEED } from '../constants.js'
 
 export async function createKeys() {
   const { privateJwk: authorityPrivateJwk } = transformSeedToPrivateJwk({

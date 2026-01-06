@@ -1,5 +1,5 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export const pgeuVerifier = {
   verifierId: '01936903-8879-733f-8eaf-6f2fa862099c',

@@ -1,5 +1,5 @@
-import { AGENT_HOST } from '../constants'
-import type { PlaygroundVerifierOptions } from '../verifier'
+import { AGENT_HOST } from '../constants.js'
+import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export const farmatecVerifier = {
   verifierId: '01936904-6f3c-7ccd-9e80-63e6d4945d93',

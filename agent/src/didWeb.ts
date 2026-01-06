@@ -1,6 +1,6 @@
 import { DidDocumentBuilder, getEd25519VerificationKey2020, type Kms } from '@credo-ts/core'
-import { agent } from './agent'
-import { AGENT_HOST } from './constants'
+import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
 
 const cleanHost = encodeURIComponent(AGENT_HOST.replace('https://', '').replace('http://', ''))
 
