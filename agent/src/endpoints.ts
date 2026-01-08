@@ -166,7 +166,7 @@ apiRouter.get('/issuers', async (_, response: Response) => {
   )
 })
 
-apiRouter.get('/verifier.js', async (_, response: Response) => {
+apiRouter.get('/verifier', async (_, response: Response) => {
   return response.json({
     presentationRequests: verifiers.flatMap((verifier) =>
       verifier.requests.map((c, index) => ({
