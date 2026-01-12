@@ -224,7 +224,7 @@ export const weroIssuer = {
   ],
   display: [
     {
-      name: 'Wero',
+      name: 'Wero (Demo)',
       logo: {
         url: `${AGENT_HOST}/assets/issuers/wero/issuer.svg`,
         uri: `${AGENT_HOST}/assets/issuers/wero/issuer.svg`,
