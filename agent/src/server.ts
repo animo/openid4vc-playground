@@ -125,7 +125,12 @@ async function run() {
   })
 
   // Hack for making images available
-  if (AGENT_HOST.includes('ngrok') || AGENT_HOST.includes('.ts.net') || AGENT_HOST.includes('localhost')) {
+  if (
+    AGENT_HOST.includes('ngrok') ||
+    AGENT_HOST.includes('.ts.net') ||
+    AGENT_HOST.includes('.serveousercontent.com') ||
+    AGENT_HOST.includes('localhost')
+  ) {
     console.log(path.join(dirname, '../../app/public/assets'))
     app.use('/assets', express.static(path.join(dirname, '../../app/public/assets')))
   }

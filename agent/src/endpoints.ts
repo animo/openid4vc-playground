@@ -1,3 +1,4 @@
+import { zFunkeQesTransaction, zPaymentPayload, zTs12Transaction } from '@animo-id/eudi-wallet-functionality'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -26,10 +27,11 @@ import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from '
 import { issuers } from './issuers/index.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
+import { addOneOfCredentials, findCredentials } from './utils/dcql.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier, type PlaygroundVerifierOptions } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
-import { dcqlQueryFromRequest } from './verifiers/util.js'
+import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -150,7 +152,6 @@ apiRouter.get('/issuers', async (_, response: Response) => {
 
         credentials: Object.values(issuer.credentialConfigurationsSupported).map((values) => {
           const first = Object.values(values)[0]
-
           return {
             display: first.configuration.display[0],
             formats: Object.fromEntries(
@@ -209,7 +210,21 @@ const zCreatePresentationRequestBody = z.object({
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
-  transactionAuthorizationType: z.enum(['none', 'qes']),
+  qesRequest: zFunkeQesTransaction
+    .omit({
+      credential_ids: true,
+      type: true,
+    })
+    .optional(),
+  paymentRequest: zTs12Transaction
+    .extend({
+      payload: zPaymentPayload,
+    })
+    .omit({
+      credential_ids: true,
+      type: true,
+    })
+    .optional(),
   redirectUriBase: z.url().optional(),
 })
 
@@ -222,7 +237,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   try {
     const {
       requestSignerType,
-      transactionAuthorizationType,
+      qesRequest,
+      paymentRequest,
       presentationDefinitionId,
       requestScheme,
       responseMode,
@@ -251,9 +267,46 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     }
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
+    const queryRequest = dcqlQueryFromRequest(definition, purpose)
+    let pidCredentialIds = findCredentials(queryRequest.credentials, {
+      vcts: [pidSdJwtCredential({ fields: [] }).vcts[0]],
+      doctypes: [pidMdocCredential({ fields: [] }).doctype],
+    }).map((query) => query.id)
 
-    const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
-    const credentialIds = queryLanguageDefinition.credentials.map((query) => query.id)
+    // create qes credentials if non is present
+    if (qesRequest && !pidCredentialIds.length) {
+      addOneOfCredentials(queryRequest, [
+        {
+          id: 'qes_pid_sd_jwt',
+          format: 'dc+sd-jwt',
+          meta: {
+            vct_values: [pidSdJwtCredential({ fields: [] }).vcts[0]],
+          },
+          require_cryptographic_holder_binding: true,
+        },
+        {
+          id: 'qes_pid_mdoc',
+          format: 'mso_mdoc',
+          meta: {
+            doctype_value: pidMdocCredential({ fields: [] }).doctype,
+          },
+          require_cryptographic_holder_binding: true,
+        },
+      ])
+      pidCredentialIds = ['qes_pid_sd_jwt', 'qes_pid_mdoc']
+    }
+    // create payment credential
+    const scaId = 'sca_credential'
+    if (paymentRequest) {
+      addOneOfCredentials(queryRequest, [
+        {
+          id: scaId,
+          format: 'dc+sd-jwt',
+          meta: {},
+          require_cryptographic_holder_binding: true,
+        },
+      ])
+    }
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
@@ -288,26 +341,28 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   method: 'x5c',
                   x5c: [x509DcsCertificate, x509RootCertificate],
                 },
-        transactionData:
-          transactionAuthorizationType === 'qes'
+        transactionData: [
+          ...(qesRequest
             ? [
                 {
-                  credential_ids: credentialIds as [string, ...string[]],
+                  ...qesRequest,
                   type: 'qes_authorization',
-                  transaction_data_hashes_alg: ['sha-256'],
-                  signatureQualifier: 'eu_eidas_qes',
-                  documentDigests: [
-                    {
-                      hash: 'some-hash',
-                      label: 'Declaration of Independence.pdf',
-                      hashAlgorithmOID: 'something',
-                    },
-                  ],
+                  credential_ids: pidCredentialIds as [string, ...string[]],
                 },
               ]
-            : undefined,
+            : []),
+          ...(paymentRequest
+            ? [
+                {
+                  ...paymentRequest,
+                  type: 'https://wero-wallet.eu/wero-payment',
+                  credential_ids: [scaId] as [string, ...string[]],
+                },
+              ]
+            : []),
+        ],
         dcql: {
-          query: queryLanguageDefinition,
+          query: queryRequest,
         },
         responseMode,
         version: 'v1',
@@ -500,6 +555,17 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
       return response.status(404).send('Verification session not found')
     }
   }
+})
+
+apiRouter.get('/vct/:issuerId/:credential', async (request: Request, response: Response) => {
+  console.log(request.url)
+  const { issuerId, credential } = request.params
+
+  const issuer = await agent.openid4vc.issuer.getIssuerByIssuerId(issuerId)
+  if (!issuer) return response.status(404).send('VCT not found')
+  const config = issuer.credentialConfigurationsSupported[credential]
+  if (!config) return response.status(404).send('VCT not found')
+  return response.json(config)
 })
 
 apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {

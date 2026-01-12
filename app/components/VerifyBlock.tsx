@@ -5,7 +5,14 @@ import Link from 'next/link'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
+import {
+  createRequest,
+  getRequestStatus,
+  getVerifier,
+  type PaymentRequest,
+  type QesRequest,
+  verifyResponseDc,
+} from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
 import { CollapsibleSection } from './CollapsibleSection'
 import { HighLight } from './highLight'
@@ -25,7 +32,6 @@ export type CreateRequestOptions = Parameters<typeof createRequest>[0]
 export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt' | 'dc_api' | 'dc_api.jwt'
-export type TransactionAuthorizationType = 'none' | 'qes'
 type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type RequestSignerType = CreateRequestOptions['requestSignerType']
@@ -55,7 +61,10 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   }>()
   const [verifier, setVerifier] = useState<Verifier>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
-  const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
+
+  const [isPaymentEnabled, setIsPaymentEnabled] = useState(false)
+  const [isQesEnabled, setIsQesEnabled] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState<string>('100')
 
   const enabled =
     verificationSessionId !== undefined &&
@@ -82,7 +91,10 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
     params.set('tab', 'verify')
     if (responseMode) params.set('responseMode', responseMode)
-    if (transactionAuthorizationType) params.set('transactionAuthorizationType', transactionAuthorizationType)
+    if (isPaymentEnabled) params.set('payment', 'true')
+    if (isQesEnabled) params.set('qes', 'true')
+    if (paymentAmount) params.set('amount', paymentAmount)
+
     if (presentationDefinitionId) params.set('presentationDefinitionId', presentationDefinitionId)
     if (requestScheme) params.set('requestScheme', requestScheme)
     if (purpose) params.set('purpose', purpose)
@@ -100,7 +112,9 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   }, [
     verifier,
     responseMode,
-    transactionAuthorizationType,
+    isPaymentEnabled,
+    isQesEnabled,
+    paymentAmount,
     presentationDefinitionId,
     requestScheme,
     purpose,
@@ -117,8 +131,9 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       setVerifier(v)
 
       if (query.responseMode) setResponseMode(query.responseMode as ResponseMode)
-      if (query.transactionAuthorizationType)
-        setTransactionAuthorizationType(query.transactionAuthorizationType as TransactionAuthorizationType)
+      if (query.payment === 'true') setIsPaymentEnabled(true)
+      if (query.qes === 'true') setIsQesEnabled(true)
+      if (query.amount) setPaymentAmount(query.amount as string)
 
       setPresentationDefinitionId(
         query.presentationDefinitionId ?? Object.values(groupBy(v.presentationRequests, (v) => v.useCase.name))[0][0].id
@@ -214,6 +229,34 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       throw new Error('No definition')
     }
 
+    const qesRequest: QesRequest | undefined = isQesEnabled
+      ? {
+          transaction_data_hashes_alg: ['sha-256'],
+          signatureQualifier: 'eu_eidas_qes',
+          documentDigests: [
+            {
+              hash: 'some-hash',
+              label: 'Declaration of Independence.pdf',
+              hashAlgorithmOID: 'something',
+            },
+          ],
+        }
+      : undefined
+
+    const paymentRequest: PaymentRequest | undefined = isPaymentEnabled
+      ? {
+          payload: {
+            transaction_id: '8D8AC610-566D-4EF0-9C22-186B2A5ED793',
+            payee: {
+              name: 'Acme Corp',
+              id: 'MERCH-12345',
+            },
+            currency: 'EUR',
+            amount: Number(paymentAmount),
+          },
+        }
+      : undefined
+
     let request: CreateRequestResponse
     try {
       request = await createRequest({
@@ -222,7 +265,8 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         responseMode,
         purpose: purpose && purpose !== '' ? purpose : undefined,
         requestSignerType,
-        transactionAuthorizationType,
+        qesRequest,
+        paymentRequest,
       })
       if (responseMode.includes('direct_post')) {
         setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -366,26 +410,29 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           </RadioGroup>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="presentation-type">Transaction Authorization</Label>
-          <Select
-            name="transaction-data"
-            required
-            value={transactionAuthorizationType}
-            onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a transaction authorization type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-              <SelectItem value="payment" disabled>
-                Payment
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-4">
+          <Label>Transaction Authorization</Label>
+          <div className="flex items-center space-x-2">
+            <Switch id="qes-enabled" checked={isQesEnabled} onCheckedChange={setIsQesEnabled} />
+            <Label htmlFor="qes-enabled">Qualified Electronic Signature</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch id="payment-enabled" checked={isPaymentEnabled} onCheckedChange={setIsPaymentEnabled} />
+            <Label htmlFor="payment-enabled">Payment</Label>
+          </div>
+          {isPaymentEnabled && (
+            <div className="space-y-2 ml-6">
+              <Label htmlFor="payment-amount">Amount (EUR)</Label>
+              <Input
+                id="payment-amount"
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+              />
+            </div>
+          )}
         </div>
+
         <div className="flex flex-col gap-2">
           <Label htmlFor="response-mode">Use Response Encryption</Label>
           <Switch

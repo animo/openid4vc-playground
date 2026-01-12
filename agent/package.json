@@ -14,7 +14,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "oidc-provider": "^9.6.0",
-    "zod": "^4.3.5"
+    "zod": "^4.3.5",
+    "@animo-id/eudi-wallet-functionality": "catalog:"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
