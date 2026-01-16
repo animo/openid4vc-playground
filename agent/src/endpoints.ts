@@ -1,4 +1,9 @@
-import { zFunkeQesTransaction, zPaymentPayload, zTs12Transaction } from '@animo-id/eudi-wallet-functionality'
+import {
+  URN_SCA_PAYMENT,
+  zFunkeQesTransaction,
+  zPaymentPayload,
+  zTs12Transaction,
+} from '@animo-id/eudi-wallet-functionality'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -355,7 +360,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
             ? [
                 {
                   ...paymentRequest,
-                  type: 'https://wero-wallet.eu/wero-payment',
+                  type: URN_SCA_PAYMENT,
                   credential_ids: [scaId] as [string, ...string[]],
                 },
               ]

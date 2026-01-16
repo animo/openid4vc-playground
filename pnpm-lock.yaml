@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@animo-id/eudi-wallet-functionality':
-      specifier: 0.0.0-alpha-20260108162340
-      version: 0.0.0-alpha-20260108162340
+      specifier: 0.0.0-alpha-20260112191822
+      version: 0.0.0-alpha-20260112191822
 
 importers:
 
@@ -22,7 +22,7 @@ importers:
     dependencies:
       '@animo-id/eudi-wallet-functionality':
         specifier: 'catalog:'
-        version: 0.0.0-alpha-20260108162340(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))
+        version: 0.0.0-alpha-20260112191822(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))
       '@animo-id/mdoc':
         specifier: ^0.5.2
         version: 0.5.2
@@ -86,7 +86,7 @@ importers:
     dependencies:
       '@animo-id/eudi-wallet-functionality':
         specifier: 'catalog:'
-        version: 0.0.0-alpha-20260108162340(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))
+        version: 0.0.0-alpha-20260112191822(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))
       '@radix-ui/react-collapsible':
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -187,8 +187,8 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@animo-id/eudi-wallet-functionality@0.0.0-alpha-20260108162340':
-    resolution: {integrity: sha512-l6Vj6equ9OwW9bPwMgAv/K2JQTm+Z8WhDhcdSkffX98Db0dUv40LPIaGc2Obz+MuLEAEiOq3OZ62xE6yCPRfrw==}
+  '@animo-id/eudi-wallet-functionality@0.0.0-alpha-20260112191822':
+    resolution: {integrity: sha512-LHwGCzIcQLlcsFROHuEo1lUkrn1CqlD3BsUBizPbaAKVZWvGIPT4fOpOWGvY/Ih8WpyOi3V4M1jCK16j0+3HaQ==}
     peerDependencies:
       '@credo-ts/core': '*'
       '@credo-ts/openid4vc': '*'
@@ -1213,7 +1213,6 @@ packages:
 
   '@sphereon/kmp-mdoc-core@0.2.0-SNAPSHOT.26':
     resolution: {integrity: sha512-QXJ6R8ENiZV2rPMbn06cw5JKwqUYN1kzVRbYfONqE1PEXx1noQ4md7uxr2zSczi0ubKkNcbyYDNtIMTZIhGzmQ==}
-    bundledDependencies: []
 
   '@sphereon/pex-models@2.3.2':
     resolution: {integrity: sha512-foFxfLkRwcn/MOp/eht46Q7wsvpQGlO7aowowIIb5Tz9u97kYZ2kz6K2h2ODxWuv5CRA7Q0MY8XUBGE2lfOhOQ==}
@@ -2501,7 +2500,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@animo-id/eudi-wallet-functionality@0.0.0-alpha-20260108162340(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))':
+  '@animo-id/eudi-wallet-functionality@0.0.0-alpha-20260112191822(@credo-ts/core@0.6.2-alpha-20251211125344(typescript@5.9.3))(@credo-ts/openid4vc@0.6.2-alpha-20251211125344(typescript@5.9.3))':
     dependencies:
       '@credo-ts/core': 0.6.2-alpha-20251211125344(typescript@5.9.3)
       '@credo-ts/openid4vc': 0.6.2-alpha-20251211125344(typescript@5.9.3)

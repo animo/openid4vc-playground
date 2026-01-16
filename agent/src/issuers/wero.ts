@@ -9,15 +9,15 @@ const issuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
 const localizedCardNames = [
   {
     locale: 'en',
-    name: 'Wero Card',
+    name: 'Wero',
   },
   {
     locale: 'de',
-    name: 'Wero Karte',
+    name: 'Wero',
   },
   {
     locale: 'fr',
-    name: 'Carte Wero',
+    name: 'Wero',
   },
 ] as const
 
@@ -106,16 +106,97 @@ const weroScaConfiguration = {
   },
   category: 'urn:eu:europa:ec:eudi:sua:sca',
   transaction_data_types: {
-    'https://wero-wallet.eu/wero-payment': {
+    [URN_SCA_PAYMENT]: {
       schema: URN_SCA_PAYMENT,
       claims: [
         {
-          path: ['payload', 'amount'],
+          path: ['payload', 'transaction_id'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Transaction ID' },
+            { locale: 'de', name: 'Transaktions-ID' },
+            { locale: 'fr', name: 'ID de transaction' },
+          ],
+        },
+        {
+          path: ['payload', 'date_time'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Date & Time' },
+            { locale: 'de', name: 'Datum & Uhrzeit' },
+            { locale: 'fr', name: 'Date et heure' },
+          ],
+        },
+        {
+          path: ['payload', 'payee', 'name'],
           visualisation: 1,
           display: [
-            { locale: 'en', name: 'Amount' },
-            { locale: 'de', name: 'Betrag' },
-            { locale: 'fr', name: 'Montant' },
+            { locale: 'en', name: 'Payee Name' },
+            { locale: 'de', name: 'Empfängername' },
+            { locale: 'fr', name: 'Nom du bénéficiaire' },
+          ],
+        },
+        {
+          path: ['payload', 'payee', 'id'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Payee ID' },
+            { locale: 'de', name: 'Empfänger-ID' },
+            { locale: 'fr', name: 'ID du bénéficiaire' },
+          ],
+        },
+        {
+          path: ['payload', 'payee', 'logo'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Payee Logo' },
+            { locale: 'de', name: 'Empfängerlogo' },
+            { locale: 'fr', name: 'Logo du bénéficiaire' },
+          ],
+        },
+        {
+          path: ['payload', 'payee', 'website'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Payee Website' },
+            { locale: 'de', name: 'Empfänger-Website' },
+            { locale: 'fr', name: 'Site web du bénéficiaire' },
+          ],
+        },
+        {
+          path: ['payload', 'pisp', 'legal_name'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'PISP Legal Name' },
+            { locale: 'de', name: 'PISP Juristischer Name' },
+            { locale: 'fr', name: 'Nom légal PISP' },
+          ],
+        },
+        {
+          path: ['payload', 'pisp', 'brand_name'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'PISP Brand Name' },
+            { locale: 'de', name: 'PISP Markenname' },
+            { locale: 'fr', name: 'Nom de marque PISP' },
+          ],
+        },
+        {
+          path: ['payload', 'pisp', 'domain_name'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'PISP Domain Name' },
+            { locale: 'de', name: 'PISP Domänenname' },
+            { locale: 'fr', name: 'Nom de domaine PISP' },
+          ],
+        },
+        {
+          path: ['payload', 'execution_date'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Execution Date' },
+            { locale: 'de', name: 'Ausführungsdatum' },
+            { locale: 'fr', name: "Date d'exécution" },
           ],
         },
         {
@@ -128,21 +209,138 @@ const weroScaConfiguration = {
           ],
         },
         {
-          path: ['payload', 'payee', 'name'],
+          path: ['payload', 'amount'],
           visualisation: 1,
           display: [
-            { locale: 'en', name: 'Payee' },
-            { locale: 'de', name: 'Empfänger' },
-            { locale: 'fr', name: 'Bénéficiaire' },
+            { locale: 'en', name: 'Amount' },
+            { locale: 'de', name: 'Betrag' },
+            { locale: 'fr', name: 'Montant' },
           ],
         },
         {
-          path: ['payload', 'reference'],
+          path: ['payload', 'amount_estimated'],
           visualisation: 2,
           display: [
-            { locale: 'en', name: 'Reference' },
-            { locale: 'de', name: 'Verwendungszweck' },
-            { locale: 'fr', name: 'Référence' },
+            { locale: 'en', name: 'Amount Estimated' },
+            { locale: 'de', name: 'Betrag geschätzt' },
+            { locale: 'fr', name: 'Montant estimé' },
+          ],
+        },
+        {
+          path: ['payload', 'amount_earmarked'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Amount Earmarked' },
+            { locale: 'de', name: 'Betrag vorgemerkt' },
+            { locale: 'fr', name: 'Montant réservé' },
+          ],
+        },
+        {
+          path: ['payload', 'sct_inst'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Instant Payment' },
+            { locale: 'de', name: 'Echtzeitüberweisung' },
+            { locale: 'fr', name: 'Virement instantané' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'start_date'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Start Date' },
+            { locale: 'de', name: 'Startdatum' },
+            { locale: 'fr', name: 'Date de début' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'end_date'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'End Date' },
+            { locale: 'de', name: 'Enddatum' },
+            { locale: 'fr', name: 'Date de fin' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'number'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Number of Executions' },
+            { locale: 'de', name: 'Anzahl der Ausführungen' },
+            { locale: 'fr', name: "Nombre d'exécutions" },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'frequency'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Frequency' },
+            { locale: 'de', name: 'Häufigkeit' },
+            { locale: 'fr', name: 'Fréquence' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'amount_variable'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Variable Amount' },
+            { locale: 'de', name: 'Variabler Betrag' },
+            { locale: 'fr', name: 'Montant variable' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'min_amount'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Min Amount' },
+            { locale: 'de', name: 'Mindestbetrag' },
+            { locale: 'fr', name: 'Montant minimum' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'max_amount'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Max Amount' },
+            { locale: 'de', name: 'Höchstbetrag' },
+            { locale: 'fr', name: 'Montant maximum' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'total_amount'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Total Amount' },
+            { locale: 'de', name: 'Gesamtbetrag' },
+            { locale: 'fr', name: 'Montant total' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'initial_amount'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Initial Amount' },
+            { locale: 'de', name: 'Anfangsbetrag' },
+            { locale: 'fr', name: 'Montant initial' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'initial_amount_number'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'Initial Amount Number' },
+            { locale: 'de', name: 'Anzahl Anfangsbeträge' },
+            { locale: 'fr', name: 'Nombre de montants initiaux' },
+          ],
+        },
+        {
+          path: ['payload', 'recurrence', 'mit_options', 'apr'],
+          visualisation: 2,
+          display: [
+            { locale: 'en', name: 'APR' },
+            { locale: 'de', name: 'Jahreszins' },
+            { locale: 'fr', name: 'TAEG' },
           ],
         },
       ],
