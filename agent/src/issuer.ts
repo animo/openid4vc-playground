@@ -142,7 +142,6 @@ export function serializableSignOptionsToSignOptions({
           issuer: {
             method: 'x5c',
             x5c: getX509Certificates(),
-            issuer: AGENT_HOST,
           },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
