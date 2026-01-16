@@ -17,11 +17,7 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
-import {
-  funkeDeployedAccessCertificate,
-  funkeDeployedAccessCertificateRoot,
-  funkeDeployedRegistrationCertificate,
-} from './eudiTrust.js'
+import { funkeDeployedAccessCertificate, funkeDeployedRegistrationCertificate } from './eudiTrust.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
@@ -230,7 +226,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       redirectUriBase,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
-    const x509RootCertificate = getX509RootCertificate()
+    const _x509RootCertificate = getX509RootCertificate()
     const x509DcsCertificate = getX509DcsCertificate()
 
     // Funke access certificate uses same key as the dcs certificate
@@ -279,14 +275,12 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               isEudiAuthorization
               ? {
                   method: 'x5c',
-                  x5c: [
-                    funkeDcsAccessCertificate,
-                    X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificateRoot),
-                  ],
+                  x5c: [funkeDcsAccessCertificate],
                 }
               : {
                   method: 'x5c',
-                  x5c: [x509DcsCertificate, x509RootCertificate],
+                  x5c: [x509DcsCertificate],
+                  clientIdPrefix: 'x509_hash',
                 },
         transactionData:
           transactionAuthorizationType === 'qes'
