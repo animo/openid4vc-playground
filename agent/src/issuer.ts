@@ -15,14 +15,13 @@ import {
 } from '@credo-ts/openid4vc'
 import { randomUUID } from 'crypto'
 import { agent } from './agent.js'
-import { AGENT_HOST } from './constants.js'
 import { bdrIssuer } from './issuers/bdr.js'
 import { issuers, issuersCredentialsData } from './issuers/index.js'
 import { kolnIssuer } from './issuers/koln.js'
 import { krankenkasseIssuer } from './issuers/krankenkasse.js'
 import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
-import { getX509Certificates, getX509DcsCertificate } from './keyMethods/index.js'
+import { getX509DcsCertificate } from './keyMethods/index.js'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
 import { getVerifier } from './verifier.js'
@@ -141,8 +140,7 @@ export function serializableSignOptionsToSignOptions({
                 },
           issuer: {
             method: 'x5c',
-            x5c: getX509Certificates(),
-            issuer: AGENT_HOST,
+            x5c: [getX509DcsCertificate()],
           },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -209,7 +207,6 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
   async ({ agentContext, scopes, requestedCredentialConfigurations }) => {
     const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
-    const certificates = getX509Certificates()
     const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
     const [, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
@@ -223,7 +220,7 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
       verifierId: verifier.verifierId,
       requestSigner: {
         method: 'x5c',
-        x5c: certificates,
+        x5c: [getX509DcsCertificate()],
       },
       version: 'v1',
       dcql: {
