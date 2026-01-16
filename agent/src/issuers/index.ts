@@ -6,6 +6,7 @@ import { mvrcCredentialsData, mvrcIssuer } from './mvrc.js'
 import { steuernCredentialsData, steuernIssuer } from './steuern.js'
 import { telOrgCredentialsData, telOrgIssuer } from './telOrg.js'
 import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment.js'
+import { weroCredentialsData, weroIssuer } from './wero.js'
 
 export const issuers: PlaygroundIssuerOptions[] = [
   bdrIssuer,
@@ -15,6 +16,7 @@ export const issuers: PlaygroundIssuerOptions[] = [
   telOrgIssuer,
   mvrcIssuer,
   utopiaGovernmentIssuer,
+  weroIssuer,
 ]
 
 export const issuersCredentialsData = {
@@ -25,4 +27,5 @@ export const issuersCredentialsData = {
   ...telOrgCredentialsData,
   ...mvrcCredentialsData,
   ...utopiaGovernmentData,
+  ...weroCredentialsData,
 }

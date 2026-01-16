@@ -1,3 +1,8 @@
+import type {
+  FunkeQesTransactionDataEntry,
+  Ts12PaymentPayload,
+  Ts12TransactionDataEntry,
+} from '@animo-id/eudi-wallet-functionality'
 import type { ResponseMode } from '../components/VerifyBlock'
 import { NEXT_PUBLIC_API_URL } from './constants'
 
@@ -119,13 +124,18 @@ export async function receiveOffer(offerUri: string) {
   return response.json()
 }
 
+export type QesRequest = Omit<FunkeQesTransactionDataEntry, 'type' | 'credential_ids'>
+export type PaymentRequest = Omit<Ts12TransactionDataEntry, 'type' | 'credential_ids'> & { payload: Ts12PaymentPayload }
+
 export async function createRequest(data: {
   requestSignerType: 'x5c' | 'openid-federation' | 'none'
   presentationDefinitionId: string
   requestScheme: string
   responseMode: ResponseMode
   purpose?: string
-  transactionAuthorizationType: 'none' | 'qes'
+  qesRequest?: QesRequest
+  paymentRequest?: PaymentRequest
+  redirectUriBase?: string
 }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
     method: 'POST',
