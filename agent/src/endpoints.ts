@@ -1,9 +1,4 @@
-import {
-  URN_SCA_PAYMENT,
-  zFunkeQesTransaction,
-  zPaymentPayload,
-  zTs12Transaction,
-} from '@animo-id/eudi-wallet-functionality'
+import { URN_SCA_PAYMENT, zFunkeQesTransaction, zTs12PaymentTransaction } from '@animo-id/eudi-wallet-functionality'
 import {
   JsonEncoder,
   JsonTransformer,
@@ -221,10 +216,7 @@ const zCreatePresentationRequestBody = z.object({
       type: true,
     })
     .optional(),
-  paymentRequest: zTs12Transaction
-    .extend({
-      payload: zPaymentPayload,
-    })
+  paymentRequest: zTs12PaymentTransaction
     .omit({
       credential_ids: true,
       type: true,

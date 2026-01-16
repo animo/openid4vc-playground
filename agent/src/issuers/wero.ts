@@ -1,4 +1,4 @@
-import { URN_SCA_PAYMENT } from '@animo-id/eudi-wallet-functionality'
+import { URN_SCA_PAYMENT, type ZScaAttestationExt } from '@animo-id/eudi-wallet-functionality'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
@@ -30,10 +30,19 @@ const commonWeroCardDisplay = {
   },
 } as const
 
-const localizedWeroCardDisplay = localizedCardNames.map((it) => ({
+const commonsSJwtDisplay = {
   ...commonWeroCardDisplay,
+  rendering: {
+    simple: {
+      ...commonWeroCardDisplay,
+    },
+  },
+}
+
+const localizedWeroCardDisplay = localizedCardNames.map((it) => ({
+  ...commonsSJwtDisplay,
   ...it,
-})) as [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+})) as unknown as [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
 
 const weroScaConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
@@ -105,22 +114,20 @@ const weroScaConfiguration = {
     ],
   },
   category: 'urn:eu:europa:ec:eudi:sua:sca',
-  transaction_data_types: {
-    [URN_SCA_PAYMENT]: {
-      schema: URN_SCA_PAYMENT,
+  transaction_data_types: [
+    {
+      type: URN_SCA_PAYMENT,
       claims: [
         {
           path: ['payload', 'transaction_id'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Transaction ID' },
             { locale: 'de', name: 'Transaktions-ID' },
-            { locale: 'fr', name: 'ID de transaction' },
+            { locale: 'fr', name: 'Référence de transaction' },
           ],
         },
         {
           path: ['payload', 'date_time'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Date & Time' },
             { locale: 'de', name: 'Datum & Uhrzeit' },
@@ -129,7 +136,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'payee', 'name'],
-          visualisation: 1,
           display: [
             { locale: 'en', name: 'Payee Name' },
             { locale: 'de', name: 'Empfängername' },
@@ -138,61 +144,54 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'payee', 'id'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Payee ID' },
             { locale: 'de', name: 'Empfänger-ID' },
-            { locale: 'fr', name: 'ID du bénéficiaire' },
+            { locale: 'fr', name: 'Identifiant du bénéficiaire' },
           ],
         },
         {
           path: ['payload', 'payee', 'logo'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Payee Logo' },
-            { locale: 'de', name: 'Empfängerlogo' },
+            { locale: 'de', name: 'Empfänger-Logo' },
             { locale: 'fr', name: 'Logo du bénéficiaire' },
           ],
         },
         {
           path: ['payload', 'payee', 'website'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Payee Website' },
-            { locale: 'de', name: 'Empfänger-Website' },
+            { locale: 'de', name: 'Empfänger-Webseite' },
             { locale: 'fr', name: 'Site web du bénéficiaire' },
           ],
         },
         {
           path: ['payload', 'pisp', 'legal_name'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'PISP Legal Name' },
-            { locale: 'de', name: 'PISP Juristischer Name' },
-            { locale: 'fr', name: 'Nom légal PISP' },
+            { locale: 'de', name: 'Rechtlicher Name (PISP)' },
+            { locale: 'fr', name: 'Dénomination sociale (PISP)' },
           ],
         },
         {
           path: ['payload', 'pisp', 'brand_name'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'PISP Brand Name' },
-            { locale: 'de', name: 'PISP Markenname' },
-            { locale: 'fr', name: 'Nom de marque PISP' },
+            { locale: 'de', name: 'Markenname (PISP)' },
+            { locale: 'fr', name: 'Nom commercial (PISP)' },
           ],
         },
         {
           path: ['payload', 'pisp', 'domain_name'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'PISP Domain Name' },
-            { locale: 'de', name: 'PISP Domänenname' },
-            { locale: 'fr', name: 'Nom de domaine PISP' },
+            { locale: 'de', name: 'Domainname (PISP)' },
+            { locale: 'fr', name: 'Nom de domaine (PISP)' },
           ],
         },
         {
           path: ['payload', 'execution_date'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Execution Date' },
             { locale: 'de', name: 'Ausführungsdatum' },
@@ -201,7 +200,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'currency'],
-          visualisation: 1,
           display: [
             { locale: 'en', name: 'Currency' },
             { locale: 'de', name: 'Währung' },
@@ -210,7 +208,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'amount'],
-          visualisation: 1,
           display: [
             { locale: 'en', name: 'Amount' },
             { locale: 'de', name: 'Betrag' },
@@ -219,25 +216,22 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'amount_estimated'],
-          visualisation: 2,
           display: [
-            { locale: 'en', name: 'Amount Estimated' },
-            { locale: 'de', name: 'Betrag geschätzt' },
+            { locale: 'en', name: 'Estimated Amount' },
+            { locale: 'de', name: 'Geschätzter Betrag' },
             { locale: 'fr', name: 'Montant estimé' },
           ],
         },
         {
           path: ['payload', 'amount_earmarked'],
-          visualisation: 2,
           display: [
-            { locale: 'en', name: 'Amount Earmarked' },
-            { locale: 'de', name: 'Betrag vorgemerkt' },
+            { locale: 'en', name: 'Earmarked Amount' },
+            { locale: 'de', name: 'Reservierter Betrag' },
             { locale: 'fr', name: 'Montant réservé' },
           ],
         },
         {
           path: ['payload', 'sct_inst'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Instant Payment' },
             { locale: 'de', name: 'Echtzeitüberweisung' },
@@ -246,7 +240,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'start_date'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Start Date' },
             { locale: 'de', name: 'Startdatum' },
@@ -255,7 +248,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'end_date'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'End Date' },
             { locale: 'de', name: 'Enddatum' },
@@ -264,25 +256,22 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'number'],
-          visualisation: 2,
           display: [
-            { locale: 'en', name: 'Number of Executions' },
-            { locale: 'de', name: 'Anzahl der Ausführungen' },
-            { locale: 'fr', name: "Nombre d'exécutions" },
+            { locale: 'en', name: 'Number of Payments' },
+            { locale: 'de', name: 'Anzahl der Zahlungen' },
+            { locale: 'fr', name: "Nombre d'échéances" },
           ],
         },
         {
           path: ['payload', 'recurrence', 'frequency'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Frequency' },
-            { locale: 'de', name: 'Häufigkeit' },
-            { locale: 'fr', name: 'Fréquence' },
+            { locale: 'de', name: 'Zahlungsintervall' },
+            { locale: 'fr', name: 'Périodicité' },
           ],
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'amount_variable'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Variable Amount' },
             { locale: 'de', name: 'Variabler Betrag' },
@@ -291,7 +280,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'min_amount'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Min Amount' },
             { locale: 'de', name: 'Mindestbetrag' },
@@ -300,7 +288,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'max_amount'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Max Amount' },
             { locale: 'de', name: 'Höchstbetrag' },
@@ -309,7 +296,6 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'total_amount'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Total Amount' },
             { locale: 'de', name: 'Gesamtbetrag' },
@@ -318,28 +304,25 @@ const weroScaConfiguration = {
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'initial_amount'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'Initial Amount' },
-            { locale: 'de', name: 'Anfangsbetrag' },
+            { locale: 'de', name: 'Erster Betrag' },
             { locale: 'fr', name: 'Montant initial' },
           ],
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'initial_amount_number'],
-          visualisation: 2,
           display: [
-            { locale: 'en', name: 'Initial Amount Number' },
-            { locale: 'de', name: 'Anzahl Anfangsbeträge' },
+            { locale: 'en', name: 'Number of Initial Payments' },
+            { locale: 'de', name: 'Anzahl der ersten Beträge' },
             { locale: 'fr', name: 'Nombre de montants initiaux' },
           ],
         },
         {
           path: ['payload', 'recurrence', 'mit_options', 'apr'],
-          visualisation: 2,
           display: [
             { locale: 'en', name: 'APR' },
-            { locale: 'de', name: 'Jahreszins' },
+            { locale: 'de', name: 'Effektiver Jahreszins' },
             { locale: 'fr', name: 'TAEG' },
           ],
         },
@@ -348,36 +331,36 @@ const weroScaConfiguration = {
       ui_labels: {
         // [TS12] Mapped 'heading' -> 'transaction_title'
         transaction_title: [
-          { lang: 'en', value: 'Confirm Payment' },
-          { lang: 'de', value: 'Zahlung bestätigen' },
-          { lang: 'fr', value: 'Confirmer le paiement' },
+          { locale: 'en', value: 'Confirm Payment' },
+          { locale: 'de', value: 'Zahlung bestätigen' },
+          { locale: 'fr', value: 'Confirmer le paiement' },
         ],
 
         // [TS12] Mapped 'confirm_button' -> 'affirmative_action_label'
         affirmative_action_label: [
-          { lang: 'en', value: 'Pay' },
-          { lang: 'de', value: 'Zahlen' },
-          { lang: 'fr', value: 'Payer' },
+          { locale: 'en', value: 'Pay' },
+          { locale: 'de', value: 'Zahlen' },
+          { locale: 'fr', value: 'Payer' },
         ],
 
         // [TS12] Mapped 'cancel_button' -> 'denial_action_label'
         denial_action_label: [
-          { lang: 'en', value: 'Reject' },
-          { lang: 'de', value: 'Ablehnen' },
-          { lang: 'fr', value: 'Refuser' },
+          { locale: 'en', value: 'Reject' },
+          { locale: 'de', value: 'Ablehnen' },
+          { locale: 'fr', value: 'Refuser' },
         ],
 
         // [TS12] Mapped 'authenticator_prompt' -> 'security_hint'
         security_hint: [
-          { lang: 'en', value: 'Authenticate to sign this payment' },
-          { lang: 'de', value: 'Authentifizieren Sie sich, um diese Zahlung zu signieren' },
-          { lang: 'fr', value: 'Authentifiez-vous pour signer ce paiement' },
+          { locale: 'en', value: 'Authenticate to sign this payment' },
+          { locale: 'de', value: 'Authentifizieren Sie sich, um diese Zahlung zu signieren' },
+          { locale: 'fr', value: 'Authentifiez-vous pour signer ce paiement' },
         ],
       },
     },
-  },
-  display: localizedWeroCardDisplay,
-} satisfies SdJwtConfiguration
+  ],
+  display: localizedWeroCardDisplay as unknown as SdJwtConfiguration['display'],
+} satisfies SdJwtConfiguration & ZScaAttestationExt
 
 const now = new Date()
 const expiry = new Date()
