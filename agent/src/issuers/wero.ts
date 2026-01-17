@@ -484,6 +484,68 @@ const weroScaData = {
   },
 } as const
 
+const coolWeroCardDisplay = {
+  text_color: '#e0e5e5',
+  background_color: '#401a56',
+  background_image: {
+    uri: `${AGENT_HOST}/assets/issuers/wero/much_cool.jpeg`,
+  },
+} as const
+
+const localizedCoolWeroCardDisplay = [
+  {
+    locale: 'en',
+    name: 'Cool Wero',
+    ...coolWeroCardDisplay,
+    rendering: {
+      simple: coolWeroCardDisplay,
+    },
+  },
+] as [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+
+const coolWeroScaConfiguration = {
+  format: OpenId4VciCredentialFormatProfile.SdJwtDc,
+  vct: `${AGENT_HOST}/api/vct/${issuerId}/${encodeURI('openid4vc:credential:CoolWeroSca')}`,
+  scope: 'openid4vc:credential:CoolWeroSca',
+  extends: weroScaConfiguration.vct,
+  cryptographic_binding_methods_supported: ['jwk'],
+  credential_signing_alg_values_supported: ['ES256', 'EdDSA'],
+  proof_types_supported: {
+    // TODO: Remove jwt when attestation is supported in paradym, TS12 requires attestation
+    jwt: {
+      proof_signing_alg_values_supported: ['ES256', 'EdDSA'],
+    },
+    attestation: {
+      proof_signing_alg_values_supported: ['ES256', 'EdDSA'],
+      key_attestations_required: {
+        key_storage: ['iso_18045_high'],
+        user_authentication: ['iso_18045_high'],
+      },
+    },
+  },
+  credential_metadata: {
+    display: localizedCoolWeroCardDisplay,
+  },
+  display: localizedCoolWeroCardDisplay,
+} satisfies SdJwtConfiguration
+
+const coolWeroScaData = {
+  credentialConfigurationId: coolWeroScaConfiguration.scope,
+  format: coolWeroScaConfiguration.format,
+  credential: {
+    payload: {
+      ...weroPayloadClaims,
+      iat: dateToSeconds(now),
+      nbf: dateToSeconds(now),
+      exp: dateToSeconds(expiry),
+      vct: coolWeroScaConfiguration.vct,
+    },
+    disclosureFrame: {
+      _sd: Object.keys(weroPayloadClaims),
+    },
+  },
+} as const
+
 // TODO: Arf 2.7.3 section 2.6.4 requires "User identification and authentication, for example by presenting a PID" and attestation based proof (WUA) during issuance
 export const weroIssuer = {
   tags: [localizedCardNames[0].name, 'TS12 Payment'],
@@ -493,6 +555,12 @@ export const weroIssuer = {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroScaConfiguration,
         data: weroScaData,
+      },
+    },
+    {
+      [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
+        configuration: coolWeroScaConfiguration,
+        data: coolWeroScaData,
       },
     },
   ],
@@ -509,4 +577,5 @@ export const weroIssuer = {
 
 export const weroCredentialsData = {
   [weroScaData.credentialConfigurationId]: weroScaData,
+  [coolWeroScaData.credentialConfigurationId]: coolWeroScaData,
 }
