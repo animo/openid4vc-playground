@@ -1,3 +1,4 @@
+import { URN_SCA_GENERIC } from '@animo-id/eudi-wallet-functionality'
 import { AGENT_HOST } from '../constants.js'
 import { certificateOfResidenceSdJwt } from '../issuers/koln.js'
 import { healthIdSdJwt } from '../issuers/krankenkasse.js'
@@ -5,10 +6,13 @@ import { taxIdSdJwt } from '../issuers/steuern.js'
 import type { PlaygroundVerifierOptions } from '../verifier.js'
 import { pidSdJwtCredential } from './util.js'
 
+const weroIssuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
+const weroScaVct = `${AGENT_HOST}/api/vct/${weroIssuerId}/${encodeURI('openid4vc:credential:WeroSca')}`
+
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
   useCase: {
-    name: 'Open a bank account',
+    name: 'Bank account operations',
     icon: 'bank',
     tags: [],
   },
@@ -19,7 +23,7 @@ export const openHorizonBankVerifier = {
   },
   requests: [
     {
-      name: 'DE PID (not ARF compliant), MDL (sd-jwt vc), Tax ID, and Certificate of Residence',
+      name: 'Open bank account: DE PID (not ARF compliant), MDL (sd-jwt vc), Tax ID, and Certificate of Residence',
       purpose:
         'To open an Open Horizon Bank account, we need to verify your name, date of birth, country of residence and nationality',
       credentials: [
@@ -33,6 +37,52 @@ export const openHorizonBankVerifier = {
         pidSdJwtCredential({
           fields: ['given_name', 'family_name', 'birthdate', 'address.country', 'nationalities'],
         }),
+      ],
+    },
+    {
+      name: 'Login to Open Horizon Bank: SCA',
+      purpose: 'Login to your Open Horizon Bank account using Wero',
+      credentials: [
+        {
+          format: 'dc+sd-jwt',
+          vcts: [weroScaVct],
+          fields: ['account_holder_id', 'account_id'],
+        },
+      ],
+      transaction_data: [
+        {
+          type: URN_SCA_GENERIC,
+          subtype: 'login',
+          credential_ids: ['0'],
+          payload: {
+            transaction_id: '12345678-1234-1234-1234-123456789012',
+            service: 'Open Horizon Bank',
+            ip_address: '192.168.1.1',
+          },
+        },
+      ],
+    },
+    {
+      name: 'Increase Spending Limit: SCA',
+      purpose: 'Increase your spending limit using Wero',
+      credentials: [
+        {
+          format: 'dc+sd-jwt',
+          vcts: [weroScaVct],
+          fields: ['account_holder_id', 'account_id'],
+        },
+      ],
+      transaction_data: [
+        {
+          type: URN_SCA_GENERIC,
+          subtype: 'increase_spending_limit',
+          credential_ids: ['0'],
+          payload: {
+            transaction_id: '87654321-4321-4321-4321-210987654321',
+            old_spending_limit: '€1000',
+            new_spending_limit: '€5000',
+          },
+        },
       ],
     },
   ],

@@ -11,6 +11,13 @@ export interface PlaygroundVerifierOptions {
     credentials: Array<SdJwtCredential | MdocCredential>
     // Indexes
     credential_sets?: Array<number[]>
+    transaction_data?: Array<{
+      type: string
+      subtype?: string
+      credential_ids: [string, ...string[]]
+      transaction_data_hashes_alg?: [string, ...string[]]
+      payload: Record<string, unknown>
+    }>
   }>
   useCase?: {
     name: string
