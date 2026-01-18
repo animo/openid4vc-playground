@@ -301,6 +301,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       ])
     }
 
+    const definitionTransactionData = definition.transaction_data ?? []
+
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
 
@@ -333,6 +335,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   clientIdPrefix: 'x509_hash',
                 },
         transactionData: [
+          ...definitionTransactionData,
           ...(qesRequest
             ? [
                 {
