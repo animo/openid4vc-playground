@@ -485,8 +485,8 @@ const weroScaData = {
 } as const
 
 const coolWeroCardDisplay = {
-  text_color: '#e0e5e5',
-  background_color: '#401a56',
+  text_color: '#1D1C1C',
+  background_color: '#fff48d',
   background_image: {
     uri: `${AGENT_HOST}/assets/issuers/wero/much_cool.jpeg`,
   },
