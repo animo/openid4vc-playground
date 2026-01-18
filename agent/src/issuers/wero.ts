@@ -130,7 +130,7 @@ const weroSdJwtVcTypeMetadata = {
        * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
        * is merged and integrated into Paradym Wallet
        */
-      lang: rest.locale,
+      lang: rest.locale as string,
     })),
   })),
   display: weroScaConfiguration.credential_metadata.display.map((display) => ({
@@ -139,7 +139,7 @@ const weroSdJwtVcTypeMetadata = {
      * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
      * is merged and integrated into Paradym Wallet
      */
-    lang: display.locale,
+    lang: display.locale as string,
   })),
   category: 'urn:eu:europa:ec:eudi:sua:sca',
   transaction_data_types: [
@@ -580,7 +580,7 @@ const coolWeroSdJwtVcTypeMetadata = {
      * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
      * is merged and integrated into Paradym Wallet
      */
-    lang: display.locale,
+    lang: display.locale as string,
   })),
   extends: weroScaConfiguration.vct,
 } satisfies SdJwtVcTypeMetadata
