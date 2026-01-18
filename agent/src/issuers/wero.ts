@@ -1,8 +1,10 @@
 import { URN_SCA_GENERIC, URN_SCA_PAYMENT, type ZScaAttestationExt } from '@animo-id/eudi-wallet-functionality'
+import type { SdJwtVcTypeMetadata } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
 import { dateToSeconds } from '../utils/date.js'
+import { getVctUrl } from '../utils/vct.js'
 
 const issuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
 
@@ -44,9 +46,9 @@ const localizedWeroCardDisplay = localizedCardNames.map((it) => ({
   ...it,
 })) as unknown as [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
 
-const weroScaConfiguration = {
+export const weroScaConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
-  vct: `${AGENT_HOST}/api/vct/${issuerId}/${encodeURI('openid4vc:credential:WeroSca')}`,
+  vct: getVctUrl(issuerId, 'openid4vc:credential:WeroSca'),
   scope: 'openid4vc:credential:WeroSca',
   cryptographic_binding_methods_supported: ['jwk'],
   credential_signing_alg_values_supported: ['ES256', 'EdDSA'],
@@ -113,6 +115,32 @@ const weroScaConfiguration = {
       },
     ],
   },
+
+  display: localizedWeroCardDisplay,
+} satisfies SdJwtConfiguration
+
+const weroSdJwtVcTypeMetadata = {
+  vct: weroScaConfiguration.vct,
+  claims: weroScaConfiguration.credential_metadata.claims.map((claim) => ({
+    ...claim,
+    display: claim.display.map(({ name, ...rest }) => ({
+      ...rest,
+      label: name,
+      /**
+       * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
+       * is merged and integrated into Paradym Wallet
+       */
+      lang: rest.locale,
+    })),
+  })),
+  display: weroScaConfiguration.credential_metadata.display.map((display) => ({
+    ...display,
+    /**
+     * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
+     * is merged and integrated into Paradym Wallet
+     */
+    lang: display.locale,
+  })),
   category: 'urn:eu:europa:ec:eudi:sua:sca',
   transaction_data_types: [
     {
@@ -451,8 +479,7 @@ const weroScaConfiguration = {
       },
     },
   ],
-  display: localizedWeroCardDisplay,
-} satisfies SdJwtConfiguration & ZScaAttestationExt
+} satisfies SdJwtVcTypeMetadata & ZScaAttestationExt
 
 const now = new Date()
 const expiry = new Date()
@@ -505,9 +532,8 @@ const localizedCoolWeroCardDisplay = [
 
 const coolWeroScaConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
-  vct: `${AGENT_HOST}/api/vct/${issuerId}/${encodeURI('openid4vc:credential:CoolWeroSca')}`,
+  vct: getVctUrl(issuerId, 'openid4vc:credential:CoolWeroSca'),
   scope: 'openid4vc:credential:CoolWeroSca',
-  extends: weroScaConfiguration.vct,
   cryptographic_binding_methods_supported: ['jwk'],
   credential_signing_alg_values_supported: ['ES256', 'EdDSA'],
   proof_types_supported: {
@@ -546,6 +572,19 @@ const coolWeroScaData = {
   },
 } as const
 
+const coolWeroSdJwtVcTypeMetadata = {
+  vct: coolWeroScaConfiguration.vct,
+  display: coolWeroScaConfiguration.credential_metadata.display.map((display) => ({
+    ...display,
+    /**
+     * FIXME: can be removed once https://github.com/openwallet-foundation/sd-jwt-js/pull/359
+     * is merged and integrated into Paradym Wallet
+     */
+    lang: display.locale,
+  })),
+  extends: weroScaConfiguration.vct,
+} satisfies SdJwtVcTypeMetadata
+
 // TODO: Arf 2.7.3 section 2.6.4 requires "User identification and authentication, for example by presenting a PID" and attestation based proof (WUA) during issuance
 export const weroIssuer = {
   tags: [localizedCardNames[0].name, 'TS12 Payment'],
@@ -555,12 +594,14 @@ export const weroIssuer = {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroScaConfiguration,
         data: weroScaData,
+        typeMetadata: weroSdJwtVcTypeMetadata,
       },
     },
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: coolWeroScaConfiguration,
         data: coolWeroScaData,
+        typeMetadata: coolWeroSdJwtVcTypeMetadata,
       },
     },
   ],

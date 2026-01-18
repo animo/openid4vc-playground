@@ -552,14 +552,18 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
 })
 
 apiRouter.get('/vct/:issuerId/:credential', async (request: Request, response: Response) => {
-  console.log(request.url)
   const { issuerId, credential } = request.params
 
-  const issuer = await agent.openid4vc.issuer.getIssuerByIssuerId(issuerId)
+  const issuer = issuers.find((issuer) => issuer.issuerId === issuerId)
   if (!issuer) return response.status(404).send('VCT not found')
-  const config = issuer.credentialConfigurationsSupported[credential]
-  if (!config) return response.status(404).send('VCT not found')
-  return response.json(config)
+
+  const configuration = issuer.credentialConfigurationsSupported.find(
+    (configuration) =>
+      configuration['dc+sd-jwt'] && configuration['dc+sd-jwt'].data.credentialConfigurationId === credential
+  )?.['dc+sd-jwt']
+  if (!configuration || !configuration.typeMetadata) return response.status(404).send('VCT not found')
+
+  return response.json(configuration.typeMetadata)
 })
 
 apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {

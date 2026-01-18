@@ -1,5 +1,12 @@
 import { cborDecode, cborEncode } from '@animo-id/mdoc'
-import { ClaimFormat, Kms, type MdocSignOptions, type NonEmptyArray, type SdJwtVcSignOptions } from '@credo-ts/core'
+import {
+  ClaimFormat,
+  Kms,
+  type MdocSignOptions,
+  type NonEmptyArray,
+  type SdJwtVcSignOptions,
+  type SdJwtVcTypeMetadata,
+} from '@credo-ts/core'
 import {
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
@@ -78,6 +85,11 @@ export interface PlaygroundIssuerOptions
     'dc+sd-jwt'?: {
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
+
+      /**
+       * Optional VCT Type Metadata to host
+       */
+      typeMetadata?: SdJwtVcTypeMetadata
     }
   }>
 }

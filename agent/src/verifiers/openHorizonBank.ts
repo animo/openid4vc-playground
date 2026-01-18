@@ -3,11 +3,9 @@ import { AGENT_HOST } from '../constants.js'
 import { certificateOfResidenceSdJwt } from '../issuers/koln.js'
 import { healthIdSdJwt } from '../issuers/krankenkasse.js'
 import { taxIdSdJwt } from '../issuers/steuern.js'
+import { weroScaConfiguration } from '../issuers/wero.js'
 import type { PlaygroundVerifierOptions } from '../verifier.js'
 import { pidSdJwtCredential } from './util.js'
-
-const weroIssuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
-const weroScaVct = `${AGENT_HOST}/api/vct/${weroIssuerId}/${encodeURI('openid4vc:credential:WeroSca')}`
 
 export const openHorizonBankVerifier = {
   verifierId: '019368e8-54aa-788e-81c4-e60a59a09d87',
@@ -45,7 +43,7 @@ export const openHorizonBankVerifier = {
       credentials: [
         {
           format: 'dc+sd-jwt',
-          vcts: [weroScaVct],
+          vcts: [weroScaConfiguration.vct],
           fields: ['account_holder_id', 'account_id'],
         },
       ],
@@ -68,7 +66,7 @@ export const openHorizonBankVerifier = {
       credentials: [
         {
           format: 'dc+sd-jwt',
-          vcts: [weroScaVct],
+          vcts: [weroScaConfiguration.vct],
           fields: ['account_holder_id', 'account_id'],
         },
       ],
