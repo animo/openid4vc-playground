@@ -63,7 +63,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - run: NEXT_PUBLIC_API_URL=https://api.playground.france-identite.gouv.fr/france-titres/animo pnpm build
+      - run: NEXT_PUBLIC_USE_WINDOW_LOCATION_AS_API_BASE=true pnpm build
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
