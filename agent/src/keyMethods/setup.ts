@@ -109,6 +109,7 @@ export async function setupX509Certificate() {
 
   console.log('======= X.509 IACA DCS  Certificate ===========')
   console.log(x509DcsCertificate.toString('pem'))
+  console.log(x509DcsCertificate.toString('base64'))
 
   console.log('======= X.509 CRL ===========')
   console.log(crlInstance.toString('pem'))

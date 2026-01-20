@@ -1,5 +1,18 @@
 import type { ResponseMode } from '../components/VerifyBlock'
-import { NEXT_PUBLIC_API_URL } from './constants'
+import { NEXT_PUBLIC_API_URL, USE_WINDOW_LOCATION_AS_API_BASE } from './constants'
+
+const getApiUrl = () => {
+  if (USE_WINDOW_LOCATION_AS_API_BASE) {
+    let windowLocationApiBase = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
+    windowLocationApiBase = windowLocationApiBase.endsWith('/')
+      ? windowLocationApiBase.slice(0, windowLocationApiBase.length - 1)
+      : windowLocationApiBase
+
+    return windowLocationApiBase
+  }
+
+  return NEXT_PUBLIC_API_URL
+}
 
 export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { userPin?: string } }
 export async function createOffer({
@@ -17,7 +30,7 @@ export async function createOffer({
   requireWalletAttestation: boolean
   requireKeyAttestation: boolean
 }): Promise<CreateOfferReturn> {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/create`, {
+  const response = await fetch(`${getApiUrl()}/api/offers/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -40,7 +53,7 @@ export async function createOffer({
 }
 
 export async function getVerifier() {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/verifier`)
+  const response = await fetch(`${getApiUrl()}/api/verifier`)
 
   if (!response.ok) {
     throw new Error('Failed to get verifier')
@@ -68,7 +81,7 @@ export type Issuers = Array<{
   }>
 }>
 export async function getIssuers(): Promise<Issuers> {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/issuers`)
+  const response = await fetch(`${getApiUrl()}/api/issuers`)
 
   if (!response.ok) {
     throw new Error('Failed to get issuers')
@@ -78,7 +91,7 @@ export async function getIssuers(): Promise<Issuers> {
 }
 
 export async function addX509Certificate(certificate: string) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/x509`, {
+  const response = await fetch(`${getApiUrl()}/api/x509`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -92,7 +105,7 @@ export async function addX509Certificate(certificate: string) {
 }
 
 export async function getX509Certificate(): Promise<{ base64: string; pem: string; decoded: string }> {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/x509`)
+  const response = await fetch(`${getApiUrl()}/api/x509`)
 
   if (!response.ok) {
     throw new Error('Failed to get x509 certificate')
@@ -102,7 +115,7 @@ export async function getX509Certificate(): Promise<{ base64: string; pem: strin
 }
 
 export async function receiveOffer(offerUri: string) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/receive`, {
+  const response = await fetch(`${getApiUrl()}/api/offers/receive`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -127,7 +140,7 @@ export async function createRequest(data: {
   purpose?: string
   transactionAuthorizationType: 'none' | 'qes'
 }) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
+  const response = await fetch(`${getApiUrl()}/api/requests/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -151,7 +164,7 @@ export async function verifyResponseDc(data: {
   verificationSessionId: string
   data: string | Record<string, unknown>
 }) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/verify-dc`, {
+  const response = await fetch(`${getApiUrl()}/api/requests/verify-dc`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -175,7 +188,7 @@ export async function verifyResponseDc(data: {
 }
 
 export async function getRequestStatus({ verificationSessionId }: { verificationSessionId: string }) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/${verificationSessionId}`, {
+  const response = await fetch(`${getApiUrl()}/api/requests/${verificationSessionId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -190,7 +203,7 @@ export async function getRequestStatus({ verificationSessionId }: { verification
 }
 
 export async function receiveRequest(requestUri: string) {
-  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/receive`, {
+  const response = await fetch(`${getApiUrl()}/api/requests/receive`, {
     headers: {
       'Content-Type': 'application/json',
     },

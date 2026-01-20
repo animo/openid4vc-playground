@@ -10,7 +10,7 @@ if (
 }
 
 const AGENT_HOST = process.env.AGENT_HOST
-const AGENT_DNS = AGENT_HOST.replace('https://', '')
+const AGENT_DNS = AGENT_HOST.replace('https://', '').split('/')[0]
 const AGENT_WALLET_KEY = process.env.AGENT_WALLET_KEY
 
 const ROOT_P256_SEED = process.env.ROOT_P256_SEED
