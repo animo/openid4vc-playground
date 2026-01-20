@@ -13,7 +13,7 @@ export function Main() {
       <div className="flex items-center justify-center w-full p-8">
         <div className="relative grid gap-2">
           <div className="absolute -right-10 -top-5 text-3xl">🇫🇷</div>
-          <Image alt="Logo" className="h-4 md:h-6 w-auto object-contain" height={256} width={256} src="/logo.svg" />
+          <Image alt="Logo" className="h-4 md:h-6 w-auto object-contain" height={256} width={256} src="logo.svg" />
           <div className="flex w-full justify-between">
             {['P', 'L', 'A', 'Y', 'G', 'R', 'O', 'U', 'N', 'D'].map((char, _i) => (
               <span key={char} className="text-xs text-gray-500 font-medium">
