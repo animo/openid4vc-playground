@@ -2,7 +2,6 @@ import type { PlaygroundVerifierOptions } from '../verifier.js'
 import { europeanUnionVerifier } from './europeanUnion.js'
 import { farmatecVerifier } from './farmatec.js'
 import { kvkVerifier } from './kvk.js'
-import { openHorizonBankVerifier } from './openHorizonBank.js'
 import { pgeuVerifier } from './pgeu.js'
 import { redcarePharmacyVerifier } from './redcarePharmacy.js'
 import type { TrustChain } from './trustChains.js'
@@ -12,14 +11,14 @@ import { utopiaGovernmentVerifier } from './utopiaGovernment.js'
 
 export const verifiers = [
   utopiaGovernmentVerifier,
-  turboKeysVerifier,
-  kvkVerifier,
-  trustPilotVerifier,
-  openHorizonBankVerifier,
-  redcarePharmacyVerifier,
-  farmatecVerifier,
-  pgeuVerifier,
-  europeanUnionVerifier,
+  // turboKeysVerifier,
+  // kvkVerifier,
+  // trustPilotVerifier,
+  // openHorizonBankVerifier,
+  // redcarePharmacyVerifier,
+  // farmatecVerifier,
+  // pgeuVerifier,
+  // europeanUnionVerifier,
 ]
 export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 

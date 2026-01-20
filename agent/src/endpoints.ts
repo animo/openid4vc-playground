@@ -2,6 +2,7 @@ import {
   JsonEncoder,
   JsonTransformer,
   Jwt,
+  joinUriParts,
   MdocDeviceResponse,
   RecordNotFoundError,
   TypedArrayEncoder,
@@ -17,6 +18,7 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
 import { funkeDeployedAccessCertificate, funkeDeployedRegistrationCertificate } from './eudiTrust.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
@@ -25,7 +27,7 @@ import { oidcUrl } from './oidcProvider/provider.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier, type PlaygroundVerifierOptions } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
-import { dcqlQueryFromRequest } from './verifiers/util.js'
+import { presentationDefinitionFromRequest } from './verifiers/util.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -223,7 +225,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       requestScheme,
       responseMode,
       purpose,
-      redirectUriBase,
+      redirectUriBase = joinUriParts(AGENT_HOST, ['api', 'redirect']),
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
     const _x509RootCertificate = getX509RootCertificate()
@@ -248,8 +250,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
 
-    const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
-    const credentialIds = queryLanguageDefinition.credentials.map((query) => query.id)
+    const queryLanguageDefinition = presentationDefinitionFromRequest(definition, purpose)
+    const credentialIds = queryLanguageDefinition.input_descriptors.map((query) => query.id)
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
@@ -280,7 +282,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               : {
                   method: 'x5c',
                   x5c: [x509DcsCertificate],
-                  clientIdPrefix: 'x509_hash',
+                  clientIdPrefix: 'x509_san_dns',
                 },
         transactionData:
           transactionAuthorizationType === 'qes'
@@ -300,11 +302,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 },
               ]
             : undefined,
-        dcql: {
-          query: queryLanguageDefinition,
+        // dcql: {
+        //   query: queryLanguageDefinition,
+        // },
+        presentationExchange: {
+          definition: queryLanguageDefinition,
         },
         responseMode,
-        version: 'v1',
+        version: 'v1.draft21',
         expectedOrigins:
           requestSignerType !== 'none' && responseMode.includes('dc_api')
             ? [request.headers.origin as string]
@@ -326,6 +331,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     }))
 
     console.log(JSON.stringify(authorizationRequestObject, null, 2))
+    const presentationDefinition = authorizationRequestPayload.presentation_definition
     return response.json({
       authorizationRequestObject,
       authorizationRequestUri: authorizationRequest.replace('openid4vp://', requestScheme),
@@ -333,6 +339,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       responseStatus: verificationSession.state,
       dcqlQuery,
       transactionData,
+      definition: presentationDefinition,
       authorizationRequest: authorizationRequestJwt
         ? {
             payload: authorizationRequestJwt.payload.toJson(),
@@ -358,6 +365,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     header: authorizationRequestJwt?.header,
   }
   const dcqlQuery = authorizationRequestPayload.dcql_query
+  const presentationDefinition = authorizationRequestPayload.presentation_definition
 
   const transactionData = authorizationRequestPayload.verifier_info?.map((e) => ({
     ...e,
@@ -366,66 +374,72 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
 
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
     const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)
+    console.log(verified.presentationExchange?.presentations)
     console.log(verified.dcql?.presentationResult)
 
     const presentations = await Promise.all(
-      Object.values(verified.dcql?.presentations ?? {})
-        .flat()
-        .map(async (presentation) => {
-          if (presentation instanceof W3cJsonLdVerifiablePresentation) {
-            return {
-              pretty: presentation.toJson(),
-              encoded: presentation.toJson(),
-            }
-          }
-
-          if (presentation instanceof W3cJwtVerifiablePresentation) {
-            return {
-              pretty: JsonTransformer.toJSON(presentation.presentation),
-              encoded: presentation.serializedJwt,
-            }
-          }
-
-          if (presentation instanceof MdocDeviceResponse) {
-            return {
-              pretty: JsonTransformer.toJSON({
-                documents: presentation.documents.map((doc) => ({
-                  doctype: doc.docType,
-                  alg: doc.alg,
-                  base64Url: doc.base64Url,
-                  validityInfo: doc.validityInfo,
-                  deviceSignedNamespaces: doc.deviceSignedNamespaces,
-                  issuerSignedNamespaces: Object.entries(doc.issuerSignedNamespaces).map(
-                    ([nameSpace, nameSpacEntries]) => [
-                      nameSpace,
-                      Object.entries(nameSpacEntries).map(([key, value]) =>
-                        value instanceof Uint8Array
-                          ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
-                          : [key, value]
-                      ),
-                    ]
-                  ),
-                })),
-              }),
-              encoded: presentation.base64Url,
-            }
-          }
-
-          if (
-            presentation instanceof W3cV2JwtVerifiablePresentation ||
-            presentation instanceof W3cV2SdJwtVerifiablePresentation
-          ) {
-            throw new Error('W3C V2 presentations are not supported yet')
-          }
-
+      verified.presentationExchange?.presentations.map(async (presentation) => {
+        if (presentation instanceof W3cJsonLdVerifiablePresentation) {
           return {
-            pretty: {
-              ...presentation,
-              compact: undefined,
-            },
-            encoded: presentation.compact,
+            pretty: presentation.toJson(),
+            encoded: presentation.toJson(),
           }
-        }) ?? []
+        }
+
+        if (presentation instanceof W3cJwtVerifiablePresentation) {
+          return {
+            pretty: JsonTransformer.toJSON(presentation.presentation),
+            encoded: presentation.serializedJwt,
+          }
+        }
+
+        if (presentation instanceof W3cV2JwtVerifiablePresentation) {
+          return {
+            pretty: presentation.resolvedPresentation.toJSON(),
+            encoded: presentation.jwt.serializedJwt,
+          }
+        }
+
+        if (presentation instanceof W3cV2SdJwtVerifiablePresentation) {
+          return {
+            pretty: presentation.resolvedPresentation.toJSON(),
+            encoded: presentation.encoded,
+          }
+        }
+
+        if (presentation instanceof MdocDeviceResponse) {
+          return {
+            pretty: JsonTransformer.toJSON({
+              documents: presentation.documents.map((doc) => ({
+                doctype: doc.docType,
+                alg: doc.alg,
+                base64Url: doc.base64Url,
+                validityInfo: doc.validityInfo,
+                deviceSignedNamespaces: doc.deviceSignedNamespaces,
+                issuerSignedNamespaces: Object.entries(doc.issuerSignedNamespaces).map(
+                  ([nameSpace, nameSpacEntries]) => [
+                    nameSpace,
+                    Object.entries(nameSpacEntries).map(([key, value]) =>
+                      value instanceof Uint8Array
+                        ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
+                        : [key, value]
+                    ),
+                  ]
+                ),
+              })),
+            }),
+            encoded: presentation.base64Url,
+          }
+        }
+
+        return {
+          pretty: {
+            ...presentation,
+            compact: undefined,
+          },
+          encoded: presentation.compact,
+        }
+      }) ?? []
     )
 
     const dcqlSubmission = verified.dcql
@@ -444,6 +458,8 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
       authorizationRequest,
 
       presentations: presentations,
+      submission: verified.presentationExchange?.submission,
+      definition: verified.presentationExchange?.definition,
       transactionDataSubmission: verified.transactionData,
 
       dcqlQuery,
@@ -458,6 +474,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     responseStatus: verificationSession.state,
     error: verificationSession.errorMessage,
     authorizationRequest,
+    definition: presentationDefinition,
     transactionData,
     dcqlQuery,
   }
@@ -495,6 +512,9 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
     }
   }
 })
+
+apiRouter.get('/redirect', (_request, response) => response.send('Success!'))
+apiRouter.post('/redirect', (_request, response) => response.send('Success!'))
 
 apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
   console.error('Unhandled error', error)

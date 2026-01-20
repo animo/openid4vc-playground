@@ -4,9 +4,7 @@ import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { IssueTab } from './IssueTab'
 import { VerifyBlock } from './VerifyBlock'
-import { X509Tab } from './X509Tab'
 
 export function Main() {
   const searchParams = useSearchParams()
@@ -14,6 +12,7 @@ export function Main() {
     <main key="1" className="flex flex-col gap-2 min-h-screen bg-gray-100">
       <div className="flex items-center justify-center w-full p-8">
         <div className="relative grid gap-2">
+          <div className="absolute -right-10 -top-5 text-3xl">🇫🇷</div>
           <Image alt="Logo" className="h-4 md:h-6 w-auto object-contain" height={256} width={256} src="/logo.svg" />
           <div className="flex w-full justify-between">
             {['P', 'L', 'A', 'Y', 'G', 'R', 'O', 'U', 'N', 'D'].map((char, _i) => (
@@ -26,20 +25,24 @@ export function Main() {
       </div>
       <div className="flex w-full items-center justify-center">
         <Tabs className="w-full max-w-5xl px-6" defaultValue={searchParams.get('tab') ?? 'verify'}>
-          <TabsList className="grid w-full grid-cols-3 gap-2">
+          <TabsList className="grid w-full grid-cols-1 gap-2">
             <TabsTrigger value="verify">Verify</TabsTrigger>
-            <TabsTrigger value="issue">Issue</TabsTrigger>
-            <TabsTrigger value="x509">Manage Certificates</TabsTrigger>
+            {/* <TabsTrigger disabled value="issue">
+              Issue
+            </TabsTrigger>
+            <TabsTrigger disabled value="x509">
+              Manage Certificates
+            </TabsTrigger> */}
           </TabsList>
           <TabsContent value="verify">
             <VerifyBlock searchParams={searchParams} />
           </TabsContent>
-          <TabsContent value="issue">
+          {/* <TabsContent value="issue">
             <IssueTab searchParams={searchParams} />
           </TabsContent>
           <TabsContent value="x509">
             <X509Tab />
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
       <footer className="flex items-center justify-center w-full p-4 gap-8">

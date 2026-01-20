@@ -12,7 +12,7 @@ env:
 jobs:
   build-and-push-image-agent:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/france'
     permissions:
       contents: read
       packages: write
@@ -45,7 +45,7 @@ jobs:
 
   build-and-push-image-app:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/france'
     permissions:
       contents: read
       packages: write

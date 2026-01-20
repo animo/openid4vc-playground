@@ -13,11 +13,8 @@ import { PlaygroundAlert } from './PlaygroundAlert'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { Input } from './ui/input'
 import { Label } from './ui/label'
-import { CardRadioItem, MiniRadioItem, RadioGroup } from './ui/radio'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
 import { X509Certificates } from './X509Certificates'
 
@@ -250,15 +247,17 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setIsCopyingTimeout(timeout)
   }
 
-  // This is wrong
-  const groupedVerifier = verifier?.presentationRequests
-    ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
-    : {}
+  const requests = verifier?.presentationRequests.filter((v) => v.useCase.name === 'Utopia Government')
 
-  const selectedUseCase =
-    Object.entries(groupedVerifier).find(([, requests]) =>
-      requests.find((r) => r.id === presentationDefinitionId)
-    )?.[0] ?? Object.keys(groupedVerifier)[0]
+  // // This is wrong
+  // const groupedVerifier = verifier?.presentationRequests
+  //   ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
+  //   : {}
+
+  // const selectedUseCase =
+  //   Object.entries(groupedVerifier).find(([, requests]) =>
+  //     requests.find((r) => r.id === presentationDefinitionId)
+  //   )?.[0] ?? Object.keys(groupedVerifier)[0]
 
   return (
     <Card className="p-6">
@@ -271,7 +270,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         </Button>
       </div>
       <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
-        <div className="flex flex-col">
+        {/* <div className="flex flex-col">
           <div className="flex flex-col items-start gap-2">
             <span className="text-accent font-medium text-sm">Use Case</span>
           </div>
@@ -291,7 +290,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               />
             ))}
           </RadioGroup>
-        </div>
+        </div> */}
 
         <div className="space-y-2">
           <Label htmlFor="presentation-type">Presentation Type</Label>
@@ -309,105 +308,13 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               <SelectValue placeholder="Select a presentation type" />
             </SelectTrigger>
             <SelectContent>
-              {selectedUseCase &&
-                groupedVerifier[selectedUseCase]?.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.display}
-                  </SelectItem>
-                ))}
+              {requests?.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.display}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="initiation-method">Initiation Method</Label>
-
-          <RadioGroup
-            name="initiation-method"
-            required
-            value={responseMode === 'dc_api' || responseMode === 'dc_api.jwt' ? 'dcApi' : 'qr'}
-            onValueChange={(value) => {
-              setResponseMode(
-                `${value === 'qr' ? 'direct_post' : 'dc_api'}${responseMode.endsWith('.jwt') ? '.jwt' : ''}`
-              )
-              if (value === 'qr') {
-                setRequestSignerType((s) => (s === 'none' ? 'x5c' : s))
-              }
-            }}
-          >
-            <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
-            <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
-          </RadioGroup>
-        </div>
-        {responseMode.includes('direct_post') && (
-          <div className="space-y-2">
-            <Label htmlFor="request-scheme">Scheme (QR / Deeplink)</Label>
-            <Input
-              disabled={responseMode.includes('dc_api')}
-              name="request-scheme"
-              required
-              value={requestScheme}
-              onChange={({ target }) => setRequestScheme(target.value)}
-            />
-          </div>
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="request-signer-type">Request Signer Type</Label>
-
-          <RadioGroup
-            name="request-signer-type"
-            required
-            value={requestSignerType}
-            onValueChange={(value) => setRequestSignerType(value as RequestSignerType)}
-            defaultValue="x5c"
-          >
-            <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            {/* <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" /> */}
-            {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
-          </RadioGroup>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="presentation-type">Transaction Authorization</Label>
-          <Select
-            name="transaction-data"
-            required
-            value={transactionAuthorizationType}
-            onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a transaction authorization type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-              <SelectItem value="payment" disabled>
-                Payment
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="response-mode">Use Response Encryption</Label>
-          <Switch
-            id="response-mode"
-            name="response-mode"
-            required
-            checked={responseMode === 'direct_post.jwt' || responseMode === 'dc_api.jwt'}
-            onCheckedChange={(checked) =>
-              setResponseMode(
-                checked
-                  ? responseMode.endsWith('.jwt')
-                    ? responseMode
-                    : (`${responseMode}.jwt` as ResponseMode)
-                  : (responseMode.replace('.jwt', '') as ResponseMode)
-              )
-            }
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="request-purpose">Purpose</Label>
-          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
         </div>
         {!hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">

@@ -1,5 +1,4 @@
 import { GitHubLogoIcon, InfoCircledIcon } from '@radix-ui/react-icons'
-import Image from 'next/image'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 export function PlaygroundAlert() {
@@ -8,28 +7,35 @@ export function PlaygroundAlert() {
       <InfoCircledIcon className="h-4 w-4" />
       <AlertTitle>Info</AlertTitle>
       <AlertDescription>
-        This playground implements <code>OpenID4VC 1.0</code>, <code>OpenID4VP 1.0</code>, <code>SD-JWT VC</code>,{' '}
-        <code>mDOC</code>, and most of the <code>High Assurance Interop Profile</code> (full support pending).
-        <br />
-        <br />
-        You can use it with the{' '}
+        This playground is specifically adapted for interoperability with the France Identité 🇫🇷 wallet targeting
+        verification of <code>ISO 18013-5 mDOC</code> credentials using <code>ISO 18013-7:2024 (Annex B)</code>. You can
+        read more about access to the{' '}
         <a
           target="_blank"
           href="https://linktr.ee/paradym_id"
           className="inline-flex gap-1 pl-px underline"
           rel="noreferrer"
         >
-          <Image
-            src="/assets/paradym-wallet-logo.png"
-            width={11}
-            height={14}
-            alt="Paradym Wallet Logo"
-            className="inline p-0 h-[14px]"
-          />
-          Paradym Wallet
+          France Identité 🇫🇷 Sandbox Environment
         </a>
-        , or any other wallet implementation compliant with the High Assurance Interoperability Profile. If you
-        experience any issues when using this playground, please open an issue in the
+        .
+        <br />
+        <br />
+        You can also check out the{' '}
+        <a
+          target="_blank"
+          href="https://linktr.ee/paradym_id"
+          className="inline-flex gap-1 pl-px underline"
+          rel="noreferrer"
+        >
+          full Animo Playground
+        </a>{' '}
+        which in addition supports <code>OpenID4VC 1.0</code>, <code>OpenID4VP 1.0</code>, <code>SD-JWT VC</code>,{' '}
+        <code>W3C Digital Credentials API</code>, and most of the <code>High Assurance Interop Profile</code> (full
+        support pending).
+        <br />
+        <br />
+        If you experience any issues when using this playground, please open an issue in the
         <a
           target="_blank"
           className="inline-flex gap-1 pl-1.5 underline"

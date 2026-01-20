@@ -1,4 +1,5 @@
-import type { DcqlQuery } from '@credo-ts/core'
+import { randomUUID } from 'node:crypto'
+import type { DcqlQuery, DifPresentationExchangeDefinitionV2 } from '@credo-ts/core'
 import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export interface SdJwtCredential {
@@ -37,6 +38,85 @@ export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) 
     fields,
     vcts: ['urn:eudi:pid:1', 'https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
   } satisfies SdJwtCredential
+}
+
+export function presentationDefinitionFromRequest(
+  request: PlaygroundVerifierOptions['requests'][number],
+  purpose?: string
+): DifPresentationExchangeDefinitionV2 {
+  return {
+    id: randomUUID(),
+    name: request.name,
+    purpose: purpose ?? request.purpose,
+    input_descriptors: request.credentials.map((c, index) => ({
+      id: c.format === 'mso_mdoc' ? c.doctype : randomUUID(),
+      group: request.credential_sets
+        ?.map((set, setIndex) => (set.includes(index) ? `${setIndex}` : undefined))
+        .filter((s): s is string => s !== undefined),
+      format:
+        c.format === 'dc+sd-jwt'
+          ? {
+              'vc+sd-jwt': {
+                'sd-jwt_alg_values': ['ES256', 'ES384', 'EdDSA'],
+                'kb-jwt_alg_values': ['ES256', 'ES384', 'EdDSA'],
+              },
+            }
+          : {
+              mso_mdoc: {
+                alg: ['ES256', 'ES384', 'EdDSA'],
+              },
+            },
+      constraints: {
+        limit_disclosure: 'required',
+        fields: [
+          ...c.fields.map((field) =>
+            c.format === 'dc+sd-jwt'
+              ? {
+                  path: [`$.${typeof field === 'string' ? field : field.path}`],
+                  filter:
+                    typeof field !== 'string'
+                      ? {
+                          enum: field.values,
+                        }
+                      : undefined,
+                }
+              : {
+                  intent_to_retain: false,
+                  path: [`$['${c.namespace}']['${typeof field === 'string' ? field : field.path}']`],
+                  // Filter not allowed for mdoc
+                }
+          ),
+          ...(c.format === 'dc+sd-jwt' && c.issuers?.length
+            ? [
+                {
+                  path: ['$.iss'],
+                  filter: {
+                    type: 'string',
+                    enum: c.issuers,
+                  },
+                },
+              ]
+            : []),
+          ...(c.format === 'dc+sd-jwt' && c.vcts.length
+            ? [
+                {
+                  path: ['$.vct'],
+                  filter: {
+                    type: 'string',
+                    ...(c.vcts.length === 1 ? { const: c.vcts[0] } : { enum: c.vcts }),
+                  },
+                },
+              ]
+            : []),
+        ],
+      },
+    })),
+    submission_requirements: request.credential_sets?.map((_, index) => ({
+      rule: 'pick',
+      count: 1,
+      from: `${index}`,
+    })),
+  }
 }
 
 export function dcqlQueryFromRequest(
