@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Playground | Animo',
+  title: 'EUDI Playground | Animo',
   description:
-    'This playground implements OpenID4VC 1.0, OpenID4VP 1.0, SD-JWT VC, mDOC, and most of the High Assurance Interop Profile (full support pending).',
+    'This EUDI playground is built by Animo and specifically adapted to work with the France Identité 🇫🇷 wallet.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
