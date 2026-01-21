@@ -12,13 +12,8 @@ export function PlaygroundAlert() {
         <code>mDOC</code>, and most of the <code>High Assurance Interop Profile</code> (full support pending).
         <br />
         <br />
-        You can use it with the{' '}
-        <a
-          target="_blank"
-          href="https://linktr.ee/paradym_id"
-          className="inline-flex gap-1 pl-px underline"
-          rel="noreferrer"
-        >
+        You can use it with the Experimental{' '}
+        <span>
           <Image
             src="/assets/paradym-wallet-logo.png"
             width={11}
@@ -27,6 +22,24 @@ export function PlaygroundAlert() {
             className="inline p-0 h-[14px]"
           />
           Paradym Wallet
+        </span>{' '}
+        for{' '}
+        <a
+          target="_blank"
+          href="https://testflight.apple.com/join/rxhN5uaw"
+          className="inline-flex gap-1 pl-px underline"
+          rel="noreferrer"
+        >
+          IOS
+        </a>{' '}
+        or{' '}
+        <a
+          target="_blank"
+          href="https://expo.dev/accounts/animo-id/projects/paradym-wallet/builds/29414cda-2dbd-45bb-8da3-cfc8cea78df3"
+          className="inline-flex gap-1 pl-px underline"
+          rel="noreferrer"
+        >
+          Android
         </a>
         , or any other wallet implementation compliant with the High Assurance Interoperability Profile. If you
         experience any issues when using this playground, please open an issue in the
