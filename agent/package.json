@@ -9,12 +9,12 @@
     "@credo-ts/openid4vc": "0.6.2-alpha-20260126104135",
     "@openwallet-foundation/askar-nodejs": "^0.4.3",
     "@openwallet-foundation/askar-shared": "^0.4.3",
-    "@peculiar/x509": "^1.14.2",
-    "cors": "^2.8.5",
+    "@peculiar/x509": "^1.14.3",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "oidc-provider": "^9.6.0",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
