@@ -27,8 +27,8 @@ importers:
         specifier: 0.6.2-alpha-20260126104135
         version: 0.6.2-alpha-20260126104135(typescript@5.9.3)
       '@credo-ts/openid4vc':
-        specifier: 0.6.2-alpha-20260126104135
-        version: 0.6.2-alpha-20260126104135(typescript@5.9.3)
+        specifier: 0.6.2-pr-2634-20260123131820
+        version: 0.6.2-pr-2634-20260123131820(typescript@5.9.3)
       '@openwallet-foundation/askar-nodejs':
         specifier: ^0.4.3
         version: 0.4.3
@@ -246,6 +246,9 @@ packages:
   '@credo-ts/core@0.6.2-alpha-20260126104135':
     resolution: {integrity: sha512-l10LInrJ+RG1MCiUEPt+6etX/3+gjCu7wX2BrZseOrzaG77juH/9+ihmm4jZ+ACU9dIx7xEsJTijgu4pURINJQ==}
 
+  '@credo-ts/core@0.6.2-pr-2634-20260123131820':
+    resolution: {integrity: sha512-jV6enfV4HXWwtsIt4vrVpnkHn/D0Ne6/iWCxggErVbBMcD2JTfZmiEAXxuzz9pyNGpcJyW9SLqmc50BzFGGMog==}
+
   '@credo-ts/didcomm@0.6.2-alpha-20260126104135':
     resolution: {integrity: sha512-+7jkU+ynb7HjqflI2glHHnElpJdssRw5uIis1MLR6wj74YQAKrosiSO1Fhrwetoel5N8ffKzXOSr21J5yZs7qg==}
 
@@ -253,8 +256,8 @@ packages:
     resolution: {integrity: sha512-/aNS8KpvJkgLZ3JfFQdQW1RxRDmHAi8jp9pR0OfsBYfxNKayZmjic+4dUsN4QYUmQfTUmtISll44e362BBs3PQ==}
     engines: {node: '>=20.19'}
 
-  '@credo-ts/openid4vc@0.6.2-alpha-20260126104135':
-    resolution: {integrity: sha512-HZ6MUYx8lAz0BMz9DAVFOphFXjVaBktjBcsqKfGgpnPZ1Rd0puqDdAU67qTSuC0BZ/UI68NsfPmZrAztA/jQcA==}
+  '@credo-ts/openid4vc@0.6.2-pr-2634-20260123131820':
+    resolution: {integrity: sha512-D6jeGZefSpN1lgxmLAdzDar0J3S5S+Es1f9SN/zWVEwWay6ZJWmxVUiEQVk0EtQfJLZ2yh306TulQ0x0ccTCzQ==}
 
   '@digitalbazaar/security-context@1.0.1':
     resolution: {integrity: sha512-0WZa6tPiTZZF8leBtQgYAfXQePFQp2z5ivpCEN/iZguYYZ0TB9qRmWtan5XH6mNFuusHtMcyIzAcReyE6rZPhA==}
@@ -2313,6 +2316,7 @@ packages:
   tar@7.5.2:
     resolution: {integrity: sha512-7NyxrTE4Anh8km8iEy7o0QYPs+0JKBTj5ZaqHg6B39erLg0qYXN3BijtShwbsNSvQ+LN75+KV+C4QR/f6Gwnpg==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -2610,6 +2614,55 @@ snapshots:
       - supports-color
       - typescript
 
+  '@credo-ts/core@0.6.2-pr-2634-20260123131820(typescript@5.9.3)':
+    dependencies:
+      '@animo-id/mdoc': 0.5.2
+      '@animo-id/pex': 6.1.1
+      '@astronautlabs/jsonpath': 1.1.2
+      '@digitalcredentials/jsonld': 9.0.0
+      '@digitalcredentials/jsonld-signatures': 12.0.1
+      '@digitalcredentials/vc': 10.0.2
+      '@multiformats/base-x': 4.0.1
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@peculiar/asn1-ecc': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/x509': 1.14.2
+      '@sd-jwt/core': 0.18.1
+      '@sd-jwt/decode': 0.18.1
+      '@sd-jwt/jwt-status-list': 0.18.1
+      '@sd-jwt/present': 0.18.1
+      '@sd-jwt/sd-jwt-vc': 0.18.1
+      '@sd-jwt/types': 0.18.1
+      '@sd-jwt/utils': 0.18.1
+      '@sphereon/pex-models': 2.3.2
+      '@sphereon/ssi-types': 0.33.0
+      '@stablelib/ed25519': 2.0.2
+      '@types/ws': 8.18.1
+      buffer: 6.0.3
+      class-transformer: 0.5.1
+      class-validator: 0.14.3
+      dcql: 3.0.0(typescript@5.9.3)
+      did-resolver: 4.1.0
+      ec-compression: 0.0.1-alpha.12
+      lru_map: 0.4.1
+      make-error: 1.3.6
+      object-inspect: 1.13.4
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tsyringe: 4.10.0
+      uuid: 13.0.0
+      varint: 6.0.0
+      web-did-resolver: 2.0.32
+      webcrypto-core: 1.8.1
+      zod: 4.3.5
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+      - typescript
+
   '@credo-ts/didcomm@0.6.2-alpha-20260126104135(typescript@5.9.3)':
     dependencies:
       '@credo-ts/core': 0.6.2-alpha-20260126104135(typescript@5.9.3)
@@ -2638,9 +2691,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@credo-ts/openid4vc@0.6.2-alpha-20260126104135(typescript@5.9.3)':
+  '@credo-ts/openid4vc@0.6.2-pr-2634-20260123131820(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.6.2-alpha-20260126104135(typescript@5.9.3)
+      '@credo-ts/core': 0.6.2-pr-2634-20260123131820(typescript@5.9.3)
       '@openid4vc/oauth2': 0.4.4
       '@openid4vc/openid4vci': 0.4.4
       '@openid4vc/openid4vp': 0.4.4
