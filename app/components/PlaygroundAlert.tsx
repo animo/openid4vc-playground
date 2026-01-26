@@ -12,7 +12,7 @@ export function PlaygroundAlert() {
         read more about access to the{' '}
         <a
           target="_blank"
-          href="https://linktr.ee/paradym_id"
+          href="https://playground.france-identite.gouv.fr/doc/marketplace/wallets/fin/"
           className="inline-flex gap-1 pl-px underline"
           rel="noreferrer"
         >
@@ -24,7 +24,7 @@ export function PlaygroundAlert() {
         You can also check out the{' '}
         <a
           target="_blank"
-          href="https://linktr.ee/paradym_id"
+          href="https://playground.animo.id"
           className="inline-flex gap-1 pl-px underline"
           rel="noreferrer"
         >
