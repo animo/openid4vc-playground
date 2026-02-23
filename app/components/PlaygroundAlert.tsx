@@ -35,7 +35,7 @@ export function PlaygroundAlert() {
         or{' '}
         <a
           target="_blank"
-          href="https://expo.dev/accounts/animo-id/projects/paradym-wallet/builds/29414cda-2dbd-45bb-8da3-cfc8cea78df3"
+          href="https://expo.dev/accounts/animo-id/projects/paradym-wallet/builds/83dfa043-7078-4c50-a0c9-e117ae57e77a"
           className="inline-flex gap-1 pl-px underline"
           rel="noreferrer"
         >
