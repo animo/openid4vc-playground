@@ -128,6 +128,15 @@ export const utopiaGovernmentVerifier = {
       credential_sets: [[0, 1]],
     },
     {
+      name: 'PID (sd-jwt-vc or mdoc) + optional mDL (mdoc)',
+      purpose: 'PID (sd-jwt-vc or mdoc) + optional mDL (mdoc)',
+      credentials: [pidSdJwtVcNames, pidMdocNames, mdlNames],
+      credential_sets: [
+        { options: [0, 1], required: true },
+        { options: [2], required: false },
+      ],
+    },
+    {
       name: 'PID - postal code or resident city (mdoc)',
       purpose: 'PID - postal code or resident city (mdoc)',
       credentials: [pidMdocPostalCodeOrResidentCity],

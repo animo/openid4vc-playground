@@ -93,13 +93,24 @@ export function dcqlQueryFromRequest(
           }
     ),
     credential_sets: request.credential_sets
-      ? request.credential_sets.map((set) => ({
-          options: set.map((v) => [`${v}`]),
-          purpose: purpose ?? request.purpose,
-        }))
+      ? request.credential_sets.map((set) => {
+          if (Array.isArray(set)) {
+            return {
+              options: set.map((v) => [`${v}`]),
+              required: true,
+              purpose: purpose ?? request.purpose,
+            }
+          }
+          return {
+            options: set.options.map((v) => [`${v}`]),
+            required: set.required ?? true,
+            purpose: set.purpose ?? purpose ?? request.purpose,
+          }
+        })
       : [
           {
             options: [request.credentials.map((_, index) => `${index}`)],
+            required: true,
             purpose: purpose ?? request.purpose,
           },
         ],
