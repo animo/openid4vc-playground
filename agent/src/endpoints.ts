@@ -261,44 +261,42 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
     const queryRequest = dcqlQueryFromRequest(definition, purpose)
+    const pidSdJwtVct = pidSdJwtCredential({ fields: [] }).vcts[0]
+    const pidMdocDoctype = pidMdocCredential({ fields: [] }).doctype
+
     let pidCredentialIds = findCredentials(queryRequest.credentials, {
-      vcts: [pidSdJwtCredential({ fields: [] }).vcts[0]],
-      doctypes: [pidMdocCredential({ fields: [] }).doctype],
+      vcts: [pidSdJwtVct],
     }).map((query) => query.id)
 
-    // create qes credentials if non is present
+    // create qes credentials if none is present (SD-JWT only)
     if (qesRequest && !pidCredentialIds.length) {
       addOneOfCredentials(queryRequest, [
         {
           id: 'qes_pid_sd_jwt',
           format: 'dc+sd-jwt',
           meta: {
-            vct_values: [pidSdJwtCredential({ fields: [] }).vcts[0]],
-          },
-          require_cryptographic_holder_binding: true,
-        },
-        {
-          id: 'qes_pid_mdoc',
-          format: 'mso_mdoc',
-          meta: {
-            doctype_value: pidMdocCredential({ fields: [] }).doctype,
+            vct_values: [pidSdJwtVct],
           },
           require_cryptographic_holder_binding: true,
         },
       ])
-      pidCredentialIds = ['qes_pid_sd_jwt', 'qes_pid_mdoc']
+      pidCredentialIds = ['qes_pid_sd_jwt']
     }
     // create payment credential
     const scaId = 'sca_credential'
     if (paymentRequest) {
-      addOneOfCredentials(queryRequest, [
-        {
-          id: scaId,
-          format: 'dc+sd-jwt',
-          meta: {},
-          require_cryptographic_holder_binding: true,
-        },
-      ])
+      addOneOfCredentials(
+        queryRequest,
+        [
+          {
+            id: scaId,
+            format: 'dc+sd-jwt',
+            meta: {},
+            require_cryptographic_holder_binding: true,
+          },
+        ],
+        { position: 'prepend' }
+      )
     }
 
     const definitionTransactionData = definition.transaction_data ?? []

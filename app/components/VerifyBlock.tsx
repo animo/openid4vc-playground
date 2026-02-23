@@ -481,13 +481,13 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                     <div className="gap-2 w-full justify-center flex flex-1">
                       <div>
                         <Link href={authorizationRequestUri}>
-                          <Button>Open in Wallet</Button>
+                          <Button type="button">Open in Wallet</Button>
                         </Link>
                       </div>
                     </div>
                     <div>
                       <Link href={authorizationRequestUri.replace('openid4vp://', 'id.animo.paradym:')}>
-                        <Button>Open in Paradym Wallet</Button>
+                        <Button type="button">Open in Paradym Wallet</Button>
                       </Link>
                     </div>
                   </div>

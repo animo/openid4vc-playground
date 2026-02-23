@@ -20,9 +20,14 @@ export function findCredentials(
 /**
  * Adds a new credential set with OR relationship
  */
-export function addOneOfCredentials(query: DcqlQuery, newCredentials: DcqlQuery['credentials'][number][]) {
+export function addOneOfCredentials(
+  query: DcqlQuery,
+  newCredentials: DcqlQuery['credentials'][number][],
+  options?: { position?: 'append' | 'prepend' }
+) {
   if (newCredentials.length === 0) return
 
+  const position = options?.position ?? 'append'
   const existingIds = query.credentials.map((c) => c.id)
   if (!query.credential_sets || query.credential_sets.length === 0) {
     query.credential_sets = [{ options: [existingIds], required: true }]
@@ -35,8 +40,13 @@ export function addOneOfCredentials(query: DcqlQuery, newCredentials: DcqlQuery[
     // biome-ignore lint/suspicious/noExplicitAny: match existing pattern
     query.credentials.push(credential as any)
   }
-  query.credential_sets.push({
+  const newSet = {
     options: newIds.map((it) => [it]) as NonEmptyArray<string[]>,
     required: true,
-  })
+  }
+  if (position === 'prepend') {
+    query.credential_sets.unshift(newSet)
+  } else {
+    query.credential_sets.push(newSet)
+  }
 }

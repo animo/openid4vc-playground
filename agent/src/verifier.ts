@@ -10,7 +10,14 @@ export interface PlaygroundVerifierOptions {
     purpose: string
     credentials: Array<SdJwtCredential | MdocCredential>
     // Indexes
-    credential_sets?: Array<number[]>
+    credential_sets?: Array<
+      | number[]
+      | {
+          options: number[]
+          required?: boolean
+          purpose?: string
+        }
+    >
     transaction_data?: Array<{
       type: string
       subtype?: string
