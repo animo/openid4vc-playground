@@ -1,10 +1,11 @@
-import { CheckIcon, CopyIcon } from '@radix-ui/react-icons'
+import { CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
 import Link from 'next/link'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -38,9 +39,12 @@ export function IssueTab({
 
   const [selectedAuthorization, setSelectedAuthorization] = useState<string>('none')
   const [selectedDeferBy, setDeferBy] = useState<string>('none')
+  const [issuanceMethod, setIssuanceMethod] = useState<'qr' | 'dcApi'>('qr')
 
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
   const [userPin, setUserPin] = useState<string>()
+  const [issueStatus, setIssueStatus] = useState<'idle' | 'issuing' | 'issued' | 'error'>('idle')
+  const [issueError, setIssueError] = useState<string>()
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
   const router = useRouter()
@@ -68,6 +72,9 @@ export function IssueTab({
       if (query.dpop) setRequireDpop(query.dpop === 'true')
       if (query.walletAttestation) setRequireWalletAttestation(query.walletAttestation === 'true')
       if (query.keyAttestation) setRequireKeyAttestation(query.keyAttestation === 'true')
+      if (query.initiationMethod === 'dcApi' || query.initiationMethod === 'qr') {
+        setIssuanceMethod(query.initiationMethod)
+      }
     })
   }, [issuers, searchParams])
 
@@ -84,6 +91,7 @@ export function IssueTab({
     params.set('dpop', `${requireDpop}`)
     params.set('keyAttestation', `${requireKeyAttestation}`)
     params.set('walletAttestation', `${requireWalletAttestation}`)
+    if (issuanceMethod) params.set('initiationMethod', issuanceMethod)
     if (credentialType !== undefined) params.set('credentialType', `${credentialType}`)
 
     const existingSearchParams = new URLSearchParams(searchParams.toString())
@@ -101,6 +109,7 @@ export function IssueTab({
     selectedFormat,
     selectedAuthorization,
     selectedDeferBy,
+    issuanceMethod,
     credentialType,
     router,
     searchParams,
@@ -108,6 +117,54 @@ export function IssueTab({
     requireKeyAttestation,
     requireWalletAttestation,
   ])
+
+  useEffect(() => {
+    setIssueStatus('idle')
+    setIssueError(undefined)
+  }, [issuanceMethod])
+
+  const buildDcApiRequestData = (offerUri: string) => {
+    const queryIndex = offerUri.indexOf('?')
+    if (queryIndex >= 0) {
+      const params = new URLSearchParams(offerUri.slice(queryIndex + 1))
+      const offerUriParam = params.get('credential_offer_uri')
+      if (offerUriParam) {
+        return { credential_offer_uri: offerUriParam }
+      }
+      const inlineOffer = params.get('credential_offer')
+      if (inlineOffer) {
+        try {
+          return { credential_offer: JSON.parse(inlineOffer) }
+        } catch {
+          return { credential_offer: inlineOffer }
+        }
+      }
+    }
+
+    try {
+      return { credential_offer: JSON.parse(offerUri) }
+    } catch {
+      return { credential_offer_uri: offerUri }
+    }
+  }
+
+  const initiateDcIssuance = async (offerUri: string) => {
+    if (!('credentials' in navigator) || typeof navigator.credentials.create !== 'function') {
+      throw new Error('Digital Credentials API is not supported in this browser.')
+    }
+    const requestData = buildDcApiRequestData(offerUri)
+    await navigator.credentials.create({
+      // @ts-expect-error Digital Credentials API typings
+      digital: {
+        requests: [
+          {
+            protocol: 'openid4vci1.0',
+            data: requestData,
+          },
+        ],
+      },
+    })
+  }
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
@@ -128,6 +185,19 @@ export function IssueTab({
     })
     setCredentialOfferUri(offer.credentialOffer)
     setUserPin(offer.issuanceSession.userPin)
+    setIssueError(undefined)
+    setIssueStatus('idle')
+
+    if (issuanceMethod === 'dcApi') {
+      setIssueStatus('issuing')
+      try {
+        await initiateDcIssuance(offer.credentialOffer)
+        setIssueStatus('issued')
+      } catch (error) {
+        setIssueStatus('error')
+        setIssueError(error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API')
+      }
+    }
   }
 
   const copyConfiguration = async () => {
@@ -253,6 +323,19 @@ export function IssueTab({
           </RadioGroup>
         </div>
         <div className="space-y-2">
+          <Label htmlFor="initiation-method">Initiation Method</Label>
+          <RadioGroup
+            name="initiation-method"
+            required
+            className="flex flex-col gap-2 md:gap-4 md:flex-row"
+            onValueChange={(v) => setIssuanceMethod(v as 'qr' | 'dcApi')}
+            value={issuanceMethod}
+          >
+            <MiniRadioItem value="qr" label="QR / Deeplink" />
+            <MiniRadioItem value="dcApi" label="Digital Credentials API" />
+          </RadioGroup>
+        </div>
+        <div className="space-y-2">
           <div>
             <Label htmlFor="format">Authentication</Label>
             <p className="text-gray-500 text-sm">
@@ -327,7 +410,11 @@ export function IssueTab({
           />
         </div>
         <div className="flex justify-center items-center bg-gray-200 min-h-64 w-full rounded-md">
-          {credentialOfferUri ? (
+          {issuanceMethod === 'dcApi' ? (
+            <p className="text-gray-500 text-center px-6">
+              Digital Credentials API is selected. The credential offer will be sent directly.
+            </p>
+          ) : credentialOfferUri ? (
             <TooltipProvider>
               <Tooltip>
                 <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
@@ -372,6 +459,25 @@ export function IssueTab({
             <p className="text-gray-500 break-all">Credential offer will be displayed here</p>
           )}
         </div>
+        {issuanceMethod === 'dcApi' && issueStatus !== 'idle' && (
+          <Alert variant={issueStatus === 'issued' ? 'success' : issueStatus === 'error' ? 'destructive' : 'warning'}>
+            {issueStatus === 'error' ? (
+              <ExclamationTriangleIcon className="h-4 w-4" />
+            ) : issueStatus === 'issued' ? (
+              <CheckIcon className="h-5 w-5" />
+            ) : null}
+            <AlertTitle>
+              {issueStatus === 'issuing'
+                ? 'Requesting Credential'
+                : issueStatus === 'issued'
+                  ? 'Credential Request Sent'
+                  : 'Issuance Failed'}
+            </AlertTitle>
+            {issueStatus === 'error' && issueError && (
+              <AlertDescription className="mt-2">{issueError}</AlertDescription>
+            )}
+          </Alert>
+        )}
         <Button
           onClick={onSubmitIssueCredential}
           disabled={disabled}

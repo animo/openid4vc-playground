@@ -129,6 +129,7 @@ async function run() {
     AGENT_HOST.includes('ngrok') ||
     AGENT_HOST.includes('.ts.net') ||
     AGENT_HOST.includes('.serveousercontent.com') ||
+    AGENT_HOST.includes('trycloudflare.com') ||
     AGENT_HOST.includes('localhost')
   ) {
     console.log(path.join(dirname, '../../app/public/assets'))
