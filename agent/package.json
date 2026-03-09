@@ -11,7 +11,7 @@
     "@openwallet-foundation/askar-shared": "^0.4.3",
     "@peculiar/x509": "^1.14.3",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "oidc-provider": "^9.6.1",
     "zod": "^4.3.6"
