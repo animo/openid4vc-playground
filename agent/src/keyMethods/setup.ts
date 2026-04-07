@@ -10,13 +10,15 @@ import {
 
 let x509RootCertificate: X509Certificate | undefined
 let x509DcsCertificate: X509Certificate | undefined
+export let dcsId: string | undefined
 let crl: Buffer | undefined
 
 export async function setupX509Certificate() {
   const x509Record = await agent.genericRecords.findById('X509_CERTIFICATE')
 
   try {
-    const { documentSignerPublicJwk, authorityPublicJwk } = await createKeys()
+    const { documentSignerPublicJwk, authorityPublicJwk, dcsId: documentSignerCertificateId } = await createKeys()
+    dcsId = documentSignerCertificateId
 
     if (X509_ROOT_CERTIFICATE) {
       const parsedCertificate = X509Service.parseCertificate(agent.context, {

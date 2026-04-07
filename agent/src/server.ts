@@ -1,6 +1,6 @@
 import '@openwallet-foundation/askar-nodejs'
-import { Kms } from '@credo-ts/core'
-import type { Response } from 'express'
+import { JwsService, JwtPayload, Kms } from '@credo-ts/core'
+import type { Request, Response } from 'express'
 
 import express from 'express'
 import path from 'path'
@@ -11,9 +11,10 @@ import { createDidWeb, getWebDidDocument } from './didWeb.js'
 import { apiRouter } from './endpoints.js'
 import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer.js'
 import { issuers } from './issuers/index.js'
-import { openHorizonbankCredentialMetadata } from './issuers/openHorizonBank.js'
-import { getCertificateRevocationList, setupX509Certificate } from './keyMethods/index.js'
+import { openHorizonbankCredentialMetadata, openHorizonIssuerId } from './issuers/openHorizonBank.js'
+import { dcsId, getCertificateRevocationList, getX509DcsCertificate, setupX509Certificate } from './keyMethods/index.js'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider.js'
+import { dateToSeconds } from './utils/date.js'
 import { createOrUpdateVerifier } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
 
@@ -138,8 +139,43 @@ async function run() {
   })
 
   // TODO: make URL issuer-specific
-  app.use('/payments-credential-metadata', async (_, response: Response) => {
-    return response.json(openHorizonbankCredentialMetadata)
+  //       Handle `Accept-Language` header
+  app.use('/payments-credential-metadata', async (request: Request, response: Response) => {
+    if (!dcsId) {
+      return response.status(500)
+    }
+    const now = new Date()
+    const expiry = new Date()
+    expiry.setFullYear(now.getFullYear() + 3)
+
+    if (request.accepts('application/jwt')) {
+      const jwsService = agent.dependencyManager.resolve(JwsService)
+      const jws = await jwsService.createJwsCompact(agent.context, {
+        keyId: dcsId,
+        payload: new JwtPayload({
+          iss: openHorizonIssuerId,
+          sub: 'vct',
+          iat: dateToSeconds(now),
+          exp: dateToSeconds(expiry),
+          additionalClaims: {
+            credential_metadata_uri: `${AGENT_HOST}/payments-credential-metadata`,
+            credential_metadata: openHorizonbankCredentialMetadata,
+          },
+        }),
+        protectedHeaderOptions: {
+          alg: Kms.KnownJwaSignatureAlgorithms.ES256,
+          typ: 'credential-metadata+jwt',
+          x5c: [getX509DcsCertificate().toString('pem')],
+        },
+      })
+      return response.send(jws)
+    }
+
+    if (request.accepts('json')) {
+      return response.json(openHorizonbankCredentialMetadata)
+    }
+
+    return response.status(404)
   })
 
   app.use('/crl', async (_, response) => {

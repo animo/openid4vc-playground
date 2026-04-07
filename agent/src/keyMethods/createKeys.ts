@@ -17,12 +17,13 @@ export async function createKeys() {
     type: { kty: 'EC', crv: 'P-256' },
     seed: TypedArrayEncoder.fromString(DCS_P256_SEED),
   })
-  const { publicJwk: documentSignerPublicJwk } = await agent.kms.importKey({
+  const { publicJwk: documentSignerPublicJwk, keyId } = await agent.kms.importKey({
     privateJwk: documentSignerPrivateJwk,
   })
 
   return {
     authorityPublicJwk: Kms.PublicJwk.fromPublicJwk(authorityPublicJwk),
     documentSignerPublicJwk: Kms.PublicJwk.fromPublicJwk(documentSignerPublicJwk),
+    dcsId: keyId,
   }
 }

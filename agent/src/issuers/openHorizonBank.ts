@@ -1,10 +1,11 @@
 import { Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants.js'
-import type { PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
+import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
+import type { StaticSdJwtSignInput } from '../types.js'
 import { dateToSeconds } from '../utils/date.js'
 
-const issuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
+export const openHorizonIssuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
 
 const weroCardDisplay = {
   locale: 'en',
@@ -15,7 +16,7 @@ const weroCardDisplay = {
     uri: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
     url: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
   },
-} as const
+} as const satisfies CredentialConfigurationDisplay
 
 const weroCardThirdPartyDisplay = {
   locale: 'en',
@@ -26,7 +27,7 @@ const weroCardThirdPartyDisplay = {
     uri: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
     url: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
   },
-} as const
+} as const satisfies CredentialConfigurationDisplay
 
 export const weroScaConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
@@ -48,7 +49,7 @@ export const weroScaConfiguration = {
   display: [weroCardDisplay],
   credential_metadata: { display: [weroCardDisplay] },
   credential_metadata_uri: `${AGENT_HOST}/payment-credential-metadata`,
-} as const satisfies SdJwtConfiguration
+} satisfies SdJwtConfiguration
 
 export const weroScaThirdPartyConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
@@ -70,7 +71,7 @@ export const weroScaThirdPartyConfiguration = {
   display: [weroCardThirdPartyDisplay],
   credential_metadata: { display: [weroCardThirdPartyDisplay] },
   credential_metadata_uri: `${AGENT_HOST}/payment-credential-metadata`,
-} as const satisfies SdJwtConfiguration
+} satisfies SdJwtConfiguration
 
 const now = new Date()
 const expiry = new Date()
@@ -83,7 +84,7 @@ const weroPayloadClaims = {
   email: 'erika.mustermann@email.com',
   currency: 'EUR',
   scheme: 'Wero',
-} as const
+}
 
 const weroPayloadThirdPartyClaims = {
   account_holder_name: 'John Cheese',
@@ -92,7 +93,7 @@ const weroPayloadThirdPartyClaims = {
   email: 'john.cheese@email.com',
   currency: 'EUR',
   scheme: 'Wero',
-} as const
+}
 
 const weroScaData = {
   credentialConfigurationId: weroScaConfiguration.scope,
@@ -109,7 +110,7 @@ const weroScaData = {
       _sd: Object.keys(weroPayloadClaims),
     },
   },
-} as const
+} as const satisfies StaticSdJwtSignInput
 
 const weroScaThirdPartyData = {
   credentialConfigurationId: weroScaThirdPartyConfiguration.scope,
@@ -126,11 +127,11 @@ const weroScaThirdPartyData = {
       _sd: Object.keys(weroPayloadThirdPartyClaims),
     },
   },
-} as const
+} as const satisfies StaticSdJwtSignInput
 
 export const openHorizonBankIssuer = {
   tags: [weroCardDisplay.name, 'TS12 Payment'],
-  issuerId,
+  issuerId: openHorizonIssuerId,
   credentialConfigurationsSupported: [
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
