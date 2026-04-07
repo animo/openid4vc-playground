@@ -11,6 +11,7 @@ import { createDidWeb, getWebDidDocument } from './didWeb.js'
 import { apiRouter } from './endpoints.js'
 import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer.js'
 import { issuers } from './issuers/index.js'
+import { openHorizonbankCredentialMetadata } from './issuers/openHorizonBank.js'
 import { getCertificateRevocationList, setupX509Certificate } from './keyMethods/index.js'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider.js'
 import { createOrUpdateVerifier } from './verifier.js'
@@ -134,6 +135,11 @@ async function run() {
   app.use('/.well-known/did.json', async (_, response: Response) => {
     const didWeb = await getWebDidDocument()
     return response.json(didWeb.toJSON())
+  })
+
+  // TODO: make URL issuer-specific
+  app.use('/payments-credential-metadata', async (_, response: Response) => {
+    return response.json(openHorizonbankCredentialMetadata)
   })
 
   app.use('/crl', async (_, response) => {
