@@ -148,6 +148,8 @@ async function run() {
     const expiry = new Date()
     expiry.setFullYear(now.getFullYear() + 3)
 
+    const issuerMetadata = await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)
+
     if (request.accepts('application/jwt')) {
       const jwsService = agent.dependencyManager.resolve(JwsService)
       const jws = await jwsService.createJwsCompact(agent.context, {
@@ -158,8 +160,9 @@ async function run() {
           iat: dateToSeconds(now),
           exp: dateToSeconds(expiry),
           additionalClaims: {
+            format: 'dc+sd-jwt',
             credential_metadata_uri: `${AGENT_HOST}/payments-credential-metadata`,
-            credential_metadata: openHorizonbankCredentialMetadata,
+            credential_metadata: { ...issuerMetadata.credentialIssuer, ...openHorizonbankCredentialMetadata },
           },
         }),
         protectedHeaderOptions: {
