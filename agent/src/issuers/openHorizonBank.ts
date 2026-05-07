@@ -1,5 +1,6 @@
 import { Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
+import type { CredentialMetadata } from '@owf/eudi-sca'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
 import type { StaticSdJwtSignInput } from '../types.js'
@@ -157,7 +158,7 @@ export const openHorizonBankIssuer = {
   ],
 } satisfies PlaygroundIssuerOptions
 
-export const openHorizonbankCredentialMetadata = {
+export const openHorizonbankCredentialMetadata: CredentialMetadata & Record<string, unknown> = {
   display: [{ name: 'pay.example Payment Credential', locale: 'en' }],
   transaction_data_types: {
     'urn:eudi:sca:eu.europa.ec:payment:single:1': {

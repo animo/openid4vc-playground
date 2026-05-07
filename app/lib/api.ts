@@ -1,4 +1,4 @@
-import type { ResponseMode } from '../components/VerifyBlock'
+import type { ResponseMode, TransactionAuthorizationType } from '../components/VerifyBlock'
 import { NEXT_PUBLIC_API_URL } from './constants'
 
 export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { userPin?: string } }
@@ -125,8 +125,12 @@ export async function createRequest(data: {
   requestScheme: string
   responseMode: ResponseMode
   purpose?: string
-  transactionAuthorizationType: 'none' | 'qes'
+  transactionAuthorizationType: TransactionAuthorizationType
+  paymentAmount?: string
 }) {
+  if (data.transactionAuthorizationType !== 'payment') {
+    delete data.paymentAmount
+  }
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {
     method: 'POST',
     headers: {

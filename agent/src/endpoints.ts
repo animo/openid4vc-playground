@@ -205,7 +205,8 @@ const zCreatePresentationRequestBody = z.object({
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
-  transactionAuthorizationType: z.enum(['none', 'qes']),
+  transactionAuthorizationType: z.enum(['none', 'qes', 'payment']),
+  paymentAmount: z.string().optional(),
   redirectUriBase: z.url().optional(),
 })
 
@@ -219,6 +220,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const {
       requestSignerType,
       transactionAuthorizationType,
+      paymentAmount,
       presentationDefinitionId,
       requestScheme,
       responseMode,
@@ -253,6 +255,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
+
+    console.log(paymentAmount)
 
     // Only include it in this one
     const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
@@ -299,7 +303,25 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   ],
                 },
               ]
-            : undefined,
+            : transactionAuthorizationType === 'payment'
+              ? [
+                  {
+                    type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
+                    credential_ids: credentialIds as [string, ...string[]],
+                    transaction_data_hashes_alg: ['sha-256'],
+                    payload: {
+                      transaction_id: randomUUID(),
+                      amount: `${paymentAmount} EUR`,
+                      payee: {
+                        name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
+                        id: verifierId,
+                        logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
+                        website: 'https://playground.animo.id',
+                      },
+                    },
+                  },
+                ]
+              : undefined,
         dcql: {
           query: queryLanguageDefinition,
         },
