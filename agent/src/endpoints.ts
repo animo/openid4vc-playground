@@ -415,7 +415,10 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
             presentation instanceof W3cV2JwtVerifiablePresentation ||
             presentation instanceof W3cV2SdJwtVerifiablePresentation
           ) {
-            throw new Error('W3C V2 presentations are not supported yet')
+            return {
+              pretty: presentation.resolvedPresentation.toJSON(),
+              encoded: presentation.encoded,
+            }
           }
 
           return {

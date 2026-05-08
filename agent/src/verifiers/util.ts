@@ -21,6 +21,15 @@ export interface MdocCredential {
   field_options?: string[][]
 }
 
+export interface W3cVcV2Credential {
+  format: 'vc+sd-jwt'
+  type_values: string[][]
+  fields: Array<string | { path: string; values: Array<string | number | boolean> }>
+
+  // aka claim sets. Only used for DCQL
+  field_options?: string[][]
+}
+
 export function pidMdocCredential({ fields, field_options }: Pick<MdocCredential, 'fields' | 'field_options'>) {
   return {
     format: 'mso_mdoc',
@@ -44,54 +53,72 @@ export function dcqlQueryFromRequest(
   purpose?: string
 ): DcqlQuery {
   return {
-    credentials: request.credentials.map((c, credentialIndex): DcqlQuery['credentials'][number] =>
-      c.format === 'dc+sd-jwt'
-        ? {
-            id: `${credentialIndex}`,
-            format: c.format,
-            meta: {
-              vct_values: c.vcts,
-            },
-            claims: [
-              ...c.fields.map((f) =>
-                typeof f === 'string'
-                  ? { path: f.split('.'), id: f.replace('.', '_') }
-                  : { path: f.path.split('.'), id: f.path.replace('.', '_'), values: f.values }
-              ),
-              ...(c.issuers?.length
-                ? [
-                    {
-                      id: 'iss',
-                      path: ['iss'],
-                      values: c.issuers,
-                    },
-                  ]
-                : []),
-            ],
-            claim_sets: c.field_options?.map((o) => {
-              const oo = o.map((oo) => oo.replace('.', '_'))
-              return c.issuers?.length ? [...oo, 'iss'] : oo
-            }),
-          }
-        : {
-            id: `${credentialIndex}`,
-            format: c.format,
-            meta: {
-              doctype_value: c.doctype,
-            },
-            claims: c.fields.map((f) =>
+    credentials: request.credentials.map((c, credentialIndex): DcqlQuery['credentials'][number] => {
+      if (c.format === 'dc+sd-jwt') {
+        return {
+          id: `${credentialIndex}`,
+          format: c.format,
+          meta: {
+            vct_values: c.vcts,
+          },
+          claims: [
+            ...c.fields.map((f) =>
               typeof f === 'string'
-                ? { id: f.replace('.', '_'), path: [c.namespace, f], intent_to_retain: false }
-                : {
-                    id: f.path.replace('.', '_'),
-                    path: [c.namespace, f.path],
-                    intent_to_retain: false,
-                    values: f.values,
-                  }
+                ? { path: f.split('.'), id: f.replace('.', '_') }
+                : { path: f.path.split('.'), id: f.path.replace('.', '_'), values: f.values }
             ),
-            claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
-          }
-    ),
+            ...(c.issuers?.length
+              ? [
+                  {
+                    id: 'iss',
+                    path: ['iss'],
+                    values: c.issuers,
+                  },
+                ]
+              : []),
+          ],
+          claim_sets: c.field_options?.map((o) => {
+            const oo = o.map((oo) => oo.replace('.', '_'))
+            return c.issuers?.length ? [...oo, 'iss'] : oo
+          }),
+        }
+      }
+
+      if (c.format === 'mso_mdoc') {
+        return {
+          id: `${credentialIndex}`,
+          format: c.format,
+          meta: {
+            doctype_value: c.doctype,
+          },
+          claims: c.fields.map((f) =>
+            typeof f === 'string'
+              ? { id: f.replace('.', '_'), path: [c.namespace, f], intent_to_retain: false }
+              : {
+                  id: f.path.replace('.', '_'),
+                  path: [c.namespace, f.path],
+                  intent_to_retain: false,
+                  values: f.values,
+                }
+          ),
+          claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
+        }
+      }
+
+      return {
+        id: `${credentialIndex}`,
+        format: c.format,
+        meta: {
+          type_values: c.type_values,
+        },
+        claims: c.fields.map((f) =>
+          typeof f === 'string'
+            ? { path: f.split('.'), id: f.replace('.', '_') }
+            : { path: f.path.split('.'), id: f.path.replace('.', '_'), values: f.values }
+        ),
+        claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
+      }
+    }),
     credential_sets: request.credential_sets
       ? request.credential_sets.map((set) => ({
           options: set.map((v) => [`${v}`]),
