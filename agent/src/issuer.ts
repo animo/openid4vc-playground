@@ -78,6 +78,7 @@ export interface PlaygroundIssuerOptions
     'dc+sd-jwt'?: {
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
+      credentialMetadataUri?: string
     }
   }>
 }

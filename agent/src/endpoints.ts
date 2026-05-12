@@ -248,6 +248,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       })
     }
 
+    if (transactionAuthorizationType === 'payment') {
+      definition.credentials.push({
+        format: 'dc+sd-jwt',
+        vcts: ['eu.europa.wero.card'],
+        fields: ['iban', 'bic', 'payment_network', 'currency'],
+      })
+    }
+
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
 
     const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
@@ -255,8 +263,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
-
-    console.log(paymentAmount)
 
     // Only include it in this one
     const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
@@ -307,11 +313,13 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               ? [
                   {
                     type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
-                    credential_ids: credentialIds as [string, ...string[]],
+                    // We pick the last credential id as we push the wero card
+                    credential_ids: [`${definition.credentials.length - 1}`] as [string, ...string[]],
                     transaction_data_hashes_alg: ['sha-256'],
                     payload: {
                       transaction_id: randomUUID(),
                       amount: `${paymentAmount} EUR`,
+                      date_time: new Date().toISOString(),
                       payee: {
                         name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
                         id: verifierId,

@@ -140,7 +140,7 @@ async function run() {
 
   // TODO: make URL issuer-specific
   //       Handle `Accept-Language` header
-  app.use('/payments-credential-metadata', async (request: Request, response: Response) => {
+  app.use('/payment-credential-metadata', async (request: Request, response: Response) => {
     if (!dcsId) {
       return response.status(500)
     }
@@ -175,7 +175,7 @@ async function run() {
     }
 
     if (request.accepts('json')) {
-      return response.json(openHorizonbankCredentialMetadata)
+      return response.json({ ...issuerMetadata.credentialIssuer, ...openHorizonbankCredentialMetadata })
     }
 
     return response.status(404)

@@ -1,6 +1,5 @@
 import { Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
-import type { CredentialMetadata } from '@owf/eudi-sca'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
 import type { StaticSdJwtSignInput } from '../types.js'
@@ -79,21 +78,19 @@ const expiry = new Date()
 expiry.setFullYear(now.getFullYear() + 3)
 
 const weroPayloadClaims = {
-  account_holder_name: 'Erika Mustermann',
-  account_holder_id: '1234567890',
-  account_id: 'DE22123456781234567890',
-  email: 'erika.mustermann@email.com',
+  account_holder: '1234567890',
+  iban: 'GB33BUKB20201555555555',
+  bic: 'SNSBNL2AXXX',
   currency: 'EUR',
-  scheme: 'Wero',
+  payment_network: 'Wero',
 }
 
 const weroPayloadThirdPartyClaims = {
-  account_holder_name: 'John Cheese',
-  account_holder_id: '0987654321',
-  account_id: 'DE18446744073709551612',
-  email: 'john.cheese@email.com',
+  account_holder: '1234567890',
+  iban: 'GB33BUKB20201555555555',
+  bic: 'SNSBNL2AXXX',
   currency: 'EUR',
-  scheme: 'Wero',
+  payment_network: 'Wero',
 }
 
 const weroScaData = {
@@ -158,7 +155,7 @@ export const openHorizonBankIssuer = {
   ],
 } satisfies PlaygroundIssuerOptions
 
-export const openHorizonbankCredentialMetadata: CredentialMetadata & Record<string, unknown> = {
+export const openHorizonbankCredentialMetadata = {
   display: [{ name: 'pay.example Payment Credential', locale: 'en' }],
   transaction_data_types: {
     'urn:eudi:sca:eu.europa.ec:payment:single:1': {
