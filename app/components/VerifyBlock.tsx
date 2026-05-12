@@ -25,7 +25,7 @@ export type CreateRequestOptions = Parameters<typeof createRequest>[0]
 export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt' | 'dc_api' | 'dc_api.jwt'
-export type TransactionAuthorizationType = 'none' | 'qes'
+export type TransactionAuthorizationType = 'none' | 'qes' | 'payment'
 type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type RequestSignerType = CreateRequestOptions['requestSignerType']
@@ -56,6 +56,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [verifier, setVerifier] = useState<Verifier>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
   const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
+  const [paymentAmount, setPaymentAmount] = useState('100')
 
   const enabled =
     verificationSessionId !== undefined &&
@@ -223,6 +224,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         purpose: purpose && purpose !== '' ? purpose : undefined,
         requestSignerType,
         transactionAuthorizationType,
+        paymentAmount,
       })
       if (responseMode.includes('direct_post')) {
         setAuthorizationRequestUri(request.authorizationRequestUri)
@@ -380,12 +382,20 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
               <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-              <SelectItem value="payment" disabled>
-                Payment
-              </SelectItem>
+              <SelectItem value="payment">Payment</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {transactionAuthorizationType === 'payment' && (
+          <div>
+            <Label htmlFor="payment-amount">Payment amount (EUR)</Label>
+            <Input
+              name="payment-amount"
+              value={paymentAmount || ''}
+              onChange={({ target }) => setPaymentAmount(target.value)}
+            />
+          </div>
+        )}
         <div className="flex flex-col gap-2">
           <Label htmlFor="response-mode">Use Response Encryption</Label>
           <Switch

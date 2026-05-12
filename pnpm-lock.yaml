@@ -35,6 +35,9 @@ importers:
       '@openwallet-foundation/askar-shared':
         specifier: ^0.4.3
         version: 0.4.3
+      '@owf/eudi-sca':
+        specifier: 0.2.0-alpha-20260506130404
+        version: 0.2.0-alpha-20260506130404
       '@peculiar/x509':
         specifier: ^1.14.3
         version: 1.14.3
@@ -235,6 +238,36 @@ packages:
   '@biomejs/cli-win32-x64@2.3.11':
     resolution: {integrity: sha512-43VrG813EW+b5+YbDbz31uUsheX+qFKCpXeY9kfdAx+ww3naKxeVkTD9zLIWxUPfJquANMHrmW3wbe/037G0Qg==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [win32]
+
+  '@cbor-extract/cbor-extract-darwin-arm64@2.2.2':
+    resolution: {integrity: sha512-ZKZ/F8US7JR92J4DMct6cLW/Y66o2K576+zjlEN/MevH70bFIsB10wkZEQPLzl2oNh2SMGy55xpJ9JoBRl5DOA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@cbor-extract/cbor-extract-darwin-x64@2.2.2':
+    resolution: {integrity: sha512-32b1mgc+P61Js+KW9VZv/c+xRw5EfmOcPx990JbCBSkYJFY0l25VinvyyWfl+3KjibQmAcYwmyzKF9J4DyKP/Q==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@cbor-extract/cbor-extract-linux-arm64@2.2.2':
+    resolution: {integrity: sha512-wfqgzqCAy/Vn8i6WVIh7qZd0DdBFaWBjPdB6ma+Wihcjv0gHqD/mw3ouVv7kbbUNrab6dKEx/w3xQZEdeXIlzg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@cbor-extract/cbor-extract-linux-arm@2.2.2':
+    resolution: {integrity: sha512-tNg0za41TpQfkhWjptD+0gSD2fggMiDCSacuIeELyb2xZhr7PrhPe5h66Jc67B/5dmpIhI2QOUtv4SBsricyYQ==}
+    cpu: [arm]
+    os: [linux]
+
+  '@cbor-extract/cbor-extract-linux-x64@2.2.2':
+    resolution: {integrity: sha512-rpiLnVEsqtPJ+mXTdx1rfz4RtUGYIUg2rUAZgd1KjiC1SehYUSkJN7Yh+aVfSjvCGtVP0/bfkQkXpPXKbmSUaA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@cbor-extract/cbor-extract-win32-x64@2.2.2':
+    resolution: {integrity: sha512-dI+9P7cfWxkTQ+oE+7Aa6onEn92PHgfWXZivjNheCRmTBDBf2fx6RyTi0cmgpYLnD1KLZK9ZYrMxaPZ4oiXhGA==}
     cpu: [x64]
     os: [win32]
 
@@ -697,17 +730,39 @@ packages:
     resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
     engines: {node: '>= 20.19.0'}
 
+  '@noble/hashes@2.2.0':
+    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
+    engines: {node: '>= 20.19.0'}
+
   '@openid4vc/oauth2@0.4.4':
     resolution: {integrity: sha512-MsZnIU8RWCNYgmdGH9uelFOh7ZzE38B0FZA2wsGeOf6XW2bHATi+1nVOLkEgMDCT5KFEGohGlCl0OKYtPUSnzA==}
+
+  '@openid4vc/oauth2@0.4.6':
+    resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
+
+  '@openid4vc/oauth2@0.5.0-alpha-20260415063740':
+    resolution: {integrity: sha512-3q1JEImyuGFkWkAdq3/97LRtn4syq+Fk2oXTvqLcpHc06BYhWsA4Mk4imsm3Il2KBVa/wbzjhUD51RlhKlrxOQ==}
 
   '@openid4vc/openid4vci@0.4.4':
     resolution: {integrity: sha512-BLa5A5F/IwgZax1cnxhLrg2YxxqkMhJMeUe1N+H8TyQBFJLBD7WpPoE7omdCKzSkHYH1rNInsbYMMFpPQuowfg==}
 
+  '@openid4vc/openid4vci@0.5.0-alpha-20260415063740':
+    resolution: {integrity: sha512-Mw/JnK3RegLKbSfAwltFkWOzZlPRjMji56pUPpQn1qQkv2sZjR1Io1VE5wueYtFBzljyn1kd+pvGglP/d0r/8Q==}
+
   '@openid4vc/openid4vp@0.4.4':
     resolution: {integrity: sha512-29kFNc6QIkdOYZz83y+M+XgvqsDGHcJr194IPLzoVrH9sgh8rIft9Jrf2aU+MZSTYwvc5ftm9ukxlvl2ccMIZg==}
 
+  '@openid4vc/openid4vp@0.4.6':
+    resolution: {integrity: sha512-d7H8SuFlHZS30OC1U8vsezGHuXkOTp97rrHbsxrge7AQaHHi8BZXAwUGdujbXdkkU7zulXx9yk2+J+ZTb/GE3A==}
+
   '@openid4vc/utils@0.4.4':
     resolution: {integrity: sha512-ctXOmvejB34C3ZcBbtU4N7ukpIzeVzxmNjlQ1Oxf03jKDn5pngq7h39HUg1ggjFJgTSn9jVlQUON/DG6oovh5w==}
+
+  '@openid4vc/utils@0.4.6':
+    resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
+
+  '@openid4vc/utils@0.5.0-alpha-20260415063740':
+    resolution: {integrity: sha512-r778UVTwdYy+IAUH1ktx126ZiSEHRqSNzg0FjssD+4w5O/Rr7prLHkAQTnPpGz8FXMinLivmn3I+SYohngElnA==}
 
   '@openwallet-foundation/askar-nodejs@0.4.3':
     resolution: {integrity: sha512-+7hJaCUz/GP9hhOdbLL+9OzYgb5vILcTmSyqSGTR3Qd/ba+j5HdN3BJfgRETK4Svz1jlbEKbjRLE7RwDqEr2RA==}
@@ -715,6 +770,18 @@ packages:
 
   '@openwallet-foundation/askar-shared@0.4.3':
     resolution: {integrity: sha512-Zt9zlvjJxNs8UWlnRydZH594Lak15YPHY72VT1+iDbXh0OjTdyq6Bf0FIsh9sfFnRYIgh2zd8+VoXxZ07GjADA==}
+
+  '@owf/crypto@0.2.0-alpha-20260506130404':
+    resolution: {integrity: sha512-qSCarBCg0mTYFRzTCCsVTqAvfiOsm84En1Jmt10j6X9aRHCUJhPz5rY+wxgmL08fPEJWC1wLMvsskBUZQ9gedg==}
+
+  '@owf/eudi-sca@0.2.0-alpha-20260506130404':
+    resolution: {integrity: sha512-RKEhSyj12YJJ6KTiMMFfU03lDNhBRsVVoIrqbp45NhvEqdVmVsfRMNxKLsYobDGksMoeNebl4zzB86Ws4auFKQ==}
+
+  '@owf/identity-common@0.2.0-alpha-20260506130404':
+    resolution: {integrity: sha512-bSir5MsE6Xv29kBCIkATMLiiBsE58Y741KyDiMgx3yMYnsjnS3MSkA3G+c/kPmCW1oB1SelzZAZ/O6qSvtiyVg==}
+
+  '@owf/mdoc@0.6.0':
+    resolution: {integrity: sha512-vJL62hzjcSweBjDD9eRUH1RIMSzZUtHKjVFMMo50oHPLO9ZVZbQABFe9IFoa5AgXkwfv27HjnFv/eRbkOrlsUA==}
 
   '@peculiar/asn1-cms@2.6.1':
     resolution: {integrity: sha512-vdG4fBF6Lkirkcl53q6eOdn3XYKt+kJTG59edgRZORlg/3atWWEReRCx5rYE1ZzTTX6vLK5zDMjHh7vbrcXGtw==}
@@ -1150,8 +1217,16 @@ packages:
     resolution: {integrity: sha512-Efpko+1N9bGO+r/cn0f21mgS/FdP6kTApqz7De1BJz8KX3W81JB0Hg2EzvRtaJ+tfKsbG5n0JdlXAEw5OEXRjw==}
     engines: {node: '>=20'}
 
+  '@sd-jwt/core@0.19.0':
+    resolution: {integrity: sha512-/FeuQjzQFtnxDsHF64Bw+3uixVogNkXlMGBo1CKWrxB/OLNqtGXQZplKBRZMJWgnOJEqDwD6750wrOxsVly6mg==}
+    engines: {node: '>=20'}
+
   '@sd-jwt/decode@0.18.1':
     resolution: {integrity: sha512-HLHP8zVL/NmAS2Ljvk8bUs4hGyerpPRF+RMCL4MFYV6gF4VIVkYViPWJZkvR2tdo7F0mWTkSLl/OtSo0cd/lOQ==}
+    engines: {node: '>=20'}
+
+  '@sd-jwt/decode@0.19.0':
+    resolution: {integrity: sha512-gRfpJseFRy3bFMdlmJjVjuEcLNuekpiZJD2F2luJIKVlk26AEjZSJf6377vwNySa8hb+i4MZDwdy14lcTTmqtA==}
     engines: {node: '>=20'}
 
   '@sd-jwt/decode@0.7.2':
@@ -1170,6 +1245,10 @@ packages:
     resolution: {integrity: sha512-jiddudfO3qbOcRpNzBMTSR18/F3Cgrv1nZPJ7t6vAvQ8eHMAUBuLiBbrUk3co8n/k1QR8J0AXUUmtdheFNXgmQ==}
     engines: {node: '>=20'}
 
+  '@sd-jwt/present@0.19.0':
+    resolution: {integrity: sha512-WXDwqwUXmtyj7YZ5c+wb26ZBeVOsKXCbCI7s1pRH9ngIjFNDGgAZoVCOmLq8pPgWSJzOTgJe3ErO2k63ZwhyeQ==}
+    engines: {node: '>=20'}
+
   '@sd-jwt/present@0.7.2':
     resolution: {integrity: sha512-mQV85u2+mLLy2VZ9Wx2zpaB6yTDnbhCfWkP7eeCrzJQHBKAAHko8GrylEFmLKewFIcajS/r4lT/zHOsCkp5pZw==}
     engines: {node: '>=18'}
@@ -1182,6 +1261,10 @@ packages:
     resolution: {integrity: sha512-LSUY2vtmJg9naZspH3Xw9ZU8uufPdpuhhmko3Z3Ki/aafQqvFVxhhD2bhqYNrSBY9469qjSQk62rO2/4rHN2+g==}
     engines: {node: '>=20'}
 
+  '@sd-jwt/types@0.19.0':
+    resolution: {integrity: sha512-nfuC9zRLKe7o4HSvc+N4ojWRAxo4JGfgcNWpR7bJloLUlnE9eQuu9h9pEaJZht7KRwMpGorNTIdYpoi1btuiew==}
+    engines: {node: '>=20'}
+
   '@sd-jwt/types@0.7.2':
     resolution: {integrity: sha512-1NRKowiW0ZiB9SGLApLPBH4Xk8gDQJ+nA9NdZ+uy6MmJKLEwjuJxO7yTvRIv/jX/0/Ebh339S7Kq4RD2AiFuRg==}
     engines: {node: '>=18'}
@@ -1192,6 +1275,10 @@ packages:
 
   '@sd-jwt/utils@0.18.1':
     resolution: {integrity: sha512-SFSWuNVxyp/xI0bAcrq/oV/s+l3oLL4qFZ+VPdXmipq1oQPOwJYNmTUy0PQnBiMlEyWZ7c9iHIGe5zIUZarr1A==}
+    engines: {node: '>=20'}
+
+  '@sd-jwt/utils@0.19.0':
+    resolution: {integrity: sha512-bDwDRjfxMBNOsAXY8q8hnxQq7jdOWxrdqTK926Mxt8DN+ttXbXbZIPLwSh84M90WP0V7+WdkXlZD31iISzUR3w==}
     engines: {node: '>=20'}
 
   '@sd-jwt/utils@0.7.2':
@@ -1459,6 +1546,13 @@ packages:
 
   canonicalize@1.0.8:
     resolution: {integrity: sha512-0CNTVCLZggSh7bc5VkX5WWPWO+cyZbNd07IHIsSXLia/eAq+r836hgk+8BKoEh7949Mda87VUOitx5OddVj64A==}
+
+  cbor-extract@2.2.2:
+    resolution: {integrity: sha512-hlSxxI9XO2yQfe9g6msd3g4xCfDqK5T5P0fRMLuaLHhxn4ViPrm+a+MUfhrvH2W962RGxcBwEGzLQyjbDG1gng==}
+    hasBin: true
+
+  cbor-x@1.6.4:
+    resolution: {integrity: sha512-UGKHjp6RHC6QuZ2yy5LCKm7MojM4716DwoSaqwQpaH4DvZvbBTGcoDNTiG9Y2lByXZYFEs9WRkS5tLl96IrF1Q==}
 
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
@@ -2043,6 +2137,10 @@ packages:
       encoding:
         optional: true
 
+  node-gyp-build-optional-packages@5.1.1:
+    resolution: {integrity: sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw==}
+    hasBin: true
+
   node-gyp-build@4.8.4:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
@@ -2471,6 +2569,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@2060.io/ffi-napi@4.0.9':
@@ -2553,6 +2654,24 @@ snapshots:
     optional: true
 
   '@biomejs/cli-win32-x64@2.3.11':
+    optional: true
+
+  '@cbor-extract/cbor-extract-darwin-arm64@2.2.2':
+    optional: true
+
+  '@cbor-extract/cbor-extract-darwin-x64@2.2.2':
+    optional: true
+
+  '@cbor-extract/cbor-extract-linux-arm64@2.2.2':
+    optional: true
+
+  '@cbor-extract/cbor-extract-linux-arm@2.2.2':
+    optional: true
+
+  '@cbor-extract/cbor-extract-linux-x64@2.2.2':
+    optional: true
+
+  '@cbor-extract/cbor-extract-win32-x64@2.2.2':
     optional: true
 
   '@credo-ts/askar@0.6.2-alpha-20260126104135(@openwallet-foundation/askar-shared@0.4.3)(typescript@5.9.3)':
@@ -2972,10 +3091,22 @@ snapshots:
 
   '@noble/hashes@2.0.1': {}
 
+  '@noble/hashes@2.2.0': {}
+
   '@openid4vc/oauth2@0.4.4':
     dependencies:
       '@openid4vc/utils': 0.4.4
       zod: 4.3.6
+
+  '@openid4vc/oauth2@0.4.6':
+    dependencies:
+      '@openid4vc/utils': 0.4.6
+      zod: 4.4.3
+
+  '@openid4vc/oauth2@0.5.0-alpha-20260415063740':
+    dependencies:
+      '@openid4vc/utils': 0.5.0-alpha-20260415063740
+      zod: 4.4.3
 
   '@openid4vc/openid4vci@0.4.4':
     dependencies:
@@ -2983,17 +3114,41 @@ snapshots:
       '@openid4vc/utils': 0.4.4
       zod: 4.3.6
 
+  '@openid4vc/openid4vci@0.5.0-alpha-20260415063740':
+    dependencies:
+      '@openid4vc/oauth2': 0.5.0-alpha-20260415063740
+      '@openid4vc/utils': 0.5.0-alpha-20260415063740
+      zod: 4.4.3
+
   '@openid4vc/openid4vp@0.4.4':
     dependencies:
       '@openid4vc/oauth2': 0.4.4
       '@openid4vc/utils': 0.4.4
       zod: 4.3.6
 
+  '@openid4vc/openid4vp@0.4.6':
+    dependencies:
+      '@openid4vc/oauth2': 0.4.6
+      '@openid4vc/utils': 0.4.6
+      zod: 4.4.3
+
   '@openid4vc/utils@0.4.4':
     dependencies:
       buffer: 6.0.3
       zod: 4.3.6
       zod-validation-error: 5.0.0(zod@4.3.6)
+
+  '@openid4vc/utils@0.4.6':
+    dependencies:
+      buffer: 6.0.3
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
+
+  '@openid4vc/utils@0.5.0-alpha-20260415063740':
+    dependencies:
+      buffer: 6.0.3
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@openwallet-foundation/askar-nodejs@0.4.3':
     dependencies:
@@ -3009,6 +3164,30 @@ snapshots:
     dependencies:
       buffer: 6.0.3
       tar: 7.5.2
+
+  '@owf/crypto@0.2.0-alpha-20260506130404':
+    dependencies:
+      '@noble/hashes': 2.2.0
+      '@owf/identity-common': 0.2.0-alpha-20260506130404
+
+  '@owf/eudi-sca@0.2.0-alpha-20260506130404':
+    dependencies:
+      '@openid4vc/openid4vci': 0.5.0-alpha-20260415063740
+      '@openid4vc/openid4vp': 0.4.6
+      '@owf/crypto': 0.2.0-alpha-20260506130404
+      '@owf/identity-common': 0.2.0-alpha-20260506130404
+      '@owf/mdoc': 0.6.0
+      '@sd-jwt/core': 0.19.0
+      '@sd-jwt/types': 0.19.0
+      zod: 4.4.3
+
+  '@owf/identity-common@0.2.0-alpha-20260506130404': {}
+
+  '@owf/mdoc@0.6.0':
+    dependencies:
+      cbor-x: 1.6.4
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@peculiar/asn1-cms@2.6.1':
     dependencies:
@@ -3491,10 +3670,22 @@ snapshots:
       '@sd-jwt/types': 0.18.1
       '@sd-jwt/utils': 0.18.1
 
+  '@sd-jwt/core@0.19.0':
+    dependencies:
+      '@sd-jwt/decode': 0.19.0
+      '@sd-jwt/present': 0.19.0
+      '@sd-jwt/types': 0.19.0
+      '@sd-jwt/utils': 0.19.0
+
   '@sd-jwt/decode@0.18.1':
     dependencies:
       '@sd-jwt/types': 0.18.1
       '@sd-jwt/utils': 0.18.1
+
+  '@sd-jwt/decode@0.19.0':
+    dependencies:
+      '@sd-jwt/types': 0.19.0
+      '@sd-jwt/utils': 0.19.0
 
   '@sd-jwt/decode@0.7.2':
     dependencies:
@@ -3518,6 +3709,12 @@ snapshots:
       '@sd-jwt/types': 0.18.1
       '@sd-jwt/utils': 0.18.1
 
+  '@sd-jwt/present@0.19.0':
+    dependencies:
+      '@sd-jwt/decode': 0.19.0
+      '@sd-jwt/types': 0.19.0
+      '@sd-jwt/utils': 0.19.0
+
   '@sd-jwt/present@0.7.2':
     dependencies:
       '@sd-jwt/decode': 0.7.2
@@ -3533,6 +3730,8 @@ snapshots:
 
   '@sd-jwt/types@0.18.1': {}
 
+  '@sd-jwt/types@0.19.0': {}
+
   '@sd-jwt/types@0.7.2': {}
 
   '@sd-jwt/types@0.9.2': {}
@@ -3540,6 +3739,11 @@ snapshots:
   '@sd-jwt/utils@0.18.1':
     dependencies:
       '@sd-jwt/types': 0.18.1
+      js-base64: 3.7.8
+
+  '@sd-jwt/utils@0.19.0':
+    dependencies:
+      '@sd-jwt/types': 0.19.0
       js-base64: 3.7.8
 
   '@sd-jwt/utils@0.7.2':
@@ -3847,6 +4051,22 @@ snapshots:
   caniuse-lite@1.0.30001775: {}
 
   canonicalize@1.0.8: {}
+
+  cbor-extract@2.2.2:
+    dependencies:
+      node-gyp-build-optional-packages: 5.1.1
+    optionalDependencies:
+      '@cbor-extract/cbor-extract-darwin-arm64': 2.2.2
+      '@cbor-extract/cbor-extract-darwin-x64': 2.2.2
+      '@cbor-extract/cbor-extract-linux-arm': 2.2.2
+      '@cbor-extract/cbor-extract-linux-arm64': 2.2.2
+      '@cbor-extract/cbor-extract-linux-x64': 2.2.2
+      '@cbor-extract/cbor-extract-win32-x64': 2.2.2
+    optional: true
+
+  cbor-x@1.6.4:
+    optionalDependencies:
+      cbor-extract: 2.2.2
 
   chownr@3.0.0: {}
 
@@ -4393,6 +4613,11 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
+  node-gyp-build-optional-packages@5.1.1:
+    dependencies:
+      detect-libc: 2.1.2
+    optional: true
+
   node-gyp-build@4.8.4: {}
 
   object-assign@4.1.1: {}
@@ -4831,4 +5056,10 @@ snapshots:
     dependencies:
       zod: 4.3.6
 
+  zod-validation-error@5.0.0(zod@4.4.3):
+    dependencies:
+      zod: 4.4.3
+
   zod@4.3.6: {}
+
+  zod@4.4.3: {}

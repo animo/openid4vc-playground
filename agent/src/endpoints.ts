@@ -205,7 +205,8 @@ const zCreatePresentationRequestBody = z.object({
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
-  transactionAuthorizationType: z.enum(['none', 'qes']),
+  transactionAuthorizationType: z.enum(['none', 'qes', 'payment']),
+  paymentAmount: z.string().optional(),
   redirectUriBase: z.url().optional(),
 })
 
@@ -219,6 +220,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const {
       requestSignerType,
       transactionAuthorizationType,
+      paymentAmount,
       presentationDefinitionId,
       requestScheme,
       responseMode,
@@ -243,6 +245,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     if (!definition) {
       return response.status(404).json({
         error: 'Definition not found',
+      })
+    }
+
+    if (transactionAuthorizationType === 'payment') {
+      definition.credentials.push({
+        format: 'dc+sd-jwt',
+        vcts: ['eu.europa.wero.card'],
+        fields: ['iban', 'bic', 'payment_network', 'currency'],
       })
     }
 
@@ -299,7 +309,27 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   ],
                 },
               ]
-            : undefined,
+            : transactionAuthorizationType === 'payment'
+              ? [
+                  {
+                    type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
+                    // We pick the last credential id as we push the wero card
+                    credential_ids: [`${definition.credentials.length - 1}`] as [string, ...string[]],
+                    transaction_data_hashes_alg: ['sha-256'],
+                    payload: {
+                      transaction_id: randomUUID(),
+                      amount: `${paymentAmount} EUR`,
+                      date_time: new Date().toISOString(),
+                      payee: {
+                        name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
+                        id: verifierId,
+                        logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
+                        website: 'https://playground.animo.id',
+                      },
+                    },
+                  },
+                ]
+              : undefined,
         dcql: {
           query: queryLanguageDefinition,
         },

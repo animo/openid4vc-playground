@@ -9,6 +9,7 @@
     "@credo-ts/openid4vc": "0.6.2-alpha-20260126104135",
     "@openwallet-foundation/askar-nodejs": "^0.4.3",
     "@openwallet-foundation/askar-shared": "^0.4.3",
+    "@owf/eudi-sca": "0.2.0-alpha-20260506130404",
     "@peculiar/x509": "^1.14.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",

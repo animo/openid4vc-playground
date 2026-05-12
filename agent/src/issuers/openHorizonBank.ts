@@ -78,21 +78,19 @@ const expiry = new Date()
 expiry.setFullYear(now.getFullYear() + 3)
 
 const weroPayloadClaims = {
-  account_holder_name: 'Erika Mustermann',
-  account_holder_id: '1234567890',
-  account_id: 'DE22123456781234567890',
-  email: 'erika.mustermann@email.com',
+  account_holder: '1234567890',
+  iban: 'GB33BUKB20201555555555',
+  bic: 'SNSBNL2AXXX',
   currency: 'EUR',
-  scheme: 'Wero',
+  payment_network: 'Wero',
 }
 
 const weroPayloadThirdPartyClaims = {
-  account_holder_name: 'John Cheese',
-  account_holder_id: '0987654321',
-  account_id: 'DE18446744073709551612',
-  email: 'john.cheese@email.com',
+  account_holder: '1234567890',
+  iban: 'GB33BUKB20201555555555',
+  bic: 'SNSBNL2AXXX',
   currency: 'EUR',
-  scheme: 'Wero',
+  payment_network: 'Wero',
 }
 
 const weroScaData = {
