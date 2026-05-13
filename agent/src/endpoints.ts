@@ -239,7 +239,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const verifier = await getVerifier(verifierId)
 
     // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    const definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)[
+    let definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)[
       requestIndex
     ] as PlaygroundVerifierOptions['requests'][number]
     if (!definition) {
@@ -249,11 +249,17 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     }
 
     if (transactionAuthorizationType === 'payment') {
-      definition.credentials.push({
-        format: 'dc+sd-jwt',
-        vcts: ['eu.europa.wero.card'],
-        fields: ['iban', 'bic', 'payment_network', 'currency'],
-      })
+      definition = {
+        ...definition,
+        credentials: [
+          ...definition.credentials,
+          {
+            format: 'dc+sd-jwt',
+            vcts: ['eu.europa.wero.card'],
+            fields: ['iban', 'bic', 'payment_network', 'currency'],
+          },
+        ],
+      }
     }
 
     console.log('Requesting definition', JSON.stringify(definition, null, 2))
