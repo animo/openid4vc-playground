@@ -140,7 +140,7 @@ async function run() {
 
   // TODO: make URL issuer-specific
   //       Handle `Accept-Language` header
-  app.use('/payment-credential-metadata', async (request: Request, response: Response) => {
+  app.use('/payments-credential-metadata', async (request: Request, response: Response) => {
     if (!dcsId) {
       return response.status(500)
     }
