@@ -48,7 +48,7 @@ export const weroScaConfiguration = {
   },
   display: [weroCardDisplay],
   credential_metadata: { display: [weroCardDisplay] },
-  credential_metadata_uri: `${AGENT_HOST}/payment-credential-metadata`,
+  credential_metadata_uri: `${AGENT_HOST}/payments-credential-metadata`,
 } satisfies SdJwtConfiguration
 
 export const weroScaThirdPartyConfiguration = {
@@ -70,7 +70,7 @@ export const weroScaThirdPartyConfiguration = {
   },
   display: [weroCardThirdPartyDisplay],
   credential_metadata: { display: [weroCardThirdPartyDisplay] },
-  credential_metadata_uri: `${AGENT_HOST}/payment-credential-metadata`,
+  credential_metadata_uri: `${AGENT_HOST}/payments-credential-metadata`,
 } satisfies SdJwtConfiguration
 
 const now = new Date()
