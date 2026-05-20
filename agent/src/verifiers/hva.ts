@@ -10,7 +10,7 @@ export const hvaVerifier = {
   },
   clientMetadata: {
     // TODO: add logo
-    logo_uri: `${AGENT_HOST}/assets/verifiers/hva.png`,
+    logo_uri: `${AGENT_HOST}/assets/verifiers/government.png`,
     client_name: 'HvA Verifier',
   },
   requests: [
@@ -21,8 +21,8 @@ export const hvaVerifier = {
       credentials: [
         {
           format: 'vc+sd-jwt',
-          type_values: [['Test']],
-          fields: ['attribute'],
+          type_values: [['EuropeanDigitalCredential']],
+          fields: ['givenName'],
         },
       ],
     },
