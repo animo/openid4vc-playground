@@ -79,7 +79,7 @@ export function dcqlQueryFromRequest(
               : []),
           ],
           claim_sets: c.field_options?.map((o) => {
-            const oo = o.map((oo) => oo.replace('.', '_'))
+            const oo = o.map((oo) => oo.replaceAll('.', '_'))
             return c.issuers?.length ? [...oo, 'iss'] : oo
           }),
         }
@@ -94,15 +94,15 @@ export function dcqlQueryFromRequest(
           },
           claims: c.fields.map((f) =>
             typeof f === 'string'
-              ? { id: f.replace('.', '_'), path: [c.namespace, f], intent_to_retain: false }
+              ? { id: f.replaceAll('.', '_'), path: [c.namespace, f], intent_to_retain: false }
               : {
-                  id: f.path.replace('.', '_'),
+                  id: f.path.replaceAll('.', '_'),
                   path: [c.namespace, f.path],
                   intent_to_retain: false,
                   values: f.values,
                 }
           ),
-          claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
+          claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replaceAll('.', '_'))),
         }
       }
 
@@ -114,10 +114,10 @@ export function dcqlQueryFromRequest(
         },
         claims: c.fields.map((f) =>
           typeof f === 'string'
-            ? { path: f.split('.'), id: f.replace('.', '_') }
-            : { path: f.path.split('.'), id: f.path.replace('.', '_'), values: f.values }
+            ? { path: f.split('.'), id: f.replaceAll('.', '_') }
+            : { path: f.path.split('.'), id: f.path.replaceAll('.', '_'), values: f.values }
         ),
-        claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replace('.', '_'))),
+        claim_sets: c.field_options?.map((o) => o.map((oo) => oo.replaceAll('.', '_'))),
       }
     }),
     credential_sets: request.credential_sets
