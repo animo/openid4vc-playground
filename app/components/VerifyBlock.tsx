@@ -1,7 +1,6 @@
 import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { groupBy } from 'es-toolkit'
-import Link from 'next/link'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
@@ -443,15 +442,15 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                     </TooltipTrigger>
                     <div className="gap-2 w-full justify-center flex flex-1">
                       <div>
-                        <Link href={authorizationRequestUri}>
-                          <Button>Open in Wallet</Button>
-                        </Link>
+                        <a href={authorizationRequestUri}>
+                          <Button type="button">Open in Wallet</Button>
+                        </a>
                       </div>
                     </div>
                     <div>
-                      <Link href={authorizationRequestUri.replace('openid4vp://', 'id.animo.paradym:')}>
-                        <Button>Open in Paradym Wallet</Button>
-                      </Link>
+                      <a href={authorizationRequestUri.replace('openid4vp://', 'id.animo.paradym:')}>
+                        <Button type="button">Open in Paradym Wallet</Button>
+                      </a>
                     </div>
                   </div>
 
