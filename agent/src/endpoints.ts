@@ -270,6 +270,13 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
 
+    // When credential_sets is used we need to add the wero card to each group so that it will always be requested when also requesting a payment
+    if (transactionAuthorizationType === 'payment') {
+      queryLanguageDefinition.credential_sets?.forEach((cs) => {
+        cs.options.map((opts) => opts.push(credentialIds[credentialIds.length - 1]))
+      })
+    }
+
     // Only include it in this one
     const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
     const { authorizationRequest, verificationSession, authorizationRequestObject } =
@@ -320,7 +327,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   {
                     type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
                     // We pick the last credential id as we push the wero card
-                    credential_ids: [`${definition.credentials.length - 1}`] as [string, ...string[]],
+                    credential_ids: [credentialIds[credentialIds.length - 1]] as [string, ...string[]],
                     transaction_data_hashes_alg: ['sha-256'],
                     payload: {
                       transaction_id: randomUUID(),
