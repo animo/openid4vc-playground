@@ -1,6 +1,7 @@
 import type { PlaygroundVerifierOptions } from '../verifier.js'
 import { europeanUnionVerifier } from './europeanUnion.js'
 import { farmatecVerifier } from './farmatec.js'
+import { huVerifier } from './hu.js'
 import { kvkVerifier } from './kvk.js'
 import { openHorizonBankVerifier } from './openHorizonBank.js'
 import { pgeuVerifier } from './pgeu.js'
@@ -20,6 +21,7 @@ export const verifiers = [
   farmatecVerifier,
   pgeuVerifier,
   europeanUnionVerifier,
+  huVerifier,
 ]
 export const allDefinitions = verifiers.flatMap((v): Array<PlaygroundVerifierOptions['requests'][number]> => v.requests)
 
