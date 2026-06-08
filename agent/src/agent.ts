@@ -42,7 +42,7 @@ BAMCA0gAMEUCIQD4pFHRCnOkuP4l1GHy66dd60bLkRNsQbHOFvYE7OP44QIgJHyJ
 export const agent = new Agent({
   dependencies: agentDependencies,
   config: {
-    logger: new ConsoleLogger(LogLevel.trace),
+    logger: new ConsoleLogger(LogLevel.Trace),
   },
   modules: {
     askar: new AskarModule({

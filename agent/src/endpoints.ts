@@ -432,25 +432,30 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
           if (presentation instanceof MdocDeviceResponse) {
             return {
               pretty: JsonTransformer.toJSON({
-                documents: presentation.documents.map((doc) => ({
-                  doctype: doc.docType,
-                  alg: doc.alg,
-                  base64Url: doc.base64Url,
-                  validityInfo: doc.validityInfo,
-                  deviceSignedNamespaces: doc.deviceSignedNamespaces,
-                  issuerSignedNamespaces: Object.entries(doc.issuerSignedNamespaces).map(
-                    ([nameSpace, nameSpacEntries]) => [
-                      nameSpace,
-                      Object.entries(nameSpacEntries).map(([key, value]) =>
-                        value instanceof Uint8Array
-                          ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
-                          : [key, value]
-                      ),
-                    ]
-                  ),
-                })),
+                documents: (presentation.deviceResponse.documents ?? []).map((doc) => {
+                  const docType = doc.docType
+                  const issuerSignedNamespaces = presentation.issuerClaims[docType] ?? {}
+                  const deviceSignedNamespaces = presentation.deviceClaims[docType] ?? {}
+
+                  return {
+                    doctype: docType,
+                    alg: doc.issuerSigned.issuerAuth.algorithm,
+                    validityInfo: doc.issuerSigned.issuerAuth.mobileSecurityObject.validityInfo,
+                    deviceSignedNamespaces,
+                    issuerSignedNamespaces: Object.entries(issuerSignedNamespaces).map(
+                      ([nameSpace, nameSpacEntries]) => [
+                        nameSpace,
+                        Object.entries(nameSpacEntries as Record<string, unknown>).map(([key, value]) =>
+                          value instanceof Uint8Array
+                            ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
+                            : [key, value]
+                        ),
+                      ]
+                    ),
+                  }
+                }),
               }),
-              encoded: presentation.base64Url,
+              encoded: presentation.encoded,
             }
           }
 

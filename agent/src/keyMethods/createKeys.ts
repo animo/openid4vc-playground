@@ -6,7 +6,7 @@ import { DCS_P256_SEED, ROOT_P256_SEED } from '../constants.js'
 export async function createKeys() {
   const { privateJwk: authorityPrivateJwk } = transformSeedToPrivateJwk({
     type: { kty: 'EC', crv: 'P-256' },
-    seed: TypedArrayEncoder.fromString(ROOT_P256_SEED),
+    seed: TypedArrayEncoder.fromUtf8String(ROOT_P256_SEED),
   })
 
   const { publicJwk: authorityPublicJwk } = await agent.kms.importKey({
@@ -15,7 +15,7 @@ export async function createKeys() {
 
   const { privateJwk: documentSignerPrivateJwk } = transformSeedToPrivateJwk({
     type: { kty: 'EC', crv: 'P-256' },
-    seed: TypedArrayEncoder.fromString(DCS_P256_SEED),
+    seed: TypedArrayEncoder.fromUtf8String(DCS_P256_SEED),
   })
   const { publicJwk: documentSignerPublicJwk, keyId } = await agent.kms.importKey({
     privateJwk: documentSignerPrivateJwk,
