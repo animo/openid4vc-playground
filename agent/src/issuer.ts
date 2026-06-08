@@ -1,5 +1,11 @@
-import { cborDecode, cborEncode } from '@animo-id/mdoc'
-import { ClaimFormat, Kms, type MdocSignOptions, type NonEmptyArray, type SdJwtVcSignOptions } from '@credo-ts/core'
+import {
+  ClaimFormat,
+  Kms,
+  type MdocDeviceResponse,
+  type MdocSignOptions,
+  type NonEmptyArray,
+  type SdJwtVcSignOptions,
+} from '@credo-ts/core'
 import {
   type OpenId4VciCreateIssuerOptions,
   type OpenId4VciCredentialConfigurationSupportedWithFormats,
@@ -7,12 +13,13 @@ import {
   type OpenId4VciCredentialRequestToCredentialMapper,
   type OpenId4VciDeferredCredentialRequestToCredentialMapper,
   type OpenId4VciDeferredCredentials,
-  type OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization,
+  type OpenId4VciGetVerificationSession,
   type OpenId4VciSignCredentials,
   type OpenId4VciSignMdocCredentials,
   type OpenId4VciSignSdJwtCredentials,
   OpenId4VcVerifierApi,
 } from '@credo-ts/openid4vc'
+import { cborDecode, cborEncode } from '@owf/mdoc'
 import { randomUUID } from 'crypto'
 import { agent } from './agent.js'
 import { bdrIssuer } from './issuers/bdr.js'
@@ -205,84 +212,92 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
   return issuer.issuerId
 }
 
-export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSessionForIssuanceSessionAuthorization =
-  async ({ agentContext, scopes, requestedCredentialConfigurations }) => {
-    const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
-    const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
+export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSession = async ({
+  agentContext,
+  scopes,
+  requestedCredentialConfigurations,
+}) => {
+  const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
+  const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
-    const [, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
+  const [, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
 
-    if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'dc+sd-jwt') {
-      throw new Error('Presentation during issuance is only supported for mso_mdoc and dc+sd-jwt')
-    }
-
-    const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
-    const authorizationRequest = await verifierApi.createAuthorizationRequest({
-      verifierId: verifier.verifierId,
-      requestSigner: {
-        method: 'x5c',
-        x5c: [getX509DcsCertificate()],
-      },
-      version: 'v1',
-      dcql: {
-        // User needs to present either german PID in SD-JWT, or EUDI PID in SD-JWT/mDOC
-        query: dcqlQueryFromRequest({
-          name: 'Identity card',
-          purpose: `To issue your ${credentialName} we need to verify your identity card`,
-          credentials: [
-            pidSdJwtCredential({
-              fields: [
-                'given_name',
-                'family_name',
-                'birthdate',
-                'issuing_authority',
-                'issuing_country',
-                'address',
-                'place_of_birth',
-                'nationalities',
-              ],
-            }),
-            pidMdocCredential({
-              fields: [
-                'given_name',
-                'family_name',
-                'birth_date',
-                'issuing_country',
-                'issuing_authority',
-                'resident_street',
-                'resident_postal_code',
-                'resident_city',
-                'place_of_birth',
-                'nationality',
-              ],
-            }),
-            pidSdJwtCredential({
-              fields: [
-                'given_name',
-                'family_name',
-                'birthdate',
-                'place_of_birth',
-                'address',
-                'nationalities',
-
-                // Mandatory metadata
-                'date_of_expiry',
-                'issuing_country',
-                'issuing_authority',
-              ],
-            }),
-          ],
-          credential_sets: [[0, 1, 2]],
-        }),
-      },
-      responseMode: 'direct_post.jwt',
-    })
-
-    return {
-      ...authorizationRequest,
-      scopes,
-    }
+  if (credentialConfiguration.format !== 'mso_mdoc' && credentialConfiguration.format !== 'dc+sd-jwt') {
+    throw new Error('Presentation during issuance is only supported for mso_mdoc and dc+sd-jwt')
   }
+
+  const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
+  const authorizationRequest = await verifierApi.createAuthorizationRequest({
+    verifierId: verifier.verifierId,
+    requestSigner: {
+      method: 'x5c',
+      x5c: [getX509DcsCertificate()],
+    },
+    version: 'v1',
+    dcql: {
+      // User needs to present either german PID in SD-JWT, or EUDI PID in SD-JWT/mDOC
+      query: dcqlQueryFromRequest({
+        name: 'Identity card',
+        purpose: `To issue your ${credentialName} we need to verify your identity card`,
+        credentials: [
+          pidSdJwtCredential({
+            fields: [
+              'given_name',
+              'family_name',
+              'birthdate',
+              'issuing_authority',
+              'issuing_country',
+              'address',
+              'place_of_birth',
+              'nationalities',
+            ],
+          }),
+          pidMdocCredential({
+            fields: [
+              'given_name',
+              'family_name',
+              'birth_date',
+              'issuing_country',
+              'issuing_authority',
+              'resident_street',
+              'resident_postal_code',
+              'resident_city',
+              'place_of_birth',
+              'nationality',
+            ],
+          }),
+          pidSdJwtCredential({
+            fields: [
+              'given_name',
+              'family_name',
+              'birthdate',
+              'place_of_birth',
+              'address',
+              'nationalities',
+
+              // Mandatory metadata
+              'date_of_expiry',
+              'issuing_country',
+              'issuing_authority',
+            ],
+          }),
+        ],
+        credential_sets: [[0, 1, 2]],
+      }),
+    },
+    responseMode: 'direct_post.jwt',
+  })
+
+  return {
+    ...authorizationRequest,
+    scopes,
+  }
+}
+
+// Returns the issuer-signed claims of the (first) PID namespace in an mdoc device response.
+function pidMdocNamespaceClaims(presentation: MdocDeviceResponse) {
+  return Object.values(presentation.issuerClaims)[0]?.['eu.europa.ec.eudi.pid.1'] ?? {}
+}
 
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper = async ({
   holderBinding,
@@ -321,16 +336,15 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               // issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              given_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              family_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
+              given_name: pidMdocNamespaceClaims(presentation).given_name,
+              family_name: pidMdocNamespaceClaims(presentation).family_name,
+              birth_date: pidMdocNamespaceClaims(presentation).birth_date,
 
-              issuing_authority:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
+              issuing_authority: pidMdocNamespaceClaims(presentation).issuing_authority,
 
               // NOTE: MUST be same as the C= value in the issuer cert for mdoc (checked by libs)
               issuing_country: 'NL',
-              // issuing_country: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+              // issuing_country: pidMdocNamespaceClaims(presentation).issuing_country,
             }
 
       const taxIdClaims =
@@ -345,16 +359,12 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              registered_given_name:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              registered_family_name:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              resident_address: `${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
-              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
-              issuing_authority:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_authority,
-              issuing_country:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+              registered_given_name: pidMdocNamespaceClaims(presentation).given_name,
+              registered_family_name: pidMdocNamespaceClaims(presentation).family_name,
+              resident_address: `${pidMdocNamespaceClaims(presentation).resident_street}, ${pidMdocNamespaceClaims(presentation).resident_postal_code} ${pidMdocNamespaceClaims(presentation).resident_city}`,
+              birth_date: pidMdocNamespaceClaims(presentation).birth_date,
+              issuing_authority: pidMdocNamespaceClaims(presentation).issuing_authority,
+              issuing_country: pidMdocNamespaceClaims(presentation).issuing_country,
             }
 
       const certificateOfResidenceClaims =
@@ -369,14 +379,13 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               issuing_country: presentation.prettyClaims.issuing_country,
             }
           : {
-              given_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              family_name: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
-              resident_address: `${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_street}, ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_postal_code} ${presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].resident_city}`,
-              birth_date: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].birth_date,
-              birth_place: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].place_of_birth,
-              nationality: presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].nationality,
-              issuing_country:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].issuing_country,
+              given_name: pidMdocNamespaceClaims(presentation).given_name,
+              family_name: pidMdocNamespaceClaims(presentation).family_name,
+              resident_address: `${pidMdocNamespaceClaims(presentation).resident_street}, ${pidMdocNamespaceClaims(presentation).resident_postal_code} ${pidMdocNamespaceClaims(presentation).resident_city}`,
+              birth_date: pidMdocNamespaceClaims(presentation).birth_date,
+              birth_place: pidMdocNamespaceClaims(presentation).place_of_birth,
+              nationality: pidMdocNamespaceClaims(presentation).nationality,
+              issuing_country: pidMdocNamespaceClaims(presentation).issuing_country,
             }
 
       const healthIdClaims = presentation.claimFormat === ClaimFormat.SdJwtDc ? {} : {}
@@ -388,10 +397,8 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
               registered_family_name: presentation.prettyClaims.family_name,
             }
           : {
-              registered_given_name:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].given_name,
-              registered_family_name:
-                presentation.documents[0].issuerSignedNamespaces['eu.europa.ec.eudi.pid.1'].family_name,
+              registered_given_name: pidMdocNamespaceClaims(presentation).given_name,
+              registered_family_name: pidMdocNamespaceClaims(presentation).family_name,
             }
 
       const eudiPidData =
