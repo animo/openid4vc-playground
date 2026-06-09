@@ -463,8 +463,19 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
             presentation instanceof W3cV2JwtVerifiablePresentation ||
             presentation instanceof W3cV2SdJwtVerifiablePresentation
           ) {
+            const verifiableCredentials = Array.isArray(presentation.resolvedPresentation.verifiableCredential)
+              ? presentation.resolvedPresentation.verifiableCredential
+              : [presentation.resolvedPresentation.verifiableCredential]
+
             return {
-              pretty: presentation.resolvedPresentation.toJSON(),
+              pretty: JsonTransformer.toJSON({
+                '@context': presentation.resolvedPresentation.context,
+                id: presentation.resolvedPresentation.id,
+                type: presentation.resolvedPresentation.type,
+                holder: presentation.resolvedPresentation.holder,
+
+                verifiableCredential: verifiableCredentials.map((vc) => vc.resolvedCredential.toJSON()),
+              }),
               encoded: presentation.encoded,
             }
           }
