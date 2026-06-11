@@ -15,17 +15,17 @@ importers:
   agent:
     dependencies:
       '@credo-ts/askar':
-        specifier: 0.7.1-alpha-20260608063601
-        version: 0.7.1-alpha-20260608063601(@openwallet-foundation/askar-shared@0.6.0)(typescript@5.9.3)
+        specifier: 0.7.1-alpha-20260610194159
+        version: 0.7.1-alpha-20260610194159(@openwallet-foundation/askar-shared@0.6.0)(typescript@5.9.3)
       '@credo-ts/core':
-        specifier: 0.7.1-alpha-20260608063601
-        version: 0.7.1-alpha-20260608063601(typescript@5.9.3)
+        specifier: 0.7.1-alpha-20260610194159
+        version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@credo-ts/node':
-        specifier: 0.7.1-alpha-20260608063601
-        version: 0.7.1-alpha-20260608063601(typescript@5.9.3)
+        specifier: 0.7.1-alpha-20260610194159
+        version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@credo-ts/openid4vc':
-        specifier: 0.7.1-alpha-20260608063601
-        version: 0.7.1-alpha-20260608063601(typescript@5.9.3)
+        specifier: 0.7.1-alpha-20260610194159
+        version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@openwallet-foundation/askar-nodejs':
         specifier: ^0.6.0
         version: 0.6.0
@@ -36,11 +36,11 @@ importers:
         specifier: 0.2.0-alpha-20260506130404
         version: 0.2.0-alpha-20260506130404
       '@owf/mdoc':
-        specifier: 0.7.0-alpha-20260604100157
-        version: 0.7.0-alpha-20260604100157
+        specifier: 0.7.0-alpha-20260605164430
+        version: 0.7.0-alpha-20260605164430
       '@peculiar/x509':
-        specifier: ^1.14.3
-        version: 1.14.3
+        specifier: ^2.0.0
+        version: 2.0.0
       cors:
         specifier: ^2.8.6
         version: 2.8.6
@@ -263,23 +263,23 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@credo-ts/askar@0.7.1-alpha-20260608063601':
-    resolution: {integrity: sha512-4wKM4SXHh1/IHfJF1zRU98R4cHcjfnY5a9PbhrzmySPYJw4gHW03mj/E+j1MxMjSMcbEalCW6HOz5jPNKKaxPA==}
+  '@credo-ts/askar@0.7.1-alpha-20260610194159':
+    resolution: {integrity: sha512-W8uhY0Utyo1Pbbl6RKT9G6ztnjg8JcLc5IEXIcpfHIDvrhA/5ZJGpcMetUg3eYXZZaA87qSEx3C+69b7+QXBKA==}
     peerDependencies:
       '@openwallet-foundation/askar-shared': ^0.4.3 || ^0.5.0 || ^0.6.0
 
-  '@credo-ts/core@0.7.1-alpha-20260608063601':
-    resolution: {integrity: sha512-REy0CVfEDw3sIbrgmQ60QN5c4F/DyUrZeXJlD96Co9Ip6cNJpNm6tKmCiGDGT84325YXnudyGk7/y3jeuAmMHQ==}
+  '@credo-ts/core@0.7.1-alpha-20260610194159':
+    resolution: {integrity: sha512-khCESU8xkkP4vJLnXku3kNX4A6vEajUdxS0KBQi60sCk8kw5xlfB720A5M2cQtc8U+i5BMJKFEHYOldLb0JPHA==}
 
-  '@credo-ts/didcomm@0.7.1-alpha-20260608063601':
-    resolution: {integrity: sha512-yg2EYmFM9eMsIs572Zfsj7XgVzeJM75+cqdORGhfF+GeTAvbWdT62WHqS//wPIrbmHXeu5+/acwERMvxRAbmTg==}
+  '@credo-ts/didcomm@0.7.1-alpha-20260610194159':
+    resolution: {integrity: sha512-0vW3974QgMbAWxOl9NFHeUH9AbTKeCIgRuVSTvMS0JMbuDltgg/ghzhAFhsKJImtMLTXyY4QoTLwZ1ct0LO8kA==}
 
-  '@credo-ts/node@0.7.1-alpha-20260608063601':
-    resolution: {integrity: sha512-BygA8l0ZBIh8FenRAzCkg6Npj1S2zC/9Rd7LX47ll6EzVi2oGsUMOLj5mO/EjnZHGt+uBTh3H6YE7ntLMuh+5w==}
+  '@credo-ts/node@0.7.1-alpha-20260610194159':
+    resolution: {integrity: sha512-1K0HEcgteg4DgvCKxZGbjng6erKkxqSJRBN9TfynSFaX4/clLyeX+xhtAXZp7nnJJjoe7pIHxCz9CDdjgeZuQA==}
     engines: {node: '>=20.19'}
 
-  '@credo-ts/openid4vc@0.7.1-alpha-20260608063601':
-    resolution: {integrity: sha512-srILl7vkbyke8fS1cgftL7OAOMBpsyC89NehJql4bx2MvDn9CS8TSLqBDJjkBI27VS0WY3Cxi9Ggnue7eM/UQA==}
+  '@credo-ts/openid4vc@0.7.1-alpha-20260610194159':
+    resolution: {integrity: sha512-ysXdb5i5xUYNhR+zKPx8aPYjypATQ9JzlFfDT98kiGc6GXbuEq/rhM0GX2qE2BIudrldhZDixawDSohUaA0l1g==}
 
   '@digitalbazaar/security-context@1.0.1':
     resolution: {integrity: sha512-0WZa6tPiTZZF8leBtQgYAfXQePFQp2z5ivpCEN/iZguYYZ0TB9qRmWtan5XH6mNFuusHtMcyIzAcReyE6rZPhA==}
@@ -754,8 +754,8 @@ packages:
   '@openwallet-foundation/askar-shared@0.6.0':
     resolution: {integrity: sha512-O9aaQCZ2BkQ5Z8jqshhqhxbS/rT2nTfN90iW32WKQEh9YUwWERFQcnqKR+XszGhV95jqwZagcwhDb72hFH3VaQ==}
 
-  '@owf/cose@0.3.0-alpha-20260604090304':
-    resolution: {integrity: sha512-lK3/C/ElgOLLuKeDNjC9vi9xVxR5E8q2EVf8WTOLzwsipO/kKHG1aNVosoFkAMjPhVJI5DT1BGtWYmOfavxDdQ==}
+  '@owf/cose@0.3.0-alpha-20260605053037':
+    resolution: {integrity: sha512-kagiAfAEqykFGNYjUdXkhRVVJSVQ16vGwbGxHMeh0kCJzAJg+TXrPF7DvLImLw7mAp5Ha7f3+Pgza1TRk3TeYw==}
 
   '@owf/crypto@0.2.0-alpha-20260506130404':
     resolution: {integrity: sha512-qSCarBCg0mTYFRzTCCsVTqAvfiOsm84En1Jmt10j6X9aRHCUJhPz5rY+wxgmL08fPEJWC1wLMvsskBUZQ9gedg==}
@@ -766,17 +766,17 @@ packages:
   '@owf/identity-common@0.2.0-alpha-20260506130404':
     resolution: {integrity: sha512-bSir5MsE6Xv29kBCIkATMLiiBsE58Y741KyDiMgx3yMYnsjnS3MSkA3G+c/kPmCW1oB1SelzZAZ/O6qSvtiyVg==}
 
-  '@owf/identity-common@0.3.0-alpha-20260604090304':
-    resolution: {integrity: sha512-8jq0RD7g0qfznLGLjPi63x7C/0g4yvFqIpBrsSrWxNtAwW/OX4Umd9yeElP0RbH4+8GVckjqjRJt+I0JIqz2sA==}
+  '@owf/identity-common@0.3.0-alpha-20260605053037':
+    resolution: {integrity: sha512-Eh4AUhJHXptgWdV9sQjd1Ob3m2geoKDltfdHiY4I9w6u7UkUPyjtQjSpRrVhHoo7KQeQ7mGI3qrOpqj91zNUjA==}
 
   '@owf/mdoc@0.6.0':
     resolution: {integrity: sha512-vJL62hzjcSweBjDD9eRUH1RIMSzZUtHKjVFMMo50oHPLO9ZVZbQABFe9IFoa5AgXkwfv27HjnFv/eRbkOrlsUA==}
 
-  '@owf/mdoc@0.7.0-alpha-20260604100157':
-    resolution: {integrity: sha512-Mp7P+/QRIcxChu5FUvs5mEUnNbbludpt3nrUbqiD+4SzI0L8xMllwkJDnCyMuaUvPt3xk8aO7jE2G9eC39Zhtw==}
+  '@owf/mdoc@0.7.0-alpha-20260605164430':
+    resolution: {integrity: sha512-ynCT/d1P866WWJwrXQSmqtmSmfViHpI05XdnvcZLqNUzByzXVguF0jLGkbiVN0xeW4b2HdTabejYKM2LghNMKw==}
 
-  '@owf/token-status-list@0.3.0-alpha-20260604090304':
-    resolution: {integrity: sha512-hlHZkux98usf+2IHEGA4x75HBW/rssm3gz1IWqny9gLDcRhgp4fz3mnXtLCSAl+X4LTTkUjuEaTY4hdmlJQU0w==}
+  '@owf/token-status-list@0.3.0-alpha-20260605053037':
+    resolution: {integrity: sha512-dAHmkhzwHDp2mFA7u02fp2ERuxihKGYgIXCOqoVwlgHekQq3Y+Vd9RPlXMaHaj03q1fhriTrBZmpyMdP+DKGmw==}
 
   '@peculiar/asn1-cms@2.6.1':
     resolution: {integrity: sha512-vdG4fBF6Lkirkcl53q6eOdn3XYKt+kJTG59edgRZORlg/3atWWEReRCx5rYE1ZzTTX6vLK5zDMjHh7vbrcXGtw==}
@@ -812,8 +812,8 @@ packages:
     resolution: {integrity: sha512-coUfuoMeIB7B8/NMekxaDzLhaYmp0HZNPEjYRm9goRou8UZIC3z21s0sL9AWoCw4EG876QyO3kYrc61WNF9B/w==}
     engines: {node: '>=8.0.0'}
 
-  '@peculiar/x509@1.14.3':
-    resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
+  '@peculiar/x509@2.0.0':
+    resolution: {integrity: sha512-r10lkuy6BNfRmyYdRAfgu6dq0HOmyIV2OLhXWE3gDEPBdX1b8miztJVyX/UxWhLwemNyDP3CLZHpDxDwSY0xaA==}
     engines: {node: '>=20.0.0'}
 
   '@radix-ui/number@1.1.1':
@@ -1260,6 +1260,7 @@ packages:
 
   '@sphereon/kmp-mdoc-core@0.2.0-SNAPSHOT.26':
     resolution: {integrity: sha512-QXJ6R8ENiZV2rPMbn06cw5JKwqUYN1kzVRbYfONqE1PEXx1noQ4md7uxr2zSczi0ubKkNcbyYDNtIMTZIhGzmQ==}
+    bundledDependencies: []
 
   '@sphereon/pex-models@2.3.2':
     resolution: {integrity: sha512-foFxfLkRwcn/MOp/eht46Q7wsvpQGlO7aowowIIb5Tz9u97kYZ2kz6K2h2ODxWuv5CRA7Q0MY8XUBGE2lfOhOQ==}
@@ -2563,9 +2564,9 @@ snapshots:
   '@cbor-extract/cbor-extract-win32-x64@2.2.2':
     optional: true
 
-  '@credo-ts/askar@0.7.1-alpha-20260608063601(@openwallet-foundation/askar-shared@0.6.0)(typescript@5.9.3)':
+  '@credo-ts/askar@0.7.1-alpha-20260610194159(@openwallet-foundation/askar-shared@0.6.0)(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260608063601(typescript@5.9.3)
+      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@openwallet-foundation/askar-shared': 0.6.0
       class-transformer: 0.5.1
       class-validator: 0.14.3
@@ -2576,7 +2577,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/core@0.7.1-alpha-20260608063601(typescript@5.9.3)':
+  '@credo-ts/core@0.7.1-alpha-20260610194159(typescript@5.9.3)':
     dependencies:
       '@animo-id/pex': 6.1.1
       '@astronautlabs/jsonpath': 1.1.2
@@ -2586,14 +2587,14 @@ snapshots:
       '@multiformats/base-x': 4.0.1
       '@noble/curves': 2.0.1
       '@noble/hashes': 2.2.0
-      '@owf/cose': 0.3.0-alpha-20260604090304
-      '@owf/mdoc': 0.7.0-alpha-20260604100157
-      '@owf/token-status-list': 0.3.0-alpha-20260604090304
+      '@owf/cose': 0.3.0-alpha-20260605053037
+      '@owf/mdoc': 0.7.0-alpha-20260605164430
+      '@owf/token-status-list': 0.3.0-alpha-20260605053037
       '@peculiar/asn1-ecc': 2.6.1
       '@peculiar/asn1-rsa': 2.6.1
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
-      '@peculiar/x509': 1.14.3
+      '@peculiar/x509': 2.0.0
       '@scure/base': 2.2.0
       '@sd-jwt/core': 0.19.0
       '@sd-jwt/decode': 0.19.0
@@ -2627,9 +2628,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/didcomm@0.7.1-alpha-20260608063601(typescript@5.9.3)':
+  '@credo-ts/didcomm@0.7.1-alpha-20260610194159(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260608063601(typescript@5.9.3)
+      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
       class-transformer: 0.5.1
       class-validator: 0.14.3
       luxon: 3.7.2
@@ -2640,10 +2641,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/node@0.7.1-alpha-20260608063601(typescript@5.9.3)':
+  '@credo-ts/node@0.7.1-alpha-20260610194159(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260608063601(typescript@5.9.3)
-      '@credo-ts/didcomm': 0.7.1-alpha-20260608063601(typescript@5.9.3)
+      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
+      '@credo-ts/didcomm': 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@types/express': 5.0.6
       express: 5.2.1
       rxjs: 7.8.2
@@ -2655,9 +2656,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@credo-ts/openid4vc@0.7.1-alpha-20260608063601(typescript@5.9.3)':
+  '@credo-ts/openid4vc@0.7.1-alpha-20260610194159(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260608063601(typescript@5.9.3)
+      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@openid4vc/oauth2': 0.4.6
       '@openid4vc/openid4vci': 0.4.6
       '@openid4vc/openid4vp': 0.4.6
@@ -3034,9 +3035,9 @@ snapshots:
       buffer: 6.0.3
       tar: 7.5.2
 
-  '@owf/cose@0.3.0-alpha-20260604090304':
+  '@owf/cose@0.3.0-alpha-20260605053037':
     dependencies:
-      '@owf/identity-common': 0.3.0-alpha-20260604090304
+      '@owf/identity-common': 0.3.0-alpha-20260605053037
       cbor-x: 1.6.4
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
@@ -3059,7 +3060,7 @@ snapshots:
 
   '@owf/identity-common@0.2.0-alpha-20260506130404': {}
 
-  '@owf/identity-common@0.3.0-alpha-20260604090304': {}
+  '@owf/identity-common@0.3.0-alpha-20260605053037': {}
 
   '@owf/mdoc@0.6.0':
     dependencies:
@@ -3067,17 +3068,17 @@ snapshots:
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
 
-  '@owf/mdoc@0.7.0-alpha-20260604100157':
+  '@owf/mdoc@0.7.0-alpha-20260605164430':
     dependencies:
-      '@owf/cose': 0.3.0-alpha-20260604090304
-      '@owf/identity-common': 0.3.0-alpha-20260604090304
-      '@owf/token-status-list': 0.3.0-alpha-20260604090304
+      '@owf/cose': 0.3.0-alpha-20260605053037
+      '@owf/identity-common': 0.3.0-alpha-20260605053037
+      '@owf/token-status-list': 0.3.0-alpha-20260605053037
       zod: 4.4.3
 
-  '@owf/token-status-list@0.3.0-alpha-20260604090304':
+  '@owf/token-status-list@0.3.0-alpha-20260605053037':
     dependencies:
-      '@owf/cose': 0.3.0-alpha-20260604090304
-      '@owf/identity-common': 0.3.0-alpha-20260604090304
+      '@owf/cose': 0.3.0-alpha-20260605053037
+      '@owf/identity-common': 0.3.0-alpha-20260605053037
       cbor-x: 1.6.4
       pako: 2.1.0
       zod: 4.4.3
@@ -3162,7 +3163,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@peculiar/x509@1.14.3':
+  '@peculiar/x509@2.0.0':
     dependencies:
       '@peculiar/asn1-cms': 2.6.1
       '@peculiar/asn1-csr': 2.6.1
@@ -3172,7 +3173,6 @@ snapshots:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       pvtsutils: 1.3.6
-      reflect-metadata: 0.2.2
       tslib: 2.8.1
       tsyringe: 4.10.0
 

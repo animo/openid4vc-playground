@@ -59,7 +59,7 @@ export const agent = new Agent({
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vci']),
         credentialRequestToCredentialMapper,
         deferredCredentialRequestToCredentialMapper,
-        getVerificationSessionForIssuanceSessionAuthorization: getVerificationSessionForIssuanceSession,
+        getVerificationSession: getVerificationSessionForIssuanceSession,
       },
       verifier: {
         baseUrl: joinUriParts(AGENT_HOST, ['oid4vp']),
