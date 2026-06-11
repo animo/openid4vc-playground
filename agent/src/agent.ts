@@ -79,7 +79,18 @@ export const agent = new Agent({
     }),
     x509: new X509Module({
       getTrustedCertificatesForVerification: (_agentContext, { certificateChain }) => {
-        return [certificateChain[certificateChain.length - 1].toString('pem')]
+        const lastCertificateInChain = certificateChain[certificateChain.length - 1].toString('pem')
+
+        // For now we only allow the same certificate (leaf) to be used for signing of the status list
+        // With LoTE that can be different.
+        const firstCertificateInChain = certificateChain[0].toString('pem')
+
+        return [
+          {
+            issuance: [lastCertificateInChain],
+            status: [firstCertificateInChain],
+          },
+        ]
       },
       trustedCertificates: [
         x509PidIssuerCertificate,
