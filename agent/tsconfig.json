@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2024",
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
