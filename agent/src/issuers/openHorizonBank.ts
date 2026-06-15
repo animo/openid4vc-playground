@@ -1,5 +1,6 @@
 import { Kms } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
+import { agent } from '../agent.js'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
 import type { StaticSdJwtSignInput } from '../types.js'
@@ -196,6 +197,36 @@ export const openHorizonbankCredentialMetadata = {
       },
     },
   },
+}
+
+export async function updatePaymentStatusForWeroCredential(
+  jti: string,
+  paymentTransactionId: string,
+  amount: number
+): Promise<void> {
+  const statusCode = amount > 100 ? 'RJCT' : 'ACSC'
+  agent.config.logger.info(
+    `openHorizonBank: updating payment ${paymentTransactionId} for credential ${jti}, amount ${amount} -> ${statusCode}`
+  )
+
+  const credentialTokenRecord = await agent.genericRecords.findById(`wero-credential-token-${jti}`)
+  if (!credentialTokenRecord) {
+    agent.config.logger.warn(`openHorizonBank: no credential token record found for jti ${jti}`)
+    return
+  }
+
+  const paymentRecord = await agent.genericRecords.findById(`transaction-status-${paymentTransactionId}`)
+  if (!paymentRecord || paymentRecord.content.statusCode !== 'PDNG') {
+    agent.config.logger.warn(
+      `openHorizonBank: payment record ${paymentTransactionId} not found or not PDNG (current: ${paymentRecord?.content.statusCode})`
+    )
+    return
+  }
+
+  paymentRecord.content.transaction_status_token = credentialTokenRecord.content.transaction_status_token
+  paymentRecord.content.statusCode = statusCode
+  await agent.genericRecords.update(paymentRecord)
+  agent.config.logger.info(`openHorizonBank: payment ${paymentTransactionId} updated to ${statusCode}`)
 }
 
 export const openHorizonBankCredentialsData = {

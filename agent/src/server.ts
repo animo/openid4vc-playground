@@ -1,7 +1,6 @@
 import '@openwallet-foundation/askar-nodejs'
 import { JwsService, JwtPayload, Kms } from '@credo-ts/core'
 import type { Request, Response } from 'express'
-
 import express from 'express'
 import path from 'path'
 import { agent } from './agent.js'
@@ -128,7 +127,7 @@ async function run() {
 
   // Hack for making images available
   if (AGENT_HOST.includes('ngrok') || AGENT_HOST.includes('.ts.net') || AGENT_HOST.includes('localhost')) {
-    console.log(path.join(dirname, '../../app/public/assets'))
+    agent.config.logger.debug(path.join(dirname, '../../app/public/assets'))
     app.use('/assets', express.static(path.join(dirname, '../../app/public/assets')))
   }
 
@@ -192,7 +191,7 @@ async function run() {
 
   // @ts-expect-error
   app.use((err, _, res, __) => {
-    console.error(err.stack)
+    agent.config.logger.error(err.stack)
     res.status(500).send('Something broke!')
   })
 }

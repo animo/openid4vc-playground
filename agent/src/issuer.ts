@@ -22,10 +22,12 @@ import {
 import { cborDecode, cborEncode } from '@owf/mdoc'
 import { randomUUID } from 'crypto'
 import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
 import { bdrIssuer } from './issuers/bdr.js'
 import { issuers, issuersCredentialsData } from './issuers/index.js'
 import { kolnIssuer } from './issuers/koln.js'
 import { krankenkasseIssuer } from './issuers/krankenkasse.js'
+import { weroScaConfiguration, weroScaThirdPartyConfiguration } from './issuers/openHorizonBank.js'
 import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
@@ -504,9 +506,8 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
           })),
         } satisfies SerializableMdocSignOptions
 
-        console.log(
-          'decoded',
-          cborDecode(Buffer.from(signOptions.credentials[0].namespaces, 'base64url'), { mapsAsObjects: true })
+        agent.config.logger.debug(
+          `decoded ${JSON.stringify(cborDecode(Buffer.from(signOptions.credentials[0].namespaces, 'base64url'), { mapsAsObjects: true }))}`
         )
       }
     }
@@ -543,6 +544,40 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     } else {
       throw new Error(`Unsupported credential ${credentialConfigurationId}`)
     }
+  }
+
+  // For Wero SCA SD-JWT credentials, inject a per-credential transaction status token
+  // We manually set the `jti` here so the issuer can refer later to update the status
+  if (
+    signOptions &&
+    credentialData.format === ClaimFormat.SdJwtDc &&
+    (normalizedCredentialConfigurationId === weroScaConfiguration.scope ||
+      normalizedCredentialConfigurationId === weroScaThirdPartyConfiguration.scope)
+  ) {
+    const jti = randomUUID() as string
+    const transaction_status_token = randomUUID() as string
+    const sdJwtSignOptions = signOptions as SerializableSdJwtVcSignOptions
+
+    signOptions = {
+      ...sdJwtSignOptions,
+      credentials: sdJwtSignOptions.credentials.map((credential) => ({
+        ...credential,
+        payload: {
+          ...credential.payload,
+          jti,
+          credential_metadata: {
+            transaction_status_url: `${AGENT_HOST}/api/transaction-status`,
+            transaction_status_token,
+          },
+        },
+      })),
+    } satisfies SerializableSdJwtVcSignOptions
+
+    await agent.genericRecords.save({
+      id: `wero-credential-token-${jti}`,
+      content: { transaction_status_token },
+    })
+    agent.config.logger.info(`issuer: saved Wero SCA transaction status record for jti ${jti}`)
   }
 
   const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}

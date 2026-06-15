@@ -20,6 +20,11 @@ import { agent } from './agent.js'
 import { funkeDeployedAccessCertificate, funkeDeployedRegistrationCertificate } from './eudiTrust.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
+import {
+  updatePaymentStatusForWeroCredential,
+  weroScaConfiguration,
+  weroScaThirdPartyConfiguration,
+} from './issuers/openHorizonBank.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
@@ -174,6 +179,35 @@ apiRouter.get('/verifier', async (_, response: Response) => {
   })
 })
 
+apiRouter.post('transaction-status', async (request: Request, response: Response) => {
+  const authHeader = request.headers.authorization
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+
+  const parseResult = await z.object({ transaction: z.string() }).safeParseAsync(request.body)
+  if (!parseResult.success) {
+    agent.config.logger.warn('transaction-status: missing transactionId in request body')
+    return response.status(400).json({ error: 'Missing transactionId' })
+  }
+
+  const { transaction } = parseResult.data
+  agent.config.logger.info(`transaction-status: looking up record for transaction ${transaction}`)
+  const record = await agent.genericRecords.findById(`transaction-status-${transaction}`)
+
+  if (!record || record.content.transaction_status_token !== token || !('statusCode' in record.content)) {
+    agent.config.logger.warn(
+      `transaction-status: unauthorized - record ${record ? 'found but token mismatch or no statusCode' : 'not found'}`
+    )
+    return response.status(401)
+  }
+
+  agent.config.logger.info(
+    `transaction-status: returning status ${record.content.statusCode} for transaction ${transaction}`
+  )
+  return response.json({
+    status_code: record.content.statusCode,
+  })
+})
+
 // apiRouter.post('/trust-chains', async (request: Request, response: Response) => {
 //   const parseResult = await z
 //     .object({
@@ -262,13 +296,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       }
     }
 
-    console.log('Requesting definition', JSON.stringify(definition, null, 2))
+    agent.config.logger.debug(`Requesting definition ${JSON.stringify(definition, null, 2)}`)
 
     const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
     const credentialIds = queryLanguageDefinition.credentials.map((query) => query.id)
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
+    const paymentTransactionId = transactionAuthorizationType === 'payment' ? randomUUID() : undefined
 
     // When credential_sets is used we need to add the wero card to each group so that it will always be requested when also requesting a payment
     if (transactionAuthorizationType === 'payment') {
@@ -330,7 +365,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                     credential_ids: [credentialIds[credentialIds.length - 1]] as [string, ...string[]],
                     transaction_data_hashes_alg: ['sha-256'],
                     payload: {
-                      transaction_id: randomUUID(),
+                      transaction_id: paymentTransactionId as string,
                       amount: `${paymentAmount} EUR`,
                       date_time: new Date().toISOString(),
                       payee: {
@@ -358,24 +393,29 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       responseCodeMap.set(responseCode, verificationSession.id)
     }
 
+    if (transactionAuthorizationType === 'payment' && paymentTransactionId) {
+      agent.config.logger.info(
+        `requests/create: saving PDNG payment record for paymentTransactionId ${paymentTransactionId}`
+      )
+      await agent.genericRecords.save({
+        id: `transaction-status-${paymentTransactionId}`,
+        content: { statusCode: 'PDNG' },
+      })
+    }
+
     const authorizationRequestJwt = verificationSession.authorizationRequestJwt
       ? Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
       : undefined
     const authorizationRequestPayload = verificationSession.requestPayload
     const dcqlQuery = authorizationRequestPayload.dcql_query
-    const transactionData = authorizationRequestPayload.verifier_info?.map((e) => ({
-      ...e,
-      data: typeof e.data === 'string' ? JsonEncoder.fromBase64(e.data) : e.data,
-    }))
 
-    console.log(JSON.stringify(authorizationRequestObject, null, 2))
+    agent.config.logger.debug(JSON.stringify(authorizationRequestObject, null, 2))
     return response.json({
       authorizationRequestObject,
       authorizationRequestUri: authorizationRequest.replace('openid4vp://', requestScheme),
       verificationSessionId: verificationSession.id,
       responseStatus: verificationSession.state,
       dcqlQuery,
-      transactionData,
       authorizationRequest: authorizationRequestJwt
         ? {
             payload: authorizationRequestJwt.payload.toJson(),
@@ -409,7 +449,45 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
 
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
     const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)
-    console.log(verified.dcql?.presentationResult)
+    agent.config.logger.debug(JSON.stringify(verified.dcql?.presentationResult))
+
+    // Find the Wero SCA presentation to extract the credential jti, then signal the issuer to update payment status.
+    // The issuer owns the transaction_status_token — the verifier only passes the jti and payment details.
+    const weroVcts = [weroScaConfiguration.vct, weroScaThirdPartyConfiguration.vct]
+    const weroPresentation = Object.values(verified.dcql?.presentations ?? {})
+      .flat()
+      .find((p) => weroVcts.includes((p as { prettyClaims?: Record<string, unknown> }).prettyClaims?.vct as string))
+    const weroJti = (weroPresentation as { prettyClaims?: Record<string, unknown> } | undefined)?.prettyClaims?.jti as
+      | string
+      | undefined
+
+    const rawPaymentEntry = (authorizationRequestPayload.transaction_data as string[] | undefined)?.find((data) => {
+      try {
+        return (
+          (JSON.parse(Buffer.from(data, 'base64url').toString()) as { type?: string }).type ===
+          'urn:eudi:sca:eu.europa.ec:payment:single:1'
+        )
+      } catch {
+        return false
+      }
+    })
+    if (rawPaymentEntry && weroJti) {
+      const decoded = JSON.parse(Buffer.from(rawPaymentEntry, 'base64url').toString()) as {
+        payload?: { amount?: string; transaction_id?: string }
+      }
+      const paymentTransactionId = decoded.payload?.transaction_id
+      const amount = parseFloat(decoded.payload?.amount ?? '0')
+      agent.config.logger.info(
+        `getVerificationStatus: Wero credential jti ${weroJti}, paymentTransactionId ${paymentTransactionId}, amount ${amount}`
+      )
+      if (paymentTransactionId) {
+        await updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount)
+      }
+    } else {
+      agent.config.logger.debug(
+        `getVerificationStatus: no payment update - weroJti ${weroJti ?? 'not found'}, rawPaymentEntry ${rawPaymentEntry ? 'found' : 'not found'}`
+      )
+    }
 
     const presentations = await Promise.all(
       Object.values(verified.dcql?.presentations ?? {})
@@ -497,7 +575,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
         }))
       : undefined
 
-    console.log('presentations', presentations)
+    agent.config.logger.debug(`presentations ${JSON.stringify(presentations)}`)
 
     return {
       verificationSessionId: verificationSession.id,
@@ -559,7 +637,7 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
 })
 
 apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
-  console.error('Unhandled error', error)
+  agent.config.logger.error(`Unhandled error ${error}`)
   return response.status(500).json({
     error: error.message,
   })
