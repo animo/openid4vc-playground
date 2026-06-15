@@ -20,7 +20,7 @@ import {
   OpenId4VcVerifierApi,
 } from '@credo-ts/openid4vc'
 import { cborDecode, cborEncode } from '@owf/mdoc'
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { agent } from './agent.js'
 import { AGENT_HOST } from './constants.js'
 import { bdrIssuer } from './issuers/bdr.js'
@@ -32,6 +32,7 @@ import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
+import { setPendingCredentialResponseMetadata } from './utils/credentialResponseMetadata.js'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
 import { getVerifier } from './verifier.js'
 import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util.js'
@@ -306,6 +307,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   credentialConfigurationId,
   verification,
   issuanceSession,
+  authorization,
 }): Promise<OpenId4VciSignCredentials | OpenId4VciDeferredCredentials> => {
   const normalizedCredentialConfigurationId = credentialConfigurationId.replace('-key-attestations', '')
   const credentialData = issuersCredentialsData[normalizedCredentialConfigurationId]
@@ -546,8 +548,8 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     }
   }
 
-  // For Wero SCA SD-JWT credentials, inject a per-credential transaction status token
-  // We manually set the `jti` here so the issuer can refer later to update the status
+  // For Wero SCA SD-JWT credentials, inject a per-credential jti and schedule
+  // credential_metadata to be added to the OID4VCI credential response (not the credential itself).
   if (
     signOptions &&
     credentialData.format === ClaimFormat.SdJwtDc &&
@@ -565,10 +567,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         payload: {
           ...credential.payload,
           jti,
-          credential_metadata: {
-            transaction_status_url: `${AGENT_HOST}/api/transaction-status`,
-            transaction_status_token,
-          },
         },
       })),
     } satisfies SerializableSdJwtVcSignOptions
@@ -578,6 +576,14 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
       content: { transaction_status_token },
     })
     agent.config.logger.info(`issuer: saved Wero SCA transaction status record for jti ${jti}`)
+
+    const accessTokenHash = createHash('sha256').update(authorization.accessToken.value).digest('hex')
+    setPendingCredentialResponseMetadata(accessTokenHash, {
+      'urn:eudi:sca:eu.europa.ec:payment': {
+        transaction_status_url: `${AGENT_HOST}/api/transaction-status`,
+        transaction_status_token,
+      },
+    })
   }
 
   const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}

@@ -13,7 +13,7 @@ import {
   X509ModuleConfig,
 } from '@credo-ts/core'
 import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
@@ -179,14 +179,17 @@ apiRouter.get('/verifier', async (_, response: Response) => {
   })
 })
 
-apiRouter.post('transaction-status', async (request: Request, response: Response) => {
+apiRouter.post('/transaction-status', async (request: Request, response: Response) => {
   const authHeader = request.headers.authorization
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+  if (!token) {
+    return response.status(401)
+  }
 
   const parseResult = await z.object({ transaction: z.string() }).safeParseAsync(request.body)
   if (!parseResult.success) {
     agent.config.logger.warn('transaction-status: missing transactionId in request body')
-    return response.status(400).json({ error: 'Missing transactionId' })
+    return response.status(401)
   }
 
   const { transaction } = parseResult.data
@@ -303,7 +306,28 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
-    const paymentTransactionId = transactionAuthorizationType === 'payment' ? randomUUID() : undefined
+    const paymentTransactionEntry =
+      transactionAuthorizationType === 'payment'
+        ? {
+            type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
+            credential_ids: [credentialIds[credentialIds.length - 1]] as [string, ...string[]],
+            transaction_data_hashes_alg: ['sha-256'] as [string, ...string[]],
+            payload: {
+              transaction_id: randomUUID(),
+              amount: `${paymentAmount} EUR`,
+              date_time: new Date().toISOString(),
+              payee: {
+                name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
+                id: verifierId,
+                logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
+                website: 'https://playground.animo.id',
+              },
+            },
+          }
+        : undefined
+    const paymentTransactionId = paymentTransactionEntry
+      ? createHash('sha256').update(JsonEncoder.toBase64Url(paymentTransactionEntry)).digest('hex')
+      : undefined
 
     // When credential_sets is used we need to add the wero card to each group so that it will always be requested when also requesting a payment
     if (transactionAuthorizationType === 'payment') {
@@ -357,26 +381,8 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                   ],
                 },
               ]
-            : transactionAuthorizationType === 'payment'
-              ? [
-                  {
-                    type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
-                    // We pick the last credential id as we push the wero card
-                    credential_ids: [credentialIds[credentialIds.length - 1]] as [string, ...string[]],
-                    transaction_data_hashes_alg: ['sha-256'],
-                    payload: {
-                      transaction_id: paymentTransactionId as string,
-                      amount: `${paymentAmount} EUR`,
-                      date_time: new Date().toISOString(),
-                      payee: {
-                        name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
-                        id: verifierId,
-                        logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
-                        website: 'https://playground.animo.id',
-                      },
-                    },
-                  },
-                ]
+            : transactionAuthorizationType === 'payment' && paymentTransactionEntry
+              ? [paymentTransactionEntry]
               : undefined,
         dcql: {
           query: queryLanguageDefinition,
@@ -473,16 +479,14 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     })
     if (rawPaymentEntry && weroJti) {
       const decoded = JSON.parse(Buffer.from(rawPaymentEntry, 'base64url').toString()) as {
-        payload?: { amount?: string; transaction_id?: string }
+        payload?: { amount?: string }
       }
-      const paymentTransactionId = decoded.payload?.transaction_id
+      const paymentTransactionId = createHash('sha256').update(rawPaymentEntry).digest('hex')
       const amount = parseFloat(decoded.payload?.amount ?? '0')
       agent.config.logger.info(
         `getVerificationStatus: Wero credential jti ${weroJti}, paymentTransactionId ${paymentTransactionId}, amount ${amount}`
       )
-      if (paymentTransactionId) {
-        await updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount)
-      }
+      await updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount)
     } else {
       agent.config.logger.debug(
         `getVerificationStatus: no payment update - weroJti ${weroJti ?? 'not found'}, rawPaymentEntry ${rawPaymentEntry ? 'found' : 'not found'}`
