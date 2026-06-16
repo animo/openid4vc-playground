@@ -1,11 +1,14 @@
-const pending = new Map<string, Record<string, unknown>>()
+import { AsyncLocalStorage } from 'node:async_hooks'
 
-export function setPendingCredentialResponseMetadata(accessTokenHash: string, metadata: Record<string, unknown>) {
-  pending.set(accessTokenHash, metadata)
-}
+type Store = { metadata?: Record<string, unknown> }
 
-export function popPendingCredentialResponseMetadata(accessTokenHash: string): Record<string, unknown> | undefined {
-  const value = pending.get(accessTokenHash)
-  pending.delete(accessTokenHash)
-  return value
+const storage = new AsyncLocalStorage<Store>()
+
+export const credentialResponseMetadata = {
+  run: (fn: () => void) => storage.run({}, fn),
+  set: (metadata: Record<string, unknown>) => {
+    const store = storage.getStore()
+    if (store) store.metadata = metadata
+  },
+  get: () => storage.getStore()?.metadata,
 }

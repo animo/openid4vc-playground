@@ -205,9 +205,6 @@ export async function updatePaymentStatusForWeroCredential(
   amount: number
 ): Promise<void> {
   const statusCode = amount > 100 ? 'RJCT' : 'ACSC'
-  agent.config.logger.info(
-    `openHorizonBank: updating payment ${paymentTransactionId} for credential ${jti}, amount ${amount} -> ${statusCode}`
-  )
 
   const credentialTokenRecord = await agent.genericRecords.findById(`wero-credential-token-${jti}`)
   if (!credentialTokenRecord) {
@@ -224,9 +221,23 @@ export async function updatePaymentStatusForWeroCredential(
   }
 
   paymentRecord.content.transaction_status_token = credentialTokenRecord.content.transaction_status_token
-  paymentRecord.content.statusCode = statusCode
   await agent.genericRecords.update(paymentRecord)
-  agent.config.logger.info(`openHorizonBank: payment ${paymentTransactionId} updated to ${statusCode}`)
+  agent.config.logger.info(
+    `openHorizonBank: payment ${paymentTransactionId} token set (status PDNG), flipping to ${statusCode} in 30s`
+  )
+
+  setTimeout(async () => {
+    const latest = await agent.genericRecords.findById(`transaction-status-${paymentTransactionId}`)
+    if (!latest || latest.content.statusCode !== 'PDNG') {
+      agent.config.logger.warn(
+        `openHorizonBank: payment ${paymentTransactionId} no longer PDNG at flip time (current: ${latest?.content.statusCode})`
+      )
+      return
+    }
+    latest.content.statusCode = statusCode
+    await agent.genericRecords.update(latest)
+    agent.config.logger.info(`openHorizonBank: payment ${paymentTransactionId} updated to ${statusCode}`)
+  }, 30_000)
 }
 
 export const openHorizonBankCredentialsData = {

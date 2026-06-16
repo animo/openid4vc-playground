@@ -20,7 +20,7 @@ import {
   OpenId4VcVerifierApi,
 } from '@credo-ts/openid4vc'
 import { cborDecode, cborEncode } from '@owf/mdoc'
-import { createHash, randomUUID } from 'crypto'
+import { randomUUID } from 'crypto'
 import { agent } from './agent.js'
 import { AGENT_HOST } from './constants.js'
 import { bdrIssuer } from './issuers/bdr.js'
@@ -32,7 +32,7 @@ import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
-import { setPendingCredentialResponseMetadata } from './utils/credentialResponseMetadata.js'
+import { credentialResponseMetadata } from './utils/credentialResponseMetadata.js'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
 import { getVerifier } from './verifier.js'
 import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util.js'
@@ -307,7 +307,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   credentialConfigurationId,
   verification,
   issuanceSession,
-  authorization,
 }): Promise<OpenId4VciSignCredentials | OpenId4VciDeferredCredentials> => {
   const normalizedCredentialConfigurationId = credentialConfigurationId.replace('-key-attestations', '')
   const credentialData = issuersCredentialsData[normalizedCredentialConfigurationId]
@@ -577,8 +576,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     })
     agent.config.logger.info(`issuer: saved Wero SCA transaction status record for jti ${jti}`)
 
-    const accessTokenHash = createHash('sha256').update(authorization.accessToken.value).digest('hex')
-    setPendingCredentialResponseMetadata(accessTokenHash, {
+    credentialResponseMetadata.set({
       'urn:eudi:sca:eu.europa.ec:payment': {
         transaction_status_url: `${AGENT_HOST}/api/transaction-status`,
         transaction_status_token,

@@ -1,5 +1,5 @@
 import {
-  JsonEncoder,
+  Hasher,
   JsonTransformer,
   Jwt,
   MdocDeviceResponse,
@@ -13,7 +13,7 @@ import {
   X509ModuleConfig,
 } from '@credo-ts/core'
 import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { createHash, randomUUID } from 'crypto'
+import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
@@ -57,6 +57,28 @@ const deferIntervalMapping: Record<z.infer<typeof zCreateOfferRequest>['deferBy'
 
 apiRouter.use(express.json())
 apiRouter.use(express.text())
+
+// Extracts paymentTransactionId (hash of the raw transaction_data entry, matching
+// what the wallet computes per the transaction_data spec) and the amount from the
+// authorization request JWT. Returns undefined if no transaction_data is present.
+function extractPaymentTransactionData(
+  authorizationRequestJwt: string | undefined
+): { paymentTransactionId: string; amount: number } | undefined {
+  if (!authorizationRequestJwt) return undefined
+
+  const transactionData = Jwt.fromSerializedJwt(authorizationRequestJwt).payload.additionalClaims.transaction_data
+  if (!Array.isArray(transactionData) || typeof transactionData[0] !== 'string') return undefined
+
+  const rawEntry = transactionData[0]
+  const paymentTransactionId = TypedArrayEncoder.toHex(
+    Hasher.hash(TypedArrayEncoder.fromBase64Url(rawEntry), 'sha-256')
+  )
+  const decoded = JSON.parse(Buffer.from(rawEntry, 'base64url').toString()) as { payload?: { amount?: string } }
+  const amount = parseFloat(decoded.payload?.amount ?? '0')
+
+  return { paymentTransactionId, amount }
+}
+
 apiRouter.post('/offers/create', async (request: Request, response: Response) => {
   const createOfferRequest = zCreateOfferRequest.parse(request.body)
 
@@ -183,13 +205,13 @@ apiRouter.post('/transaction-status', async (request: Request, response: Respons
   const authHeader = request.headers.authorization
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
   if (!token) {
-    return response.status(401)
+    return response.sendStatus(401)
   }
 
   const parseResult = await z.object({ transaction: z.string() }).safeParseAsync(request.body)
   if (!parseResult.success) {
     agent.config.logger.warn('transaction-status: missing transactionId in request body')
-    return response.status(401)
+    return response.sendStatus(401)
   }
 
   const { transaction } = parseResult.data
@@ -200,7 +222,7 @@ apiRouter.post('/transaction-status', async (request: Request, response: Respons
     agent.config.logger.warn(
       `transaction-status: unauthorized - record ${record ? 'found but token mismatch or no statusCode' : 'not found'}`
     )
-    return response.status(401)
+    return response.sendStatus(401)
   }
 
   agent.config.logger.info(
@@ -265,7 +287,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       redirectUriBase,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
-    const _x509RootCertificate = getX509RootCertificate()
     const x509DcsCertificate = getX509DcsCertificate()
 
     // Funke access certificate uses same key as the dcs certificate
@@ -325,9 +346,6 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
             },
           }
         : undefined
-    const paymentTransactionId = paymentTransactionEntry
-      ? createHash('sha256').update(JsonEncoder.toBase64Url(paymentTransactionEntry)).digest('hex')
-      : undefined
 
     // When credential_sets is used we need to add the wero card to each group so that it will always be requested when also requesting a payment
     if (transactionAuthorizationType === 'payment') {
@@ -399,12 +417,13 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       responseCodeMap.set(responseCode, verificationSession.id)
     }
 
-    if (transactionAuthorizationType === 'payment' && paymentTransactionId) {
+    const paymentTransaction = extractPaymentTransactionData(verificationSession.authorizationRequestJwt)
+    if (transactionAuthorizationType === 'payment' && paymentTransaction) {
       agent.config.logger.info(
-        `requests/create: saving PDNG payment record for paymentTransactionId ${paymentTransactionId}`
+        `requests/create: saving PDNG payment record for paymentTransactionId ${paymentTransaction.paymentTransactionId}`
       )
       await agent.genericRecords.save({
-        id: `transaction-status-${paymentTransactionId}`,
+        id: `transaction-status-${paymentTransaction.paymentTransactionId}`,
         content: { statusCode: 'PDNG' },
       })
     }
@@ -448,48 +467,30 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
   }
   const dcqlQuery = authorizationRequestPayload.dcql_query
 
-  const transactionData = authorizationRequestPayload.verifier_info?.map((e) => ({
-    ...e,
-    data: typeof e.data === 'string' ? JsonEncoder.fromBase64(e.data) : e.data,
-  }))
-
   if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
     const verified = await agent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSession.id)
     agent.config.logger.debug(JSON.stringify(verified.dcql?.presentationResult))
 
     // Find the Wero SCA presentation to extract the credential jti, then signal the issuer to update payment status.
     // The issuer owns the transaction_status_token — the verifier only passes the jti and payment details.
-    const weroVcts = [weroScaConfiguration.vct, weroScaThirdPartyConfiguration.vct]
-    const weroPresentation = Object.values(verified.dcql?.presentations ?? {})
-      .flat()
-      .find((p) => weroVcts.includes((p as { prettyClaims?: Record<string, unknown> }).prettyClaims?.vct as string))
-    const weroJti = (weroPresentation as { prettyClaims?: Record<string, unknown> } | undefined)?.prettyClaims?.jti as
-      | string
-      | undefined
+    const weroVcts: string[] = [weroScaConfiguration.vct, weroScaThirdPartyConfiguration.vct]
+    const presentationsList = Object.values(verified.dcql?.presentations ?? {}).flat() as Array<{
+      prettyClaims?: { vct?: string; jti?: string }
+    }>
+    const weroJti = presentationsList.find((p) => weroVcts.includes(p.prettyClaims?.vct ?? ''))?.prettyClaims?.jti
 
-    const rawPaymentEntry = (authorizationRequestPayload.transaction_data as string[] | undefined)?.find((data) => {
-      try {
-        return (
-          (JSON.parse(Buffer.from(data, 'base64url').toString()) as { type?: string }).type ===
-          'urn:eudi:sca:eu.europa.ec:payment:single:1'
-        )
-      } catch {
-        return false
-      }
-    })
-    if (rawPaymentEntry && weroJti) {
-      const decoded = JSON.parse(Buffer.from(rawPaymentEntry, 'base64url').toString()) as {
-        payload?: { amount?: string }
-      }
-      const paymentTransactionId = createHash('sha256').update(rawPaymentEntry).digest('hex')
-      const amount = parseFloat(decoded.payload?.amount ?? '0')
+    const paymentTransaction = extractPaymentTransactionData(verificationSession.authorizationRequestJwt)
+    if (weroJti && paymentTransaction) {
+      const { paymentTransactionId, amount } = paymentTransaction
       agent.config.logger.info(
         `getVerificationStatus: Wero credential jti ${weroJti}, paymentTransactionId ${paymentTransactionId}, amount ${amount}`
       )
-      await updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount)
+      updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount).catch((error) => {
+        agent.config.logger.error(`getVerificationStatus: payment update failed for ${paymentTransactionId}`, error)
+      })
     } else {
       agent.config.logger.debug(
-        `getVerificationStatus: no payment update - weroJti ${weroJti ?? 'not found'}, rawPaymentEntry ${rawPaymentEntry ? 'found' : 'not found'}`
+        `getVerificationStatus: no payment update - weroJti ${weroJti ?? 'not found'}, paymentTransaction ${paymentTransaction ? 'found' : 'not found'}`
       )
     }
 
@@ -602,7 +603,6 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     responseStatus: verificationSession.state,
     error: verificationSession.errorMessage,
     authorizationRequest,
-    transactionData,
     dcqlQuery,
   }
 }
