@@ -70,7 +70,7 @@ function extractPaymentTransactionData(
   if (!Array.isArray(transactionData) || typeof transactionData[0] !== 'string') return undefined
 
   const rawEntry = transactionData[0]
-  const paymentTransactionId = TypedArrayEncoder.toHex(
+  const paymentTransactionId = TypedArrayEncoder.toBase64Url(
     Hasher.hash(TypedArrayEncoder.fromBase64Url(rawEntry), 'sha-256')
   )
   const decoded = JSON.parse(Buffer.from(rawEntry, 'base64url').toString()) as { payload?: { amount?: string } }
