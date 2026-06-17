@@ -485,7 +485,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
       agent.config.logger.info(
         `getVerificationStatus: Wero credential jti ${weroJti}, paymentTransactionId ${paymentTransactionId}, amount ${amount}`
       )
-      updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount).catch((error) => {
+      await updatePaymentStatusForWeroCredential(weroJti, paymentTransactionId, amount).catch((error) => {
         agent.config.logger.error(`getVerificationStatus: payment update failed for ${paymentTransactionId}`, error)
       })
     } else {
