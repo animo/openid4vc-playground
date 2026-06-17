@@ -2,6 +2,13 @@ packages:
   - agent
   - app
 
+allowBuilds:
+  '@openwallet-foundation/askar-nodejs': true
+  cbor-extract: false
+  esbuild: false
+  koffi: true
+  sharp: false
+
 ignoredBuiltDependencies:
   - es5-ext
   - esbuild
