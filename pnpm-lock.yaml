@@ -21,8 +21,8 @@ importers:
         specifier: 0.7.1-alpha-20260610194159
         version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
       '@credo-ts/node':
-        specifier: 0.7.1-alpha-20260610194159
-        version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
+        specifier: 0.7.1-pr-2844-20260626134650
+        version: 0.7.1-pr-2844-20260626134650(typescript@5.9.3)
       '@credo-ts/openid4vc':
         specifier: 0.7.1-alpha-20260610194159
         version: 0.7.1-alpha-20260610194159(typescript@5.9.3)
@@ -275,11 +275,14 @@ packages:
   '@credo-ts/core@0.7.1-alpha-20260610194159':
     resolution: {integrity: sha512-khCESU8xkkP4vJLnXku3kNX4A6vEajUdxS0KBQi60sCk8kw5xlfB720A5M2cQtc8U+i5BMJKFEHYOldLb0JPHA==}
 
-  '@credo-ts/didcomm@0.7.1-alpha-20260610194159':
-    resolution: {integrity: sha512-0vW3974QgMbAWxOl9NFHeUH9AbTKeCIgRuVSTvMS0JMbuDltgg/ghzhAFhsKJImtMLTXyY4QoTLwZ1ct0LO8kA==}
+  '@credo-ts/core@0.7.1-pr-2844-20260626134650':
+    resolution: {integrity: sha512-S1RqIM4EHD564MyfF8ceZrPGHD3uCab4dZ9iQA7Tf83BVVaZXbpAYiz/2rx3VNvYSmIwZxbKX+75tQ15oR3GBQ==}
 
-  '@credo-ts/node@0.7.1-alpha-20260610194159':
-    resolution: {integrity: sha512-1K0HEcgteg4DgvCKxZGbjng6erKkxqSJRBN9TfynSFaX4/clLyeX+xhtAXZp7nnJJjoe7pIHxCz9CDdjgeZuQA==}
+  '@credo-ts/didcomm@0.7.1-pr-2844-20260626134650':
+    resolution: {integrity: sha512-Rvcje45UYOuzUmHZITwX9nIOl0LHYeYm0DdZ3GIAehn0wmok0tOV0ML95IxZ8lgL8uYLWAFtY8LN8hBQnsQfQg==}
+
+  '@credo-ts/node@0.7.1-pr-2844-20260626134650':
+    resolution: {integrity: sha512-3VXlJR4gCKKQDECggNnhw/Lt2jpSkEZiicdYkEVHDO2jq/rUuQIDMTcexny262pWnhYh+hKGv/NSX4pES/4Bzw==}
     engines: {node: '>=20.19'}
 
   '@credo-ts/openid4vc@0.7.1-alpha-20260610194159':
@@ -738,6 +741,10 @@ packages:
     resolution: {integrity: sha512-vs1Az2OOTBiP4q0pwjW5aF0xp9n4MxVrmkFBxc6EKZc6ddYx5gaZiAsZoq0uRRXWbi3AT/sBqn05eRPtn1JCPw==}
     engines: {node: '>= 20.19.0'}
 
+  '@noble/curves@2.2.0':
+    resolution: {integrity: sha512-T/BoHgFXirb0ENSPBquzX0rcjXeM6Lo892a2jlYJkqk83LqZx0l1Of7DzlKJ6jkpvMrkHSnAcgb5JegL8SeIkQ==}
+    engines: {node: '>= 20.19.0'}
+
   '@noble/hashes@1.6.1':
     resolution: {integrity: sha512-pq5D8h10hHBjyqX+cfBm0i8JUXJ0UhczFc4r74zbuT9XgewFo2E3J1cOaGtdZynILNmQ685YWGzGE1Zv6io50w==}
     engines: {node: ^14.21.3 || >=16}
@@ -778,6 +785,9 @@ packages:
   '@openwallet-foundation/askar-shared@0.6.0':
     resolution: {integrity: sha512-O9aaQCZ2BkQ5Z8jqshhqhxbS/rT2nTfN90iW32WKQEh9YUwWERFQcnqKR+XszGhV95jqwZagcwhDb72hFH3VaQ==}
 
+  '@owf/cose@0.3.0':
+    resolution: {integrity: sha512-fED6VqssD2X7QuGffrrbgqTs5xeptupTE0so3syPMgWKvzydwiW4mj9FbML+SPMo6ZZpJeNh/kII9qiK8WcOeA==}
+
   '@owf/cose@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-kagiAfAEqykFGNYjUdXkhRVVJSVQ16vGwbGxHMeh0kCJzAJg+TXrPF7DvLImLw7mAp5Ha7f3+Pgza1TRk3TeYw==}
 
@@ -790,6 +800,9 @@ packages:
   '@owf/identity-common@0.2.0-alpha-20260506130404':
     resolution: {integrity: sha512-bSir5MsE6Xv29kBCIkATMLiiBsE58Y741KyDiMgx3yMYnsjnS3MSkA3G+c/kPmCW1oB1SelzZAZ/O6qSvtiyVg==}
 
+  '@owf/identity-common@0.3.0':
+    resolution: {integrity: sha512-Ot+T8zHqb9cPqPdHL2edRXjWtRLng95N+auhb9TZq+Jy4HxjRzBUMVnB0wzeV5GCgoIkINcHAeLXFMsHs77hVQ==}
+
   '@owf/identity-common@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-Eh4AUhJHXptgWdV9sQjd1Ob3m2geoKDltfdHiY4I9w6u7UkUPyjtQjSpRrVhHoo7KQeQ7mGI3qrOpqj91zNUjA==}
 
@@ -798,6 +811,13 @@ packages:
 
   '@owf/mdoc@0.7.0-alpha-20260605164430':
     resolution: {integrity: sha512-ynCT/d1P866WWJwrXQSmqtmSmfViHpI05XdnvcZLqNUzByzXVguF0jLGkbiVN0xeW4b2HdTabejYKM2LghNMKw==}
+
+  '@owf/mdoc@0.7.0-alpha-20260612121208':
+    resolution: {integrity: sha512-VnaTspcSw1jLj2a8GDAenreehSZzdCs+4RCgKgHyXVCsQt993gFPfn7XPg6ykmUYV4txM0tbvPsZu8JU94cJjw==}
+    engines: {node: '>=20.19'}
+
+  '@owf/token-status-list@0.3.0':
+    resolution: {integrity: sha512-6XkQIQJVsFyxVdeAD2SVktBFD7wIANVJ/tgGw4D4N6lKadsc2Tb8+Gr1m+UEKbYPnbV6eIUbfpPafulTInruug==}
 
   '@owf/token-status-list@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-dAHmkhzwHDp2mFA7u02fp2ERuxihKGYgIXCOqoVwlgHekQq3Y+Vd9RPlXMaHaj03q1fhriTrBZmpyMdP+DKGmw==}
@@ -811,6 +831,9 @@ packages:
   '@peculiar/asn1-ecc@2.6.1':
     resolution: {integrity: sha512-+Vqw8WFxrtDIN5ehUdvlN2m73exS2JVG0UAyfVB31gIfor3zWEAQPD+K9ydCxaj3MLen9k0JhKpu9LqviuCE1g==}
 
+  '@peculiar/asn1-ecc@2.8.0':
+    resolution: {integrity: sha512-ohwlk+u9Rv2NOAY1c6MfHj45ATVF8R1DUN/WCgABiRtLi2ZftlZWZX7KvpAbU8v9xPcmoILfELeEABj/rn18AQ==}
+
   '@peculiar/asn1-pfx@2.6.1':
     resolution: {integrity: sha512-nB5jVQy3MAAWvq0KY0R2JUZG8bO/bTLpnwyOzXyEh/e54ynGTatAR+csOnXkkVD9AFZ2uL8Z7EV918+qB1qDvw==}
 
@@ -823,8 +846,14 @@ packages:
   '@peculiar/asn1-rsa@2.6.1':
     resolution: {integrity: sha512-1nVMEh46SElUt5CB3RUTV4EG/z7iYc7EoaDY5ECwganibQPkZ/Y2eMsTKB/LeyrUJ+W/tKoD9WUqIy8vB+CEdA==}
 
+  '@peculiar/asn1-rsa@2.8.0':
+    resolution: {integrity: sha512-zHEUlCqB2mk7x2lxDwHHJy7hWZOPdGHVlsmITWKB5/PbQo61atbu9PJ/0r9dQNMwFzbKPXZ8uK8/91eUhRznSg==}
+
   '@peculiar/asn1-schema@2.6.0':
     resolution: {integrity: sha512-xNLYLBFTBKkCzEZIw842BxytQQATQv+lDTCEMZ8C196iJcJJMBUZxrhSTxLaohMyKK8QlzRNTRkUmanucnDSqg==}
+
+  '@peculiar/asn1-schema@2.8.0':
+    resolution: {integrity: sha512-7YT0U/ze0tF2QOBbE15gKZwy5tvgGyLRiRHLzhlbOpf7BT032oBSd0haZqXn5W6l26WLlu3dyxzjM+2638/z2Q==}
 
   '@peculiar/asn1-x509-attr@2.6.1':
     resolution: {integrity: sha512-tlW6cxoHwgcQghnJwv3YS+9OO1737zgPogZ+CgWRUK4roEwIPzRH4JEiG770xe5HX2ATfCpmX60gurfWIF9dcQ==}
@@ -832,9 +861,15 @@ packages:
   '@peculiar/asn1-x509@2.6.1':
     resolution: {integrity: sha512-O9jT5F1A2+t3r7C4VT7LYGXqkGLK7Kj1xFpz7U0isPrubwU5PbDoyYtx6MiGst29yq7pXN5vZbQFKRCP+lLZlA==}
 
+  '@peculiar/asn1-x509@2.8.0':
+    resolution: {integrity: sha512-N0CMuhWUzsWEVq6F1q9X6+VKUnWzSW+cSVg+aPaGGwDdbFoFWTYgin5MHwXgpWd6y9COMBxnfy/Qc+Xc7F0Zwg==}
+
   '@peculiar/json-schema@1.1.12':
     resolution: {integrity: sha512-coUfuoMeIB7B8/NMekxaDzLhaYmp0HZNPEjYRm9goRou8UZIC3z21s0sL9AWoCw4EG876QyO3kYrc61WNF9B/w==}
     engines: {node: '>=8.0.0'}
+
+  '@peculiar/utils@2.0.3':
+    resolution: {integrity: sha512-+oL3HPFRIZ1St2K50lWCXiioIgSoxzz7R1J3uF6neO2yl1sgmpgY6XXJH4BdpoDkMWznQTeYF6oWNDZLCdQ4eQ==}
 
   '@peculiar/x509@2.0.0':
     resolution: {integrity: sha512-r10lkuy6BNfRmyYdRAfgu6dq0HOmyIV2OLhXWE3gDEPBdX1b8miztJVyX/UxWhLwemNyDP3CLZHpDxDwSY0xaA==}
@@ -1298,6 +1333,9 @@ packages:
   '@stablelib/ed25519@2.0.2':
     resolution: {integrity: sha512-d/lJ5sgzhtmpMIbKFWfev+i6WebBdIzzBpMzXtZdvUijoksjXosYFNqytoMj7cRshNj+/XTLYnnVMdZfd+penw==}
 
+  '@stablelib/ed25519@2.1.0':
+    resolution: {integrity: sha512-8GLWoJur9nJiErABKHs5MjceSiYJJ2n8QP9k8Q5x6GWU2y5oAQ6qzPh8kCgQy5aHlUxcmRA1frQ5Gu2bHoIDPw==}
+
   '@stablelib/hash@2.0.0':
     resolution: {integrity: sha512-u3WPSqGido8lwJuMcrBgM5K54LrPGhkWAdtsyccf7dGsLixAZUds77zOAbu7bvKPwQlmoByH0txBi5rTmEKuHg==}
 
@@ -1514,6 +1552,10 @@ packages:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
     engines: {node: '>=10'}
 
+  asn1js@3.0.10:
+    resolution: {integrity: sha512-S2s3aOytiKdFRdulw2qPE51MzjzVOisppcVv7jVFR+Kw0kxwvFrDcYA0h7Ndqbmj0HkMIXYWaoj7fli8kgx1eg==}
+    engines: {node: '>=12.0.0'}
+
   asn1js@3.0.7:
     resolution: {integrity: sha512-uLvq6KJu04qoQM6gvBfKFjlh6Gl0vOKQuR5cJMDHQkmwfMOQeN3F3SHCv9SNYSL+CRoHvOGFfllDlVz03GQjvQ==}
     engines: {node: '>=12.0.0'}
@@ -1567,6 +1609,9 @@ packages:
 
   class-validator@0.14.3:
     resolution: {integrity: sha512-rXXekcjofVN1LTOSw+u4u9WXVEUvNBVjORW154q/IdmYWy1nMbOU9aNtZB0t8m+FJQ9q91jlr2f9CwwUFdFMRA==}
+
+  class-validator@0.14.4:
+    resolution: {integrity: sha512-AwNusCCam51q703dW82x95tOqQp6oC9HNUl724KxJJOfnKscI8dOloXFgyez7LbTTKWuRBA37FScqVbJEoq8Yw==}
 
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
@@ -1902,6 +1947,9 @@ packages:
   libphonenumber-js@1.12.33:
     resolution: {integrity: sha512-r9kw4OA6oDO4dPXkOrXTkArQAafIKAU71hChInV4FxZ69dxCfbwQGDPzqR5/vea94wU705/3AZroEbSoeVWrQw==}
 
+  libphonenumber-js@1.13.7:
+    resolution: {integrity: sha512-rvr3HIMdOgzhz1RFGjftji+wjoAFlzhqCNqJOU/MKTZQ8d9NZxAR/tI+0weDicyoucqVR0U1GCniqHJ0f8aM2A==}
+
   lightningcss-android-arm64@1.30.2:
     resolution: {integrity: sha512-BH9sEdOCahSgmkVhBLeU7Hc9DWeZ1Eb6wNS6Da8igvUwAe0sqROHddIlvU06q3WyXVEOYDZ6ykBZQnjTbmo4+A==}
     engines: {node: '>= 12.0.0'}
@@ -2121,6 +2169,9 @@ packages:
   pako@2.1.0:
     resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
+  pako@2.2.0:
+    resolution: {integrity: sha512-zJq6RP/5q+TO2OpFV3FHzlPnFjmkb7Nc99a5SNjJE+uu/PkpChs+NIZSSzbBoD+6kjiISXjfYdwj1ZRQ81dz/w==}
+
   parseurl@1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
@@ -2169,8 +2220,8 @@ packages:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
 
-  query-string@9.3.1:
-    resolution: {integrity: sha512-5fBfMOcDi5SA9qj5jZhWAcTtDfKF5WFdd2uD9nVNlbxVv1baq65aALy6qofpNEGELHvisjjasxQp7BlM9gvMzw==}
+  query-string@9.4.0:
+    resolution: {integrity: sha512-ivvWyHqU9K1Log4hJFhqVIIMoEi0nzmlRhvk2pPcTuQH/Y0K5iTTMxEx7R0PRHD2Z1hMVbWnjfsEWbIKIK+3IA==}
     engines: {node: '>=18'}
 
   quick-lru@7.3.0:
@@ -2445,6 +2496,10 @@ packages:
     resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
     hasBin: true
 
+  uuid@13.0.2:
+    resolution: {integrity: sha512-vzi9uRZ926x4XV73S/4qQaTwPXM2JBj6/6lI/byHH1jOpCzb0zDbfytgA9LcN/hzb2l7WQSQnxITOVx5un/wGw==}
+    hasBin: true
+
   valibot@1.2.0:
     resolution: {integrity: sha512-mm1rxUsmOxzrwnX5arGS+U4T25RdvpPjPN4yR0u9pUBov9+zGVtO84tif1eY4r6zWxVxu3KzIyknJy3rxfRZZg==}
     peerDependencies:
@@ -2455,6 +2510,10 @@ packages:
 
   validator@13.15.26:
     resolution: {integrity: sha512-spH26xU080ydGggxRyR1Yhcbgx+j3y5jbNXk/8L+iRvdIEQ4uTRH2Sgf2dokud6Q4oAtsbNvJ1Ft+9xmm6IZcA==}
+    engines: {node: '>= 0.10'}
+
+  validator@13.15.35:
+    resolution: {integrity: sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==}
     engines: {node: '>= 0.10'}
 
   varint@6.0.0:
@@ -2469,6 +2528,9 @@ packages:
 
   webcrypto-core@1.8.1:
     resolution: {integrity: sha512-P+x1MvlNCXlKbLSOY4cYrdreqPG5hbzkmawbcXLKN/mf6DZW0SdNNkZ+sjwsqVkI4A4Ko2sPZmkZtCKY58w83A==}
+
+  webcrypto-core@1.9.2:
+    resolution: {integrity: sha512-gsXecm82UQNlTBURJGuqOWy1Ww08S3kZUcr3aOJS02Pk0xLtkfeUAVC0u0xhgdonFme80edSJUIJyuvL/7250Q==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -2660,23 +2722,74 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/didcomm@0.7.1-alpha-20260610194159(typescript@5.9.3)':
+  '@credo-ts/core@0.7.1-pr-2844-20260626134650(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
+      '@animo-id/pex': 6.1.1
+      '@astronautlabs/jsonpath': 1.1.2
+      '@digitalcredentials/jsonld': 9.0.0
+      '@digitalcredentials/jsonld-signatures': 12.0.1
+      '@digitalcredentials/vc': 10.0.2
+      '@multiformats/base-x': 4.0.1
+      '@noble/curves': 2.2.0
+      '@noble/hashes': 2.2.0
+      '@owf/cose': 0.3.0
+      '@owf/mdoc': 0.7.0-alpha-20260612121208
+      '@owf/token-status-list': 0.3.0
+      '@peculiar/asn1-ecc': 2.8.0
+      '@peculiar/asn1-rsa': 2.8.0
+      '@peculiar/asn1-schema': 2.8.0
+      '@peculiar/asn1-x509': 2.8.0
+      '@peculiar/x509': 2.0.0
+      '@scure/base': 2.2.0
+      '@sd-jwt/core': 0.19.0
+      '@sd-jwt/decode': 0.19.0
+      '@sd-jwt/present': 0.19.0
+      '@sd-jwt/sd-jwt-vc': 0.19.0
+      '@sd-jwt/types': 0.19.0
+      '@sd-jwt/utils': 0.19.0
+      '@sphereon/pex-models': 2.3.2
+      '@sphereon/ssi-types': 0.33.0
+      '@stablelib/ed25519': 2.1.0
+      '@types/ws': 8.18.1
+      '@verifiables/request-converter': 0.2.0(dcql@3.0.0(typescript@5.9.3))
       class-transformer: 0.5.1
-      class-validator: 0.14.3
+      class-validator: 0.14.4
+      dcql: 3.0.0(typescript@5.9.3)
+      did-resolver: 4.1.0
+      ec-compression: 0.0.1-alpha.12
+      lru_map: 0.4.1
+      make-error: 1.3.6
+      object-inspect: 1.13.4
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tsyringe: 4.10.0
+      uuid: 13.0.2
+      varint: 6.0.0
+      web-did-resolver: 2.0.32
+      webcrypto-core: 1.9.2
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+      - typescript
+
+  '@credo-ts/didcomm@0.7.1-pr-2844-20260626134650(typescript@5.9.3)':
+    dependencies:
+      '@credo-ts/core': 0.7.1-pr-2844-20260626134650(typescript@5.9.3)
+      class-transformer: 0.5.1
+      class-validator: 0.14.4
       luxon: 3.7.2
-      query-string: 9.3.1
+      query-string: 9.4.0
       rxjs: 7.8.2
     transitivePeerDependencies:
       - encoding
       - supports-color
       - typescript
 
-  '@credo-ts/node@0.7.1-alpha-20260610194159(typescript@5.9.3)':
+  '@credo-ts/node@0.7.1-pr-2844-20260626134650(typescript@5.9.3)':
     dependencies:
-      '@credo-ts/core': 0.7.1-alpha-20260610194159(typescript@5.9.3)
-      '@credo-ts/didcomm': 0.7.1-alpha-20260610194159(typescript@5.9.3)
+      '@credo-ts/core': 0.7.1-pr-2844-20260626134650(typescript@5.9.3)
+      '@credo-ts/didcomm': 0.7.1-pr-2844-20260626134650(typescript@5.9.3)
       '@types/express': 5.0.6
       express: 5.2.1
       rxjs: 7.8.2
@@ -3011,6 +3124,10 @@ snapshots:
     dependencies:
       '@noble/hashes': 2.0.1
 
+  '@noble/curves@2.2.0':
+    dependencies:
+      '@noble/hashes': 2.2.0
+
   '@noble/hashes@1.6.1': {}
 
   '@noble/hashes@2.0.1': {}
@@ -3025,7 +3142,7 @@ snapshots:
   '@openid4vc/oauth2@0.5.0-alpha-20260415063740':
     dependencies:
       '@openid4vc/utils': 0.5.0-alpha-20260415063740
-      zod: 4.4.3
+      zod: 4.3.6
 
   '@openid4vc/openid4vci@0.4.6':
     dependencies:
@@ -3054,8 +3171,8 @@ snapshots:
   '@openid4vc/utils@0.5.0-alpha-20260415063740':
     dependencies:
       buffer: 6.0.3
-      zod: 4.4.3
-      zod-validation-error: 5.0.0(zod@4.4.3)
+      zod: 4.3.6
+      zod-validation-error: 5.0.0(zod@4.3.6)
 
   '@openwallet-foundation/askar-nodejs@0.6.0':
     dependencies:
@@ -3066,6 +3183,13 @@ snapshots:
     dependencies:
       buffer: 6.0.3
       tar: 7.5.2
+
+  '@owf/cose@0.3.0':
+    dependencies:
+      '@owf/identity-common': 0.3.0
+      cbor-x: 1.6.4
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@owf/cose@0.3.0-alpha-20260605053037':
     dependencies:
@@ -3092,6 +3216,8 @@ snapshots:
 
   '@owf/identity-common@0.2.0-alpha-20260506130404': {}
 
+  '@owf/identity-common@0.3.0': {}
+
   '@owf/identity-common@0.3.0-alpha-20260605053037': {}
 
   '@owf/mdoc@0.6.0':
@@ -3105,6 +3231,21 @@ snapshots:
       '@owf/cose': 0.3.0-alpha-20260605053037
       '@owf/identity-common': 0.3.0-alpha-20260605053037
       '@owf/token-status-list': 0.3.0-alpha-20260605053037
+      zod: 4.4.3
+
+  '@owf/mdoc@0.7.0-alpha-20260612121208':
+    dependencies:
+      '@owf/cose': 0.3.0
+      '@owf/identity-common': 0.3.0
+      '@owf/token-status-list': 0.3.0
+      zod: 4.4.3
+
+  '@owf/token-status-list@0.3.0':
+    dependencies:
+      '@owf/cose': 0.3.0
+      '@owf/identity-common': 0.3.0
+      cbor-x: 1.6.4
+      pako: 2.2.0
       zod: 4.4.3
 
   '@owf/token-status-list@0.3.0-alpha-20260605053037':
@@ -3135,6 +3276,13 @@ snapshots:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-ecc@2.8.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.8.0
+      '@peculiar/asn1-x509': 2.8.0
+      asn1js: 3.0.10
       tslib: 2.8.1
 
   '@peculiar/asn1-pfx@2.6.1':
@@ -3171,10 +3319,23 @@ snapshots:
       asn1js: 3.0.7
       tslib: 2.8.1
 
+  '@peculiar/asn1-rsa@2.8.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.8.0
+      '@peculiar/asn1-x509': 2.8.0
+      asn1js: 3.0.10
+      tslib: 2.8.1
+
   '@peculiar/asn1-schema@2.6.0':
     dependencies:
       asn1js: 3.0.7
       pvtsutils: 1.3.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-schema@2.8.0':
+    dependencies:
+      '@peculiar/utils': 2.0.3
+      asn1js: 3.0.10
       tslib: 2.8.1
 
   '@peculiar/asn1-x509-attr@2.6.1':
@@ -3191,7 +3352,18 @@ snapshots:
       pvtsutils: 1.3.6
       tslib: 2.8.1
 
+  '@peculiar/asn1-x509@2.8.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.8.0
+      '@peculiar/utils': 2.0.3
+      asn1js: 3.0.10
+      tslib: 2.8.1
+
   '@peculiar/json-schema@1.1.12':
+    dependencies:
+      tslib: 2.8.1
+
+  '@peculiar/utils@2.0.3':
     dependencies:
       tslib: 2.8.1
 
@@ -3667,6 +3839,12 @@ snapshots:
       '@stablelib/sha512': 2.0.1
       '@stablelib/wipe': 2.0.1
 
+  '@stablelib/ed25519@2.1.0':
+    dependencies:
+      '@stablelib/random': 2.0.1
+      '@stablelib/sha512': 2.0.1
+      '@stablelib/wipe': 2.0.1
+
   '@stablelib/hash@2.0.0': {}
 
   '@stablelib/int@2.0.1': {}
@@ -3885,6 +4063,12 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  asn1js@3.0.10:
+    dependencies:
+      pvtsutils: 1.3.6
+      pvutils: 1.1.5
+      tslib: 2.8.1
+
   asn1js@3.0.7:
     dependencies:
       pvtsutils: 1.3.6
@@ -3955,6 +4139,12 @@ snapshots:
       '@types/validator': 13.15.10
       libphonenumber-js: 1.12.33
       validator: 13.15.26
+
+  class-validator@0.14.4:
+    dependencies:
+      '@types/validator': 13.15.10
+      libphonenumber-js: 1.13.7
+      validator: 13.15.35
 
   class-variance-authority@0.7.1:
     dependencies:
@@ -4299,6 +4489,8 @@ snapshots:
 
   libphonenumber-js@1.12.33: {}
 
+  libphonenumber-js@1.13.7: {}
+
   lightningcss-android-arm64@1.30.2:
     optional: true
 
@@ -4477,6 +4669,8 @@ snapshots:
 
   pako@2.1.0: {}
 
+  pako@2.2.0: {}
+
   parseurl@1.3.3: {}
 
   path-to-regexp@8.3.0: {}
@@ -4526,7 +4720,7 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
-  query-string@9.3.1:
+  query-string@9.4.0:
     dependencies:
       decode-uri-component: 0.4.1
       filter-obj: 5.1.0
@@ -4814,11 +5008,15 @@ snapshots:
 
   uuid@13.0.0: {}
 
+  uuid@13.0.2: {}
+
   valibot@1.2.0(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
 
   validator@13.15.26: {}
+
+  validator@13.15.35: {}
 
   varint@6.0.0: {}
 
@@ -4839,6 +5037,14 @@ snapshots:
       pvtsutils: 1.3.6
       tslib: 2.8.1
 
+  webcrypto-core@1.9.2:
+    dependencies:
+      '@peculiar/asn1-schema': 2.8.0
+      '@peculiar/json-schema': 1.1.12
+      '@peculiar/utils': 2.0.3
+      asn1js: 3.0.10
+      tslib: 2.8.1
+
   webidl-conversions@3.0.1: {}
 
   whatwg-url@5.0.0:
@@ -4855,6 +5061,10 @@ snapshots:
   yallist@4.0.0: {}
 
   yallist@5.0.0: {}
+
+  zod-validation-error@5.0.0(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
 
   zod-validation-error@5.0.0(zod@4.4.3):
     dependencies:
