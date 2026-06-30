@@ -2,7 +2,7 @@
   "name": "agent",
   "type": "module",
   "dependencies": {
-    "@owf/mdoc": "0.7.0-alpha-20260605164430",
+    "@owf/mdoc": "0.7.0",
     "@credo-ts/askar": "0.7.1-alpha-20260610194159",
     "@credo-ts/core": "0.7.1-alpha-20260610194159",
     "@credo-ts/node": "0.7.1-alpha-20260610194159",
