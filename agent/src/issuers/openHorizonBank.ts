@@ -237,7 +237,7 @@ export async function updatePaymentStatusForWeroCredential(
     latest.content.statusCode = statusCode
     await agent.genericRecords.update(latest)
     agent.config.logger.info(`openHorizonBank: payment ${paymentTransactionId} updated to ${statusCode}`)
-  }, 30_000)
+  }, 20_000)
 }
 
 export const openHorizonBankCredentialsData = {
