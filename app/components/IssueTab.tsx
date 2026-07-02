@@ -3,7 +3,7 @@ import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
 import Link from 'next/link'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -44,6 +44,8 @@ export function IssueTab({
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
   const router = useRouter()
+  const issueButtonRef = useRef<HTMLButtonElement>(null)
+  const hasScrolledToIssueRef = useRef(false)
   const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
   const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
 
@@ -69,6 +71,13 @@ export function IssueTab({
       if (query.walletAttestation) setRequireWalletAttestation(query.walletAttestation === 'true')
       if (query.keyAttestation) setRequireKeyAttestation(query.keyAttestation === 'true')
     })
+  }, [issuers, searchParams])
+
+  // Scroll to the Issue Credential button when opened via a shared config link
+  useEffect(() => {
+    if (!issuers || hasScrolledToIssueRef.current || !searchParams.get('scrollToIssue')) return
+    hasScrolledToIssueRef.current = true
+    issueButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [issuers, searchParams])
 
   // Update URL when state changes
@@ -274,6 +283,20 @@ export function IssueTab({
             <MiniRadioItem value="browser" label="Sign in" />
             <MiniRadioItem value="pin" label="Transaction code" />
           </RadioGroup>
+          {selectedAuthorization === 'presentation' && (
+            <p className="text-gray-500 text-sm">
+              You first need to obtain the credential that will be presented during issuance. The configuration is
+              already selected for you.{' '}
+              <a
+                href="/?authorization=presentation&credentialType=1&deferBy=none&dpop=false&format=dc%2Bsd-jwt&issuerId=188e2459-6da8-4431-9062-2fcdac274f41&keyAttestation=false&tab=issue&walletAttestation=false&scrollToIssue=true"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline"
+              >
+                Issue that credential here.
+              </a>
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <div>
@@ -373,6 +396,7 @@ export function IssueTab({
           )}
         </div>
         <Button
+          ref={issueButtonRef}
           onClick={onSubmitIssueCredential}
           disabled={disabled}
           className="w-full"
