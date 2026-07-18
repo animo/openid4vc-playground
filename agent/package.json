@@ -4,7 +4,7 @@
   "dependencies": {
     "@owf/mdoc": "0.7.0-alpha-20260605164430",
     "@credo-ts/askar": "0.7.1-alpha-20260610194159",
-    "@credo-ts/core": "0.7.1-alpha-20260610194159",
+    "@credo-ts/core": "0.7.1-pr-2844-20260626134650",
     "@credo-ts/node": "0.7.1-alpha-20260610194159",
     "@credo-ts/openid4vc": "0.7.1-alpha-20260610194159",
     "@openwallet-foundation/askar-nodejs": "^0.6.0",
