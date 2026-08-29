@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  json-canonicalize: 2.0.0
+
 importers:
 
   .:
@@ -1921,9 +1924,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  json-canonicalize@2.0.1:
-    resolution: {integrity: sha512-TuGrLM400c1VN8bQsSOiyDEEmRjIVgFvcSehWC+0JJaV4BGl1vYNxHBPVsN5ADUZIcWp75IN1yf+vCZyDjPt1Q==}
-    engines: {node: '>=8.5', npm: '>=6.0', yarn: ^1.0}
+  json-canonicalize@2.0.0:
+    resolution: {integrity: sha512-yyrnK/mEm6Na3ChbJUWueXdapueW0p380RUyTW87XGb1ww8l8hU0pRrGC3vSWHe9CxrbPHX2fGUOZpNiHR0IIg==}
 
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
@@ -2703,7 +2705,7 @@ snapshots:
       dcql: 3.0.0(typescript@5.9.3)
       did-resolver: 4.1.0
       ec-compression: 2.0.0
-      json-canonicalize: 2.0.1
+      json-canonicalize: 2.0.0
       lru_map: 0.4.1
       make-error: 1.3.6
       object-inspect: 1.13.4
@@ -4368,7 +4370,7 @@ snapshots:
 
   jsesc@3.1.0: {}
 
-  json-canonicalize@2.0.1: {}
+  json-canonicalize@2.0.0: {}
 
   json-schema-traverse@1.0.0: {}
 

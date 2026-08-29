@@ -14,6 +14,11 @@ ignoredBuiltDependencies:
   - esbuild
   - sharp
 
+overrides:
+  # 2.0.1 is a broken publish: the tarball ships only src/*.ts, but package.json
+  # still points main at ./bundles/index.umd.js, so Node cannot resolve it.
+  json-canonicalize: 2.0.0
+
 minimumReleaseAgeExclude:
   - '@owf/mdoc@0.8.0-alpha-20260829141538'
   - '@credo-ts/askar@0.7.1-pr-2922-20260829144742'
