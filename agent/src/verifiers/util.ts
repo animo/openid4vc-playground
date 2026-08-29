@@ -1,4 +1,4 @@
-import type { DcqlQuery } from '@credo-ts/core'
+import type { DcqlQuery, MdocDocumentRequest } from '@credo-ts/core'
 import type { PlaygroundVerifierOptions } from '../verifier.js'
 
 export interface SdJwtCredential {
@@ -47,6 +47,60 @@ export function pidSdJwtCredential({ fields }: Pick<SdJwtCredential, 'fields'>) 
     fields,
     vcts: ['urn:eudi:pid:1', 'https://demo.pid-issuer.bundesdruckerei.de/credentials/pid/1.0'],
   } satisfies SdJwtCredential
+}
+
+/**
+ * Fields of an mdoc credential as `DocRequest` name spaces. A `DeviceRequest` can't express
+ * alternative claim sets, so when `field_options` are defined we request the first option.
+ * Value constraints (`{ path, values }`) can't be expressed either and are dropped.
+ */
+function isoMdocNameSpacesFromCredential(credential: MdocCredential): MdocDocumentRequest['nameSpaces'] {
+  const paths = credential.field_options?.[0] ?? credential.fields.map((f) => (typeof f === 'string' ? f : f.path))
+
+  return {
+    [credential.namespace]: Object.fromEntries(paths.map((path) => [path, false])),
+  }
+}
+
+/**
+ * The ISO 18013-7 Annex C `DeviceRequest` only carries mdoc doc types and name spaces, and has no
+ * way to express optionality: every `DocRequest` in it is requested. A request can therefore only
+ * be expressed as a `DeviceRequest` if every credential set has at least one mdoc option (or, when
+ * no credential sets are defined, if all credentials are mdoc).
+ *
+ * Returns `undefined` if the request can't be expressed as a `DeviceRequest`.
+ */
+export function isoMdocDocRequestsFromRequest(
+  request: PlaygroundVerifierOptions['requests'][number]
+): MdocDocumentRequest[] | undefined {
+  // Each credential set is a list of alternatives of which one must be satisfied. As a
+  // DeviceRequest can't express alternatives we pick the first mdoc option of each set.
+  // Without credential sets all credentials are requested, so all of them must be mdoc.
+  const credentials = request.credential_sets
+    ? request.credential_sets.map((set) =>
+        set.map((index) => request.credentials[index]).find((c) => c?.format === 'mso_mdoc')
+      )
+    : request.credentials.map((c) => (c.format === 'mso_mdoc' ? c : undefined))
+
+  if (credentials.some((c) => c === undefined)) return undefined
+
+  const docRequests: MdocDocumentRequest[] = []
+  for (const credential of credentials as MdocCredential[]) {
+    // Two sets can resolve to the same doc type, and a DeviceRequest should request each doc type once.
+    const existing = docRequests.find((docRequest) => docRequest.docType === credential.doctype)
+    const nameSpaces = isoMdocNameSpacesFromCredential(credential)
+
+    if (existing) {
+      existing.nameSpaces[credential.namespace] = {
+        ...existing.nameSpaces[credential.namespace],
+        ...nameSpaces[credential.namespace],
+      }
+    } else {
+      docRequests.push({ docType: credential.doctype, nameSpaces })
+    }
+  }
+
+  return docRequests
 }
 
 export function dcqlQueryFromRequest(

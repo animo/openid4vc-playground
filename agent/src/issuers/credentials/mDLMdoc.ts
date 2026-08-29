@@ -204,6 +204,18 @@ const mobileDriversLicenseClaims = [
     ],
   },
   {
+    path: ['org.iso.18013.5.1', 'portrait'],
+    display: [
+      { locale: 'en', name: 'Portrait' },
+      { locale: 'nl', name: 'Portret' },
+      { locale: 'fi', name: 'Muotokuva' },
+      { locale: 'sv', name: 'Porträtt' },
+      { locale: 'de', name: 'Porträt' },
+      { locale: 'sq', name: 'Portreti' },
+      { locale: 'pt', name: 'Retrato' },
+    ],
+  },
+  {
     path: ['org.iso.18013.5.1', 'driving_privileges'],
     display: [
       { locale: 'en', name: 'Driving privileges' },

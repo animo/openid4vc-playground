@@ -14,6 +14,14 @@ ignoredBuiltDependencies:
   - esbuild
   - sharp
 
+minimumReleaseAgeExclude:
+  - '@owf/mdoc@0.8.0-alpha-20260829141538'
+  - '@credo-ts/askar@0.7.1-pr-2922-20260829144742'
+  - '@credo-ts/core@0.7.1-pr-2922-20260829144742'
+  - '@credo-ts/didcomm@0.7.1-pr-2922-20260829144742'
+  - '@credo-ts/node@0.7.1-pr-2922-20260829144742'
+  - '@credo-ts/openid4vc@0.7.1-pr-2922-20260829144742'
+
 onlyBuiltDependencies:
   - '@2060.io/ffi-napi'
   - '@2060.io/ref-napi'
