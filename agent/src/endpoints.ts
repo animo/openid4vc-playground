@@ -652,7 +652,7 @@ const zCreateIsoMdocRequestBody = z.object({
 
 const zVerifyIsoMdocResponseBody = z.object({
   verificationSessionId: z.string(),
-  response: z.union([z.string(), z.object({ response: z.string() })]),
+  response: z.object({ response: z.string() }),
 })
 
 apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: Response) => {
@@ -687,9 +687,8 @@ apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: R
 
     const { verificationSession, request: dcApiRequest } = await agent.mdoc.createDcApiVerificationSession({
       docRequests,
-      expectedOrigins: [origin],
       // Reader authentication signs over the session transcript, which binds this single origin.
-      readerAuth: useReaderAuth ? { certificate: getX509DcsCertificate() } : undefined,
+      readerAuth: useReaderAuth ? { certificate: getX509DcsCertificate(), origin } : undefined,
     })
 
     return response.json({
@@ -716,6 +715,12 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
   })
   // Logged separately so the (encrypted) response can be replayed when debugging a failure
   agent.config.logger.debug(`iso-mdoc/verify: encrypted response ${encryptedResponse}`)
+
+  if (!origin) {
+    return response.status(400).json({
+      message: 'Missing origin header',
+    })
+  }
 
   try {
     const {
@@ -750,7 +755,7 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
     // The verification session is updated to `Error` before the error is rethrown, so it's still
     // available here and tells us which origins/state the response was verified against.
     const verificationSession = await agent.mdoc
-      .getDcApiVerificationSessionById(verificationSessionId)
+      .getVerificationSessionById(verificationSessionId)
       .catch(() => undefined)
 
     const trustedCertificates = (agent.dependencyManager.resolve(X509ModuleConfig).trustedCertificates ?? []).map(
@@ -770,12 +775,11 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
       )}`,
       {
         requestOrigin: origin,
-        expectedOrigins: verificationSession?.expectedOrigins,
         verificationSessionState: verificationSession?.state,
         verificationSessionExpiresAt: verificationSession?.expiresAt,
         verificationSessionIsExpired: verificationSession?.isExpired,
         deviceRequest: verificationSession?.deviceRequestBase64Url,
-        encryptionInfo: verificationSession?.encryptionInfoBase64Url,
+        sessionTranscript: verificationSession?.sessionTranscript,
         trustedCertificates,
         errorChain,
       }

@@ -1,5 +1,7 @@
 version: 3
 
+agent:
+  authtoken: 1wfINqcxlU6SbwTZV9szHabdwtZ_3gSTNHb1SyJ6M5B1RUrsw
 
 tunnels:
   agent:
