@@ -50,6 +50,22 @@ const mdlNames = {
   fields: ['given_name', 'family_name'],
 } satisfies MdocCredential
 
+const mdlNamesAndPortrait = {
+  format: 'mso_mdoc',
+  doctype: mobileDriversLicenseMdoc.doctype,
+  namespace: 'org.iso.18013.5.1',
+  fields: ['given_name', 'family_name', 'portrait'],
+} satisfies MdocCredential
+
+// `driving_privileges` is a nested structure (an array of objects, each with a nested `codes` array).
+// mdoc claims paths are always `[namespace, element identifier]`, so the whole element is requested.
+const mdlDrivingPrivileges = {
+  format: 'mso_mdoc',
+  doctype: mobileDriversLicenseMdoc.doctype,
+  namespace: 'org.iso.18013.5.1',
+  fields: ['given_name', 'family_name', 'driving_privileges'],
+} satisfies MdocCredential
+
 const mdlAge = {
   format: 'mso_mdoc',
   doctype: mobileDriversLicenseMdoc.doctype,
@@ -110,6 +126,16 @@ export const utopiaGovernmentVerifier = {
       name: 'mDL (mdoc) - Names',
       purpose: 'mDL (mdoc) - Names',
       credentials: [mdlNames],
+    },
+    {
+      name: 'mDL (mdoc) - Names and portrait',
+      purpose: 'mDL (mdoc) - Names and portrait',
+      credentials: [mdlNamesAndPortrait],
+    },
+    {
+      name: 'mDL (mdoc) - Driving privileges (nested)',
+      purpose: 'mDL (mdoc) - Driving privileges (nested)',
+      credentials: [mdlDrivingPrivileges],
     },
     {
       name: 'EUDI PID (sd-jwt-vc) - Names',

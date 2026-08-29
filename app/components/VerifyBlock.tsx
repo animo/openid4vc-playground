@@ -4,7 +4,15 @@ import { groupBy } from 'es-toolkit'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { createRequest, getRequestStatus, getVerifier, verifyResponseDc } from '@/lib/api'
+import {
+  type CreateIsoMdocRequestResponse,
+  createIsoMdocRequest,
+  createRequest,
+  getRequestStatus,
+  getVerifier,
+  verifyIsoMdocResponse,
+  verifyResponseDc,
+} from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
 import { CollapsibleSection } from './CollapsibleSection'
 import { HighLight } from './highLight'
@@ -25,6 +33,12 @@ export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt' | 'dc_api' | 'dc_api.jwt'
 export type TransactionAuthorizationType = 'none' | 'qes' | 'payment'
+
+/**
+ * Which protocol(s) to hand to the Digital Credentials API. `mdoc` uses the ISO/IEC TS 18013-7
+ * Annex C `org-iso-mdoc` protocol, and is only available for requests containing mdoc credentials.
+ */
+export type DcApiProtocol = 'openid4vp' | 'mdoc' | 'both'
 type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type RequestSignerType = CreateRequestOptions['requestSignerType']
@@ -32,9 +46,12 @@ type Verifier = {
   presentationRequests: Array<{
     id: string
     display: string
+    supportsIsoMdoc: boolean
     useCase: { name: string; icon: string; tags: Array<string> }
   }>
 }
+
+type IsoMdocVerifiedResponse = Awaited<ReturnType<typeof verifyIsoMdocResponse>>
 
 export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchParams }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
@@ -56,16 +73,35 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
   const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
   const [paymentAmount, setPaymentAmount] = useState('100')
+  const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
+
+  // Only set once the user (or the URL) explicitly picks a protocol. The effective protocol is
+  // derived below, so that switching to a request without mdoc credentials falls back to OpenID4VP.
+  const [selectedDcApiProtocol, setSelectedDcApiProtocol] = useState<DcApiProtocol>()
+  const [isoMdocRequest, setIsoMdocRequest] = useState<CreateIsoMdocRequestResponse>()
+  const [isoMdocResponse, setIsoMdocResponse] = useState<IsoMdocVerifiedResponse>()
+
+  const isDcApi = responseMode === 'dc_api' || responseMode === 'dc_api.jwt'
+  const supportsIsoMdoc =
+    verifier?.presentationRequests.find((r) => r.id === presentationDefinitionId)?.supportsIsoMdoc ?? false
+  const dcApiProtocol: DcApiProtocol = !supportsIsoMdoc ? 'openid4vp' : (selectedDcApiProtocol ?? 'both')
+  const usesIsoMdoc = isDcApi && dcApiProtocol !== 'openid4vp'
+  const usesOpenId4Vp = !isDcApi || dcApiProtocol !== 'mdoc'
 
   const enabled =
     verificationSessionId !== undefined &&
+    isoMdocResponse === undefined &&
     requestStatus?.responseStatus !== 'ResponseVerified' &&
     requestStatus?.responseStatus !== 'Error'
 
   const authorizationRequestUriHasBeenFetched = requestStatus?.responseStatus === 'RequestUriRetrieved'
-  const hasResponse = requestStatus?.responseStatus === 'ResponseVerified' || requestStatus?.responseStatus === 'Error'
-  const isSuccess = requestStatus?.responseStatus === 'ResponseVerified'
-  const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
+  const hasResponse =
+    requestStatus?.responseStatus === 'ResponseVerified' ||
+    requestStatus?.responseStatus === 'Error' ||
+    isoMdocResponse !== undefined
+  const isSuccess =
+    requestStatus?.responseStatus === 'ResponseVerified' ||
+    (isoMdocResponse !== undefined && requestStatus?.responseStatus !== 'Error')
   const [requestScheme, setRequestScheme] = useState<string>('openid4vp://')
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
@@ -87,6 +123,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     if (requestScheme) params.set('requestScheme', requestScheme)
     if (purpose) params.set('purpose', purpose)
     if (requestSignerType) params.set('requestSignerType', requestSignerType)
+    if (isDcApi) params.set('dcApiProtocol', dcApiProtocol)
 
     const existingSearchParams = new URLSearchParams(searchParams.toString())
 
@@ -105,6 +142,8 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     requestScheme,
     purpose,
     requestSignerType,
+    isDcApi,
+    dcApiProtocol,
     router,
     searchParams,
   ])
@@ -126,6 +165,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       if (query.requestScheme) setRequestScheme(query.requestScheme as string)
       if (query.purpose) setPurpose(query.purpose as string)
       if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
+      if (query.dcApiProtocol) setSelectedDcApiProtocol(query.dcApiProtocol as DcApiProtocol)
     })
   }, [searchParams, verifier])
 
@@ -140,64 +180,104 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     enabled,
   })
 
-  const initiateDc = async (request: CreateRequestResponse, isSigned: boolean) => {
-    let credentialResponse: Credential | null | undefined
+  const initiateDc = async ({
+    request,
+    isoMdocRequest,
+    isSigned,
+  }: {
+    request?: CreateRequestResponse
+    isoMdocRequest?: CreateIsoMdocRequestResponse
+    isSigned: boolean
+  }) => {
+    // An openid4vp request has a verification session to attach the error to, an mdoc-only request does not
+    const setDcApiError = (error: string) => {
+      if (request) setRequestStatus({ ...request, responseStatus: 'Error', error })
+      else setRequestError(error)
+    }
 
+    const digitalRequests: Array<{ protocol: string; data: unknown }> = []
+    if (request) {
+      digitalRequests.push({
+        protocol: isSigned ? 'openid4vp-v1-signed' : 'openid4vp-v1-unsigned',
+        data: request.authorizationRequestObject,
+      })
+    }
+    if (isoMdocRequest) {
+      digitalRequests.push({ protocol: 'org-iso-mdoc', data: isoMdocRequest.request })
+    }
+
+    let credentialResponse: Credential | null | undefined
     try {
       credentialResponse = await navigator.credentials.get({
-        // @ts-expect-error
+        // @ts-expect-error digital credentials api is not part of the dom types
         digital: {
-          requests: [
-            {
-              protocol: isSigned ? 'openid4vp-v1-signed' : 'openid4vp-v1-unsigned',
-              data: request.authorizationRequestObject,
-            },
-          ],
+          requests: digitalRequests,
         },
+        mediation: 'required',
       })
     } catch (error) {
-      setRequestStatus({
-        ...request,
-        responseStatus: 'Error',
-        error: error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API',
-      })
+      setDcApiError(error instanceof Error ? error.message : 'Unknown error while calling Digital Credentials API')
       return
     }
 
     if (credentialResponse === undefined) {
-      setRequestStatus({
-        ...request,
-        responseStatus: 'Error',
-        error: 'An error occurred while requesting a credential using the Digital Credentials API',
-      })
+      setDcApiError('An error occurred while requesting a credential using the Digital Credentials API')
       return
     }
 
     if (!credentialResponse) {
-      setRequestStatus({
-        ...request,
-        responseStatus: 'Error',
-        error: 'Did not receive a response from Digital Credentials API',
-      })
+      setDcApiError('Did not receive a response from Digital Credentials API')
       return
     }
-    if (credentialResponse.constructor.name === 'DigitalCredential') {
-      // @ts-expect-error
-      const data = credentialResponse.data
 
+    if (credentialResponse.constructor.name !== 'DigitalCredential') {
+      setDcApiError('Unknown response type from Digital Credentials API')
+      return
+    }
+
+    // @ts-expect-error digital credentials api is not part of the dom types
+    const data = credentialResponse.data as string | Record<string, unknown>
+    // Not all browsers expose which protocol the wallet responded with. If only a single protocol
+    // was requested we already know which one it is.
+    const protocol =
+      // @ts-expect-error digital credentials api is not part of the dom types
+      (credentialResponse.protocol as string | undefined) ??
+      (digitalRequests.length === 1 ? digitalRequests[0].protocol : undefined)
+
+    if (protocol === 'org-iso-mdoc') {
+      if (!isoMdocRequest) {
+        setDcApiError('Received an org-iso-mdoc response, but no ISO mdoc request was created')
+        return
+      }
+
+      try {
+        setIsoMdocResponse(
+          await verifyIsoMdocResponse({
+            verificationSessionId: isoMdocRequest.verificationSessionId,
+            response: typeof data === 'string' ? JSON.parse(data) : (data as { response: string }),
+          })
+        )
+      } catch (error) {
+        setDcApiError(error instanceof Error ? error.message : 'Unknown error occurred')
+      }
+      return
+    }
+
+    if (!request) {
+      setDcApiError(`Received a response for unexpected protocol '${protocol ?? 'unknown'}'`)
+      return
+    }
+
+    try {
       setRequestStatus(
         await verifyResponseDc({
           verificationSessionId: request.verificationSessionId,
-          data,
+          data: data as string | Record<string, unknown>,
         })
       )
-      return
+    } catch (error) {
+      setDcApiError(error instanceof Error ? error.message : 'Unknown error occurred')
     }
-    setRequestStatus({
-      ...request,
-      responseStatus: 'Error',
-      error: 'Unknown response type from Digital Credentials API',
-    })
   }
 
   const onSubmitCreateRequest = async (e: FormEvent) => {
@@ -208,35 +288,58 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setVerificationSessionId(undefined)
     setRequestStatus(undefined)
     setRequestError(undefined)
+    setIsoMdocRequest(undefined)
+    setIsoMdocResponse(undefined)
 
     const id = presentationDefinitionId ?? verifier?.presentationRequests[0]?.id
     if (!id) {
       throw new Error('No definition')
     }
 
-    let request: CreateRequestResponse
-    try {
-      request = await createRequest({
-        presentationDefinitionId: id,
-        requestScheme,
-        responseMode,
-        purpose: purpose && purpose !== '' ? purpose : undefined,
-        requestSignerType,
-        transactionAuthorizationType,
-        paymentAmount,
-      })
-      if (responseMode.includes('direct_post')) {
-        setAuthorizationRequestUri(request.authorizationRequestUri)
+    let request: CreateRequestResponse | undefined
+    if (usesOpenId4Vp) {
+      try {
+        request = await createRequest({
+          presentationDefinitionId: id,
+          requestScheme,
+          responseMode,
+          purpose: purpose && purpose !== '' ? purpose : undefined,
+          requestSignerType,
+          transactionAuthorizationType,
+          paymentAmount,
+        })
+        if (responseMode.includes('direct_post')) {
+          setAuthorizationRequestUri(request.authorizationRequestUri)
+        }
+        setRequestStatus(request)
+        setVerificationSessionId(request.verificationSessionId)
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : 'Unknown error occurred')
+        return
       }
-      setRequestStatus(request)
-      setVerificationSessionId(request.verificationSessionId)
-    } catch (error) {
-      setRequestError(error instanceof Error ? error.message : 'Unknown error occurred')
-      return
     }
 
-    if (responseMode.includes('dc_api')) {
-      await initiateDc(request, requestSignerType !== 'none')
+    let createdIsoMdocRequest: CreateIsoMdocRequestResponse | undefined
+    if (usesIsoMdoc) {
+      try {
+        // The x509 request signer is what signs the mdoc reader authentication
+        createdIsoMdocRequest = await createIsoMdocRequest({
+          presentationDefinitionId: id,
+          useReaderAuth: requestSignerType !== 'none',
+        })
+        setIsoMdocRequest(createdIsoMdocRequest)
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : 'Unknown error occurred')
+        return
+      }
+    }
+
+    if (isDcApi) {
+      await initiateDc({
+        request,
+        isoMdocRequest: createdIsoMdocRequest,
+        isSigned: requestSignerType !== 'none',
+      })
     }
   }
 
@@ -339,6 +442,36 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
           </RadioGroup>
         </div>
+        {isDcApi && (
+          <div className="space-y-2">
+            <Label htmlFor="dc-api-protocol">Digital Credentials API Protocol</Label>
+            <span className="text-xs">
+              {supportsIsoMdoc
+                ? ' - ISO mdoc is only used for the mdoc credentials in this request'
+                : ' - ISO mdoc requires a request containing mdoc credentials'}
+            </span>
+            <RadioGroup
+              name="dc-api-protocol"
+              required
+              value={dcApiProtocol}
+              onValueChange={(value) => setSelectedDcApiProtocol(value as DcApiProtocol)}
+            >
+              <MiniRadioItem key="openid4vp" value="openid4vp" label="OpenID4VP" />
+              <MiniRadioItem key="mdoc" value="mdoc" label="ISO mdoc" disabled={!supportsIsoMdoc} />
+              <MiniRadioItem key="both" value="both" label="Both" disabled={!supportsIsoMdoc} />
+            </RadioGroup>
+          </div>
+        )}
+        {usesIsoMdoc && (
+          <Alert variant="default">
+            <AlertTitle>ISO/IEC TS 18013-7 Annex C</AlertTitle>
+            <AlertDescription className="mt-2">
+              {dcApiProtocol === 'both'
+                ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with. '
+                : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol. '}
+            </AlertDescription>
+          </Alert>
+        )}
         {responseMode.includes('direct_post') && (
           <div className="space-y-2">
             <Label htmlFor="request-scheme">Scheme (QR / Deeplink)</Label>
@@ -367,25 +500,27 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           </RadioGroup>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="presentation-type">Transaction Authorization</Label>
-          <Select
-            name="transaction-data"
-            required
-            value={transactionAuthorizationType}
-            onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a transaction authorization type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-              <SelectItem value="payment">Payment</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {transactionAuthorizationType === 'payment' && (
+        {usesOpenId4Vp && (
+          <div className="space-y-2">
+            <Label htmlFor="presentation-type">Transaction Authorization</Label>
+            <Select
+              name="transaction-data"
+              required
+              value={transactionAuthorizationType}
+              onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a transaction authorization type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
+                <SelectItem value="payment">Payment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {usesOpenId4Vp && transactionAuthorizationType === 'payment' && (
           <div>
             <Label htmlFor="payment-amount">Payment amount (EUR)</Label>
             <Input
@@ -395,30 +530,34 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             />
           </div>
         )}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="response-mode">Use Response Encryption</Label>
-          <Switch
-            id="response-mode"
-            name="response-mode"
-            required
-            checked={responseMode === 'direct_post.jwt' || responseMode === 'dc_api.jwt'}
-            onCheckedChange={(checked) =>
-              setResponseMode(
-                checked
-                  ? responseMode.endsWith('.jwt')
-                    ? responseMode
-                    : (`${responseMode}.jwt` as ResponseMode)
-                  : (responseMode.replace('.jwt', '') as ResponseMode)
-              )
-            }
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="request-purpose">Purpose</Label>
-          <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-          <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
-        </div>
-        {!hasResponse && (
+        {usesOpenId4Vp && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="response-mode">Use Response Encryption</Label>
+            <Switch
+              id="response-mode"
+              name="response-mode"
+              required
+              checked={responseMode === 'direct_post.jwt' || responseMode === 'dc_api.jwt'}
+              onCheckedChange={(checked) =>
+                setResponseMode(
+                  checked
+                    ? responseMode.endsWith('.jwt')
+                      ? responseMode
+                      : (`${responseMode}.jwt` as ResponseMode)
+                    : (responseMode.replace('.jwt', '') as ResponseMode)
+                )
+              }
+            />
+          </div>
+        )}
+        {usesOpenId4Vp && (
+          <div className="space-y-2">
+            <Label htmlFor="request-purpose">Purpose</Label>
+            <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
+            <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
+          </div>
+        )}
+        {usesOpenId4Vp && !hasResponse && (
           <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
             {authorizationRequestUriHasBeenFetched ? (
               <p className="text-gray-500 break-all">
@@ -482,10 +621,35 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                 {requestError ?? requestStatus?.error ?? 'Unknown error occurred'}
               </AlertDescription>
             )}
+            {isSuccess && isoMdocResponse && (
+              <AlertDescription className="mt-2">
+                ISO mdoc response verified for origin {isoMdocResponse.origin}
+              </AlertDescription>
+            )}
           </Alert>
         )}
 
-        {hasResponse && (
+        {(isoMdocResponse || isoMdocRequest) && (
+          <div className="flex flex-col w-full gap-4">
+            {isoMdocResponse && (
+              <CollapsibleSection title="Device Response" initial="open">
+                <HighLight code={JSON.stringify(isoMdocResponse.deviceResponse, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+            {isoMdocRequest && (
+              <>
+                <CollapsibleSection title="Device Request">
+                  <HighLight code={JSON.stringify(isoMdocRequest.docRequests, null, 2)} language="json" />
+                </CollapsibleSection>
+                <CollapsibleSection title="DC API Request (ISO mdoc)">
+                  <HighLight code={JSON.stringify(isoMdocRequest.request, null, 2)} language="json" />
+                </CollapsibleSection>
+              </>
+            )}
+          </div>
+        )}
+
+        {hasResponse && requestStatus && (
           <div className="flex flex-col w-full gap-4">
             {requestStatus.presentations && (
               <CollapsibleSection title="Presentations" initial="open">

@@ -178,6 +178,67 @@ export async function verifyResponseDc(data: {
   return response.json()
 }
 
+export type IsoMdocRequest = { deviceRequest: string; encryptionInfo: string }
+export type CreateIsoMdocRequestResponse = {
+  verificationSessionId: string
+  responseStatus: string
+  request: IsoMdocRequest
+  docRequests: Array<{ docType: string; nameSpaces: Record<string, Record<string, boolean>> }>
+}
+
+export async function createIsoMdocRequest(data: {
+  presentationDefinitionId: string
+  useReaderAuth: boolean
+}): Promise<CreateIsoMdocRequestResponse> {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/iso-mdoc/requests/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      await response
+        .json()
+        .then(({ message }) => message)
+        .catch(() => 'Failed to create ISO mdoc request')
+    )
+  }
+
+  return response.json()
+}
+
+export async function verifyIsoMdocResponse(data: {
+  verificationSessionId: string
+  response: { response: string }
+}): Promise<{
+  verificationSessionId: string
+  responseStatus: string
+  origin: string
+  deviceResponse: Record<string, unknown>
+}> {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/iso-mdoc/requests/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      await response
+        .json()
+        .then((a) => ('error' in a ? a.error : JSON.stringify(a, null, 2)))
+        .catch(() => 'Failed to verify ISO mdoc response')
+    )
+  }
+
+  return response.json()
+}
+
 export async function getRequestStatus({ verificationSessionId }: { verificationSessionId: string }) {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/${verificationSessionId}`, {
     method: 'GET',

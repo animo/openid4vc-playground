@@ -27,10 +27,11 @@ import {
 } from './issuers/openHorizonBank.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
+import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier, type PlaygroundVerifierOptions } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
-import { dcqlQueryFromRequest } from './verifiers/util.js'
+import { dcqlQueryFromRequest, isoMdocDocRequestsFromRequest } from './verifiers/util.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -196,6 +197,7 @@ apiRouter.get('/verifier', async (_, response: Response) => {
         useCase: 'useCase' in verifier ? verifier.useCase : undefined,
         display: c.name,
         id: `${verifier.verifierId}__${index}`,
+        supportsIsoMdoc: isoMdocDocRequestsFromRequest(c) !== undefined,
       }))
     ),
   })
@@ -456,6 +458,29 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
   }
 })
 
+function mdocDocumentsToJson(deviceResponse: MdocDeviceResponse) {
+  return (deviceResponse.deviceResponse.documents ?? []).map((doc) => {
+    const docType = doc.docType
+    const issuerSignedNamespaces = deviceResponse.issuerClaims[docType] ?? {}
+    const deviceSignedNamespaces = deviceResponse.deviceClaims[docType] ?? {}
+
+    return {
+      doctype: docType,
+      alg: doc.issuerSigned.issuerAuth.algorithm,
+      validityInfo: doc.issuerSigned.issuerAuth.mobileSecurityObject.validityInfo,
+      deviceSignedNamespaces,
+      issuerSignedNamespaces: Object.entries(issuerSignedNamespaces).map(([nameSpace, nameSpacEntries]) => [
+        nameSpace,
+        Object.entries(nameSpacEntries as Record<string, unknown>).map(([key, value]) =>
+          value instanceof Uint8Array
+            ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
+            : [key, value]
+        ),
+      ]),
+    }
+  })
+}
+
 async function getVerificationStatus(verificationSession: OpenId4VcVerificationSessionRecord) {
   const authorizationRequestJwt = verificationSession.authorizationRequestJwt
     ? Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
@@ -516,28 +541,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
           if (presentation instanceof MdocDeviceResponse) {
             return {
               pretty: JsonTransformer.toJSON({
-                documents: (presentation.deviceResponse.documents ?? []).map((doc) => {
-                  const docType = doc.docType
-                  const issuerSignedNamespaces = presentation.issuerClaims[docType] ?? {}
-                  const deviceSignedNamespaces = presentation.deviceClaims[docType] ?? {}
-
-                  return {
-                    doctype: docType,
-                    alg: doc.issuerSigned.issuerAuth.algorithm,
-                    validityInfo: doc.issuerSigned.issuerAuth.mobileSecurityObject.validityInfo,
-                    deviceSignedNamespaces,
-                    issuerSignedNamespaces: Object.entries(issuerSignedNamespaces).map(
-                      ([nameSpace, nameSpacEntries]) => [
-                        nameSpace,
-                        Object.entries(nameSpacEntries as Record<string, unknown>).map(([key, value]) =>
-                          value instanceof Uint8Array
-                            ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
-                            : [key, value]
-                        ),
-                      ]
-                    ),
-                  }
-                }),
+                documents: mdocDocumentsToJson(presentation),
               }),
               encoded: presentation.encoded,
             }
@@ -641,8 +645,151 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
   }
 })
 
+const zCreateIsoMdocRequestBody = z.object({
+  presentationDefinitionId: z.string(),
+  useReaderAuth: z.boolean().default(false),
+})
+
+const zVerifyIsoMdocResponseBody = z.object({
+  verificationSessionId: z.string(),
+  response: z.union([z.string(), z.object({ response: z.string() })]),
+})
+
+apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: Response) => {
+  try {
+    const { presentationDefinitionId, useReaderAuth } = await zCreateIsoMdocRequestBody.parseAsync(request.body)
+
+    const [verifierId, requestIndex] = presentationDefinitionId.split('__')
+    // biome-ignore lint/suspicious/noExplicitAny: no explanation
+    const definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)?.[
+      requestIndex
+    ] as PlaygroundVerifierOptions['requests'][number]
+    if (!definition) {
+      return response.status(404).json({
+        message: 'Definition not found',
+      })
+    }
+
+    const docRequests = isoMdocDocRequestsFromRequest(definition)
+    if (!docRequests) {
+      return response.status(400).json({
+        message: 'Definition can not be expressed as an ISO 18013-7 DeviceRequest',
+      })
+    }
+
+    // The origin the browser will hand to the wallet, and the only origin a response can decrypt for.
+    const origin = request.headers.origin
+    if (!origin) {
+      return response.status(400).json({
+        message: 'Missing origin header',
+      })
+    }
+
+    const { verificationSession, request: dcApiRequest } = await agent.mdoc.createDcApiVerificationSession({
+      docRequests,
+      expectedOrigins: [origin],
+      // Reader authentication signs over the session transcript, which binds this single origin.
+      readerAuth: useReaderAuth ? { certificate: getX509DcsCertificate() } : undefined,
+    })
+
+    return response.json({
+      verificationSessionId: verificationSession.id,
+      responseStatus: verificationSession.state,
+      request: dcApiRequest,
+      docRequests,
+    })
+  } catch (error) {
+    return response.status(400).json({
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+    })
+  }
+})
+
+apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: Response) => {
+  const { verificationSessionId, response: isoMdocResponse } = await zVerifyIsoMdocResponseBody.parseAsync(request.body)
+  const origin = request.headers.origin
+  const encryptedResponse = typeof isoMdocResponse === 'string' ? isoMdocResponse : isoMdocResponse.response
+
+  agent.config.logger.info(`iso-mdoc/verify: verifying response for verification session ${verificationSessionId}`, {
+    origin,
+    responseLength: encryptedResponse.length,
+  })
+  // Logged separately so the (encrypted) response can be replayed when debugging a failure
+  agent.config.logger.debug(`iso-mdoc/verify: encrypted response ${encryptedResponse}`)
+
+  try {
+    const {
+      verificationSession,
+      deviceResponse,
+      origin: verifiedOrigin,
+    } = await agent.mdoc.verifyDcApiResponse({
+      verificationSessionId,
+      response: isoMdocResponse,
+      origin,
+    })
+
+    agent.config.logger.info(`iso-mdoc/verify: verified response for verification session ${verificationSessionId}`, {
+      verifiedOrigin,
+      docTypes: deviceResponse.deviceResponse.documents?.map((document) => document.docType),
+    })
+
+    return response.json({
+      verificationSessionId: verificationSession.id,
+      responseStatus: verificationSession.state,
+      origin: verifiedOrigin,
+      deviceResponse: JsonTransformer.toJSON({ documents: mdocDocumentsToJson(deviceResponse) }),
+    })
+  } catch (error) {
+    if (error instanceof RecordNotFoundError) {
+      agent.config.logger.warn(`iso-mdoc/verify: verification session ${verificationSessionId} not found`)
+      return response.status(404).send('Verification session not found')
+    }
+
+    const errorChain = getErrorChain(error)
+
+    // The verification session is updated to `Error` before the error is rethrown, so it's still
+    // available here and tells us which origins/state the response was verified against.
+    const verificationSession = await agent.mdoc
+      .getDcApiVerificationSessionById(verificationSessionId)
+      .catch(() => undefined)
+
+    const trustedCertificates = (agent.dependencyManager.resolve(X509ModuleConfig).trustedCertificates ?? []).map(
+      (certificate) => {
+        try {
+          const parsed = X509Certificate.fromEncodedCertificate(certificate)
+          return `${parsed.subject} (issuer: ${parsed.issuer})`
+        } catch {
+          return 'unable to parse trusted certificate'
+        }
+      }
+    )
+
+    agent.config.logger.error(
+      `iso-mdoc/verify: verification failed for verification session ${verificationSessionId}. ${formatErrorChain(
+        error
+      )}`,
+      {
+        requestOrigin: origin,
+        expectedOrigins: verificationSession?.expectedOrigins,
+        verificationSessionState: verificationSession?.state,
+        verificationSessionExpiresAt: verificationSession?.expiresAt,
+        verificationSessionIsExpired: verificationSession?.isExpired,
+        deviceRequest: verificationSession?.deviceRequestBase64Url,
+        encryptionInfo: verificationSession?.encryptionInfoBase64Url,
+        trustedCertificates,
+        errorChain,
+      }
+    )
+
+    return response.status(500).send({
+      error: formatErrorChain(error),
+      errorChain: errorChain.map(({ name, message }) => `${name}: ${message}`),
+    })
+  }
+})
+
 apiRouter.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
-  agent.config.logger.error(`Unhandled error ${error}`)
+  agent.config.logger.error(`Unhandled error. ${formatErrorChain(error)}`, { errorChain: getErrorChain(error) })
   return response.status(500).json({
     error: error.message,
   })

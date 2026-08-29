@@ -161,7 +161,10 @@ const MiniRadioItem = React.forwardRef<
   return (
     <label
       htmlFor={props.id}
-      className="flex group cursor-pointer duration-200 items-center gap-2 text-gray-500 font-medium"
+      className={cn(
+        'flex group duration-200 items-center gap-2 text-gray-500 font-medium',
+        props.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+      )}
     >
       <RadioGroupPrimitive.Item
         ref={ref}
