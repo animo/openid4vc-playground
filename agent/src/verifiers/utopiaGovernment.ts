@@ -87,6 +87,13 @@ const mdlPostalCode = {
   fields: [{ path: 'resident_postal_code', values: ['90210'] }],
 } satisfies MdocCredential
 
+const photoIdNames = {
+  format: 'mso_mdoc',
+  doctype: photoIdMdoc.doctype,
+  namespace: 'org.iso.23220.1',
+  fields: ['given_name_unicode', 'family_name_unicode', 'birth_date', 'portrait'],
+} satisfies MdocCredential
+
 const photoIdAge = {
   format: 'mso_mdoc',
   doctype: photoIdMdoc.doctype,
@@ -136,6 +143,11 @@ export const utopiaGovernmentVerifier = {
       name: 'mDL (mdoc) - Driving privileges (nested)',
       purpose: 'mDL (mdoc) - Driving privileges (nested)',
       credentials: [mdlDrivingPrivileges],
+    },
+    {
+      name: 'Photo ID (mdoc) - Names, birth date and portrait',
+      purpose: 'Photo ID (mdoc) - Names, birth date and portrait',
+      credentials: [photoIdNames],
     },
     {
       name: 'EUDI PID (sd-jwt-vc) - Names',
