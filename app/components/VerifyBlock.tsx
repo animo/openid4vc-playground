@@ -1,6 +1,5 @@
 import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
-import { groupBy } from 'es-toolkit'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
@@ -10,11 +9,19 @@ import {
   createRequest,
   getRequestStatus,
   getVerifier,
+  type PresentationCredential,
+  type PresentationCredentialSelection,
   verifyIsoMdocResponse,
   verifyResponseDc,
 } from '@/lib/api'
 import { useInterval } from '@/lib/hooks'
 import { CollapsibleSection } from './CollapsibleSection'
+import {
+  CredentialRequestBuilder,
+  getCredentialSelectionError,
+  getDefaultCredentialSelection,
+  selectionSupportsIsoMdoc,
+} from './CredentialRequestBuilder'
 import { HighLight } from './highLight'
 import { PlaygroundAlert } from './PlaygroundAlert'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
@@ -22,7 +29,7 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-import { CardRadioItem, MiniRadioItem, RadioGroup } from './ui/radio'
+import { MiniRadioItem, RadioGroup } from './ui/radio'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
@@ -42,16 +49,39 @@ export type DcApiProtocol = 'openid4vp' | 'mdoc' | 'both'
 type ResponseStatus = 'RequestCreated' | 'RequestUriRetrieved' | 'ResponseVerified' | 'Error'
 
 type RequestSignerType = CreateRequestOptions['requestSignerType']
-type Verifier = {
-  presentationRequests: Array<{
-    id: string
-    display: string
-    supportsIsoMdoc: boolean
-    useCase: { name: string; icon: string; tags: Array<string> }
-  }>
-}
 
 type IsoMdocVerifiedResponse = Awaited<ReturnType<typeof verifyIsoMdocResponse>>
+
+/**
+ * Parses the credential selection from the url, ignoring credentials, formats and attributes that are
+ * not (or no longer) supported. Returns `undefined` if no valid selection is present.
+ */
+function parseCredentialSelection(
+  value: string | undefined,
+  credentials: PresentationCredential[]
+): PresentationCredentialSelection | undefined {
+  if (!value) return undefined
+
+  try {
+    const parsed = JSON.parse(value) as Partial<PresentationCredentialSelection>
+    const selectedCredentials = (parsed.credentials ?? []).flatMap((selected) => {
+      const credential = credentials.find((c) => c.id === selected.id)
+      if (!credential) return []
+
+      const formats = credential.formats.filter((format) => selected.formats?.includes(format))
+      const attributes = credential.attributes
+        .map((attribute) => attribute.id)
+        .filter((id) => selected.attributes?.includes(id))
+
+      return [{ id: credential.id, formats: formats.length > 0 ? formats : credential.formats, attributes }]
+    })
+
+    if (selectedCredentials.length === 0) return undefined
+    return { credentials: selectedCredentials, combination: parsed.combination === 'any' ? 'any' : 'all' }
+  } catch {
+    return undefined
+  }
+}
 
 export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchParams }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
@@ -69,11 +99,17 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     dcqlSubmission?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
   }>()
-  const [verifier, setVerifier] = useState<Verifier>()
+  const [credentials, setCredentials] = useState<PresentationCredential[]>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
   const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
   const [paymentAmount, setPaymentAmount] = useState('100')
-  const [presentationDefinitionId, setPresentationDefinitionId] = useState<string>()
+  const [credentialSelection, setCredentialSelection] = useState<PresentationCredentialSelection>({
+    credentials: [],
+    combination: 'all',
+  })
+  const credentialSelectionError = credentials
+    ? getCredentialSelectionError(credentials, credentialSelection)
+    : undefined
 
   // Only set once the user (or the URL) explicitly picks a protocol. The effective protocol is
   // derived below, so that switching to a request without mdoc credentials falls back to OpenID4VP.
@@ -82,8 +118,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [isoMdocResponse, setIsoMdocResponse] = useState<IsoMdocVerifiedResponse>()
 
   const isDcApi = responseMode === 'dc_api' || responseMode === 'dc_api.jwt'
-  const supportsIsoMdoc =
-    verifier?.presentationRequests.find((r) => r.id === presentationDefinitionId)?.supportsIsoMdoc ?? false
+  const supportsIsoMdoc = selectionSupportsIsoMdoc(credentialSelection)
   const dcApiProtocol: DcApiProtocol = !supportsIsoMdoc ? 'openid4vp' : (selectedDcApiProtocol ?? 'both')
   const usesIsoMdoc = isDcApi && dcApiProtocol !== 'openid4vp'
   const usesOpenId4Vp = !isDcApi || dcApiProtocol !== 'mdoc'
@@ -113,13 +148,13 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
   // Update URL when state changes
   useEffect(() => {
-    if (!verifier) return
+    if (!credentials) return
     const params = new URLSearchParams()
 
     params.set('tab', 'verify')
     if (responseMode) params.set('responseMode', responseMode)
     if (transactionAuthorizationType) params.set('transactionAuthorizationType', transactionAuthorizationType)
-    if (presentationDefinitionId) params.set('presentationDefinitionId', presentationDefinitionId)
+    if (credentialSelection.credentials.length > 0) params.set('request', JSON.stringify(credentialSelection))
     if (requestScheme) params.set('requestScheme', requestScheme)
     if (purpose) params.set('purpose', purpose)
     if (requestSignerType) params.set('requestSignerType', requestSignerType)
@@ -135,10 +170,10 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
     router.replace(`?${params.toString()}`, { scroll: false })
   }, [
-    verifier,
+    credentials,
     responseMode,
     transactionAuthorizationType,
-    presentationDefinitionId,
+    credentialSelection,
     requestScheme,
     purpose,
     requestSignerType,
@@ -149,25 +184,28 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   ])
 
   useEffect(() => {
-    if (verifier) return
+    if (credentials) return
     const query = Object.fromEntries(searchParams.entries())
 
-    getVerifier().then((v: Verifier) => {
-      setVerifier(v)
+    getVerifier().then((verifier) => {
+      setCredentials(verifier.credentials)
 
       if (query.responseMode) setResponseMode(query.responseMode as ResponseMode)
       if (query.transactionAuthorizationType)
         setTransactionAuthorizationType(query.transactionAuthorizationType as TransactionAuthorizationType)
 
-      setPresentationDefinitionId(
-        query.presentationDefinitionId ?? Object.values(groupBy(v.presentationRequests, (v) => v.useCase.name))[0][0].id
+      setCredentialSelection(
+        parseCredentialSelection(query.request, verifier.credentials) ?? {
+          credentials: verifier.credentials[0] ? [getDefaultCredentialSelection(verifier.credentials[0])] : [],
+          combination: 'all',
+        }
       )
       if (query.requestScheme) setRequestScheme(query.requestScheme as string)
       if (query.purpose) setPurpose(query.purpose as string)
       if (query.requestSignerType) setRequestSignerType(query.requestSignerType as RequestSignerType)
       if (query.dcApiProtocol) setSelectedDcApiProtocol(query.dcApiProtocol as DcApiProtocol)
     })
-  }, [searchParams, verifier])
+  }, [searchParams, credentials])
 
   useInterval({
     callback: async () => {
@@ -291,16 +329,16 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setIsoMdocRequest(undefined)
     setIsoMdocResponse(undefined)
 
-    const id = presentationDefinitionId ?? verifier?.presentationRequests[0]?.id
-    if (!id) {
-      throw new Error('No definition')
+    if (credentialSelectionError) {
+      setRequestError(credentialSelectionError)
+      return
     }
 
     let request: CreateRequestResponse | undefined
     if (usesOpenId4Vp) {
       try {
         request = await createRequest({
-          presentationDefinitionId: id,
+          request: credentialSelection,
           requestScheme,
           responseMode,
           purpose: purpose && purpose !== '' ? purpose : undefined,
@@ -324,7 +362,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       try {
         // The x509 request signer is what signs the mdoc reader authentication
         createdIsoMdocRequest = await createIsoMdocRequest({
-          presentationDefinitionId: id,
+          request: credentialSelection,
           useReaderAuth: requestSignerType !== 'none',
         })
         setIsoMdocRequest(createdIsoMdocRequest)
@@ -354,16 +392,6 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setIsCopyingTimeout(timeout)
   }
 
-  // This is wrong
-  const groupedVerifier = verifier?.presentationRequests
-    ? groupBy(verifier.presentationRequests, (v) => v.useCase.name)
-    : {}
-
-  const selectedUseCase =
-    Object.entries(groupedVerifier).find(([, requests]) =>
-      requests.find((r) => r.id === presentationDefinitionId)
-    )?.[0] ?? Object.keys(groupedVerifier)[0]
-
   return (
     <Card className="p-6">
       <PlaygroundAlert />
@@ -375,53 +403,13 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         </Button>
       </div>
       <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
-        <div className="flex flex-col">
-          <div className="flex flex-col items-start gap-2">
-            <span className="text-accent font-medium text-sm">Use Case</span>
-          </div>
-          <RadioGroup
-            className="grid  grid-cols-1 sm:grid-cols-2 gap-2 py-2 pb-4"
-            value={selectedUseCase}
-            onValueChange={(useCase) => setPresentationDefinitionId(groupedVerifier[useCase][0].id)}
-          >
-            {Object.entries(groupedVerifier).map(([useCase]) => (
-              <CardRadioItem
-                key={useCase}
-                value={useCase}
-                id={`radio-${useCase}`}
-                label={useCase}
-                description={Array.from(new Set(groupedVerifier[useCase].flatMap((u) => u.useCase.tags))).join(', ')}
-                icon={groupedVerifier[useCase][0].useCase.icon}
-              />
-            ))}
-          </RadioGroup>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="presentation-type">Presentation Type</Label>
-          <Select
-            name="presentation-definition-id"
-            required
-            value={presentationDefinitionId}
-            onValueChange={(value) => {
-              if (value !== '') {
-                setPresentationDefinitionId(value)
-              }
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a presentation type" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedUseCase &&
-                groupedVerifier[selectedUseCase]?.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.display}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {credentials && (
+          <CredentialRequestBuilder
+            credentials={credentials}
+            selection={credentialSelection}
+            onSelectionChange={setCredentialSelection}
+          />
+        )}
         <div className="space-y-2">
           <Label htmlFor="initiation-method">Initiation Method</Label>
 
@@ -448,7 +436,9 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             <span className="text-xs">
               {supportsIsoMdoc
                 ? ' - ISO mdoc is only used for the mdoc credentials in this request'
-                : ' - ISO mdoc requires a request containing mdoc credentials'}
+                : credentialSelection.combination === 'all' && credentialSelection.credentials.length > 1
+                  ? ' - ISO mdoc requires the mDOC format to be selected for all credentials'
+                  : ' - ISO mdoc requires the mDOC format to be selected'}
             </span>
             <RadioGroup
               name="dc-api-protocol"
@@ -469,6 +459,9 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               {dcApiProtocol === 'both'
                 ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with. '
                 : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol. '}
+              {credentialSelection.combination === 'any' &&
+                credentialSelection.credentials.filter((c) => c.formats.includes('mso_mdoc')).length > 1 &&
+                'An ISO mdoc DeviceRequest does not say whether multiple documents are all required or alternatives. They are requested as alternatives, which the wallet has to support as well.'}
             </AlertDescription>
           </Alert>
         )}
@@ -603,9 +596,17 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             )}
           </div>
         )}
-        <Button onClick={onSubmitCreateRequest} className="w-full" onSubmit={onSubmitCreateRequest}>
-          Verify Credential
-        </Button>
+        <div className="space-y-2">
+          <Button
+            onClick={onSubmitCreateRequest}
+            className="w-full"
+            onSubmit={onSubmitCreateRequest}
+            disabled={!credentials || credentialSelectionError !== undefined}
+          >
+            Verify Credential
+          </Button>
+          {credentialSelectionError && <p className="text-sm text-gray-500 text-center">{credentialSelectionError}</p>}
+        </div>
         {(hasResponse || requestError) && (
           <Alert variant={isSuccess ? 'success' : requestError ? 'destructive' : 'warning'}>
             {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
@@ -632,13 +633,20 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         {(isoMdocResponse || isoMdocRequest) && (
           <div className="flex flex-col w-full gap-4">
             {isoMdocResponse && (
-              <CollapsibleSection title="Device Response" initial="open">
-                <HighLight code={JSON.stringify(isoMdocResponse.deviceResponse, null, 2)} language="json" />
-              </CollapsibleSection>
+              <>
+                <CollapsibleSection title="Device Response" initial="open">
+                  <HighLight code={JSON.stringify(isoMdocResponse.deviceResponse, null, 2)} language="json" />
+                </CollapsibleSection>
+                <CollapsibleSection title="Device Request Match">
+                  <HighLight code={JSON.stringify(isoMdocResponse.deviceRequestMatch, null, 2)} language="json" />
+                </CollapsibleSection>
+              </>
             )}
             {isoMdocRequest && (
               <>
-                <CollapsibleSection title="Device Request">
+                <CollapsibleSection
+                  title={isoMdocRequest.docRequestsAsAlternatives ? 'Device Request (alternatives)' : 'Device Request'}
+                >
                   <HighLight code={JSON.stringify(isoMdocRequest.docRequests, null, 2)} language="json" />
                 </CollapsibleSection>
                 <CollapsibleSection title="DC API Request (ISO mdoc)">

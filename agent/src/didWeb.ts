@@ -40,7 +40,7 @@ export async function createDidWeb(publicJwk: Kms.PublicJwk<Kms.Ed25519PublicJwk
 export async function getWebDidDocument() {
   const [createdDid] = await agent.dids.getCreatedDids({ did: didWeb })
 
-  if (!createdDid || !createdDid.didDocument) {
+  if (!createdDid?.didDocument) {
     throw new Error('did does not exist')
   }
 

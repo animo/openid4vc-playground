@@ -39,7 +39,34 @@ export async function createOffer({
   return await response.json()
 }
 
-export async function getVerifier() {
+export type PresentationCredentialFormat = 'dc+sd-jwt' | 'mso_mdoc'
+
+export type PresentationCredential = {
+  id: string
+  display: {
+    name: string
+    background_image?: {
+      uri: string
+    }
+    background_color?: string
+    text_color?: string
+  }
+  formats: PresentationCredentialFormat[]
+  attributes: Array<{
+    id: string
+    name: string
+    required: boolean
+    formats: PresentationCredentialFormat[]
+  }>
+  presets: Array<{ id: string; name: string; attributes: string[] }>
+}
+
+export type PresentationCredentialSelection = {
+  credentials: Array<{ id: string; formats: PresentationCredentialFormat[]; attributes: string[] }>
+  combination: 'all' | 'any'
+}
+
+export async function getVerifier(): Promise<{ credentials: PresentationCredential[] }> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/verifier`)
 
   if (!response.ok) {
@@ -121,7 +148,7 @@ export async function receiveOffer(offerUri: string) {
 
 export async function createRequest(data: {
   requestSignerType: 'x5c' | 'openid-federation' | 'none'
-  presentationDefinitionId: string
+  request: PresentationCredentialSelection
   requestScheme: string
   responseMode: ResponseMode
   purpose?: string
@@ -184,10 +211,11 @@ export type CreateIsoMdocRequestResponse = {
   responseStatus: string
   request: IsoMdocRequest
   docRequests: Array<{ docType: string; nameSpaces: Record<string, Record<string, boolean>> }>
+  docRequestsAsAlternatives: boolean
 }
 
 export async function createIsoMdocRequest(data: {
-  presentationDefinitionId: string
+  request: PresentationCredentialSelection
   useReaderAuth: boolean
 }): Promise<CreateIsoMdocRequestResponse> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/iso-mdoc/requests/create`, {
@@ -218,6 +246,7 @@ export async function verifyIsoMdocResponse(data: {
   responseStatus: string
   origin: string
   deviceResponse: Record<string, unknown>
+  deviceRequestMatch: Record<string, unknown>
 }> {
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/iso-mdoc/requests/verify`, {
     method: 'POST',

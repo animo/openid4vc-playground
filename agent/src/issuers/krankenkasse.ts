@@ -64,6 +64,7 @@ export const healthIdMdocData = {
     validityInfo: {
       validFrom: new Date(healthIdPayload.issuance_date.toISOString()),
       validUntil: new Date(healthIdPayload.expiry_date.toISOString()),
+      signed: new Date(healthIdPayload.issuance_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput

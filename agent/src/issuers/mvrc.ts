@@ -4,7 +4,7 @@ import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, MdocConfiguration, PlaygroundIssuerOptions } from '../issuer.js'
 import type { StaticMdocSignInput } from '../types.js'
-import { oneYearInMilliseconds, serverStartupTimeInMilliseconds } from '../utils/date.js'
+import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from '../utils/date.js'
 
 const mvrcDisplay = {
   locale: 'en',
@@ -102,13 +102,15 @@ export const mvrcMdocData = {
       },
     },
     validityInfo: {
-      validFrom: new Date(mvrcPayload.issue_date.toISOString()),
+      // The MSO signed date must be within the validity of the document signer certificate, which is
+      // only valid from shortly before server startup, so it can't be the (static) issue date.
+      validFrom: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
       validUntil: new Date(mvrcPayload.expiry_date.toISOString()),
 
       // Causes issue in google identity credential if not present
       // Update half year before expiry
       expectedUpdate: new Date(serverStartupTimeInMilliseconds + Math.floor(oneYearInMilliseconds / 2)),
-      signed: new Date(mvrcPayload.issue_date.toISOString()),
+      signed: new Date(serverStartupTimeInMilliseconds - tenDaysInMilliseconds),
     },
   },
 } satisfies StaticMdocSignInput

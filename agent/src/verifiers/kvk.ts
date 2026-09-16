@@ -7,5 +7,4 @@ export const kvkVerifier = {
     logo_uri: `${AGENT_HOST}/assets/verifiers/kvk/verifier.png`,
     client_name: 'KVK',
   },
-  requests: [],
 } as const satisfies PlaygroundVerifierOptions

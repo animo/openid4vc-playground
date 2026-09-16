@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
   "files": {
     "maxSize": 10000000
   },
@@ -39,7 +39,7 @@
     "enabled": true,
     "includes": ["**", "!**/__tests__/**/*.ts"],
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "performance": {
         "noDelete": { "level": "off" }
       },
@@ -48,5 +48,17 @@
         "useNodejsImportProtocol": { "level": "off" }
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      }
+    }
+  ]
 }
