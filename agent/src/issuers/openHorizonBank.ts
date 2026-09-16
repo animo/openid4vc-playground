@@ -213,7 +213,7 @@ export async function updatePaymentStatusForWeroCredential(
   }
 
   const paymentRecord = await agent.genericRecords.findById(`transaction-status-${paymentTransactionId}`)
-  if (!paymentRecord || paymentRecord.content.statusCode !== 'PDNG') {
+  if (paymentRecord?.content.statusCode !== 'PDNG') {
     agent.config.logger.warn(
       `openHorizonBank: payment record ${paymentTransactionId} not found or not PDNG (current: ${paymentRecord?.content.statusCode})`
     )
@@ -228,7 +228,7 @@ export async function updatePaymentStatusForWeroCredential(
 
   setTimeout(async () => {
     const latest = await agent.genericRecords.findById(`transaction-status-${paymentTransactionId}`)
-    if (!latest || latest.content.statusCode !== 'PDNG') {
+    if (latest?.content.statusCode !== 'PDNG') {
       agent.config.logger.warn(
         `openHorizonBank: payment ${paymentTransactionId} no longer PDNG at flip time (current: ${latest?.content.statusCode})`
       )

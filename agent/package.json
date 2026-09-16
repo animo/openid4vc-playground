@@ -2,28 +2,27 @@
   "name": "agent",
   "type": "module",
   "dependencies": {
-    "@owf/mdoc": "0.8.0-alpha-20260829141538",
-    "@credo-ts/askar": "0.7.1-pr-2922-20260829144742",
-    "@credo-ts/core": "0.7.1-pr-2922-20260829144742",
-    "@credo-ts/node": "0.7.1-pr-2922-20260829144742",
-    "@credo-ts/openid4vc": "0.7.1-pr-2922-20260829144742",
+    "@credo-ts/askar": "0.7.1-pr-2922-20260915114247",
+    "@credo-ts/core": "0.7.1-pr-2922-20260915114247",
+    "@credo-ts/node": "0.7.1-pr-2922-20260915114247",
+    "@credo-ts/openid4vc": "0.7.1-pr-2922-20260915114247",
     "@openwallet-foundation/askar-nodejs": "^0.6.0",
     "@openwallet-foundation/askar-shared": "^0.6.0",
-    "@owf/eudi-sca": "0.2.0-alpha-20260506130404",
+    "@owf/mdoc": "0.8.0-alpha-20260915061504",
     "@peculiar/x509": "^2.0.0",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "oidc-provider": "^9.6.1",
-    "zod": "^4.3.6"
+    "oidc-provider": "^9.12.2",
+    "zod": "^4.6.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^22.19.3",
-    "@types/oidc-provider": "^9.5.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.13.4",
+    "@types/oidc-provider": "^9.12.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

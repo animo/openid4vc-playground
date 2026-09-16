@@ -14,18 +14,35 @@ ignoredBuiltDependencies:
   - esbuild
   - sharp
 
-overrides:
-  # 2.0.1 is a broken publish: the tarball ships only src/*.ts, but package.json
-  # still points main at ./bundles/index.umd.js, so Node cannot resolve it.
-  json-canonicalize: 2.0.0
-
 minimumReleaseAgeExclude:
-  - '@owf/mdoc@0.8.0-alpha-20260829141538'
-  - '@credo-ts/askar@0.7.1-pr-2922-20260829144742'
-  - '@credo-ts/core@0.7.1-pr-2922-20260829144742'
-  - '@credo-ts/didcomm@0.7.1-pr-2922-20260829144742'
-  - '@credo-ts/node@0.7.1-pr-2922-20260829144742'
-  - '@credo-ts/openid4vc@0.7.1-pr-2922-20260829144742'
+  - '@owf/mdoc@0.8.0-alpha-20260915061504'
+  - '@credo-ts/askar@0.7.1-pr-2922-20260915114247'
+  - '@credo-ts/core@0.7.1-pr-2922-20260915114247'
+  - '@credo-ts/didcomm@0.7.1-pr-2922-20260915114247'
+  - '@credo-ts/node@0.7.1-pr-2922-20260915114247'
+  - '@credo-ts/openid4vc@0.7.1-pr-2922-20260915114247'
+
+# @peculiar/asn1-* >= 2.7.0 ship separate ESM and CJS builds, each with its own schema storage. @peculiar/x509
+# always loads as CJS, so ASN.1 classes created from ESM code (e.g. Credo) fail with "Cannot get schema for '<Type>'
+# target". Pin to the last versions without an exports map until this is fixed upstream.
+# https://github.com/PeculiarVentures/x509/issues/145
+#
+# @owf/cose registers a global cbor-x decoder for tag 24 with its own DataItem class. @sd-jwt/sd-jwt-vc pulls in an
+# older @owf/cose (via @owf/token-status-list) whose registration overrides the one of the version used by @owf/mdoc,
+# which then fails to decode mdoc responses with "Expected DataItem". Keep a single version installed.
+overrides:
+  '@owf/cose': 0.4.0-alpha-20260910093038
+  '@peculiar/x509': 2.0.0
+  '@peculiar/asn1-cms': ~2.6.1
+  '@peculiar/asn1-csr': ~2.6.1
+  '@peculiar/asn1-ecc': ~2.6.1
+  '@peculiar/asn1-pfx': ~2.6.1
+  '@peculiar/asn1-pkcs8': ~2.6.1
+  '@peculiar/asn1-pkcs9': ~2.6.1
+  '@peculiar/asn1-rsa': ~2.6.1
+  '@peculiar/asn1-schema': ~2.6.0
+  '@peculiar/asn1-x509': ~2.6.1
+  '@peculiar/asn1-x509-attr': ~2.6.1
 
 onlyBuiltDependencies:
   - '@2060.io/ffi-napi'

@@ -72,6 +72,7 @@ export const taxIdMdocData = {
     validityInfo: {
       validFrom: new Date(taxIdPayload.issuance_date.toISOString()),
       validUntil: new Date(taxIdPayload.expiry_date.toISOString()),
+      signed: new Date(taxIdPayload.issuance_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput

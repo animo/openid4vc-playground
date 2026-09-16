@@ -1,22 +1,9 @@
 import type { OpenId4VpCreateVerifierOptions } from '@credo-ts/openid4vc'
 import { agent } from './agent.js'
-import type { MdocCredential, SdJwtCredential, W3cVcV1Credential, W3cVcV2Credential } from './verifiers/util.js'
 
 export interface PlaygroundVerifierOptions {
   verifierId: string
   clientMetadata?: OpenId4VpCreateVerifierOptions['clientMetadata'] & { [clientName: `client_name#${string}`]: string }
-  requests: Array<{
-    name: string
-    purpose: string
-    credentials: Array<SdJwtCredential | MdocCredential | W3cVcV1Credential | W3cVcV2Credential>
-    // Indexes
-    credential_sets?: Array<number[]>
-  }>
-  useCase?: {
-    name: string
-    icon: string
-    tags: Array<string>
-  }
 }
 
 export async function createOrUpdateVerifier(options: PlaygroundVerifierOptions) {

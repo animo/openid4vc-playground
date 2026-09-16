@@ -67,6 +67,7 @@ export const certificateOfResidenceMdocData = {
     validityInfo: {
       validFrom: new Date(certificateOfResidencePayload.issuance_date.toISOString()),
       validUntil: new Date(certificateOfResidencePayload.expiry_date.toISOString()),
+      signed: new Date(certificateOfResidencePayload.issuance_date.toISOString()),
     },
   },
 } satisfies StaticMdocSignInput

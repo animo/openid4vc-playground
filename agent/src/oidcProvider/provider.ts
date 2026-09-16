@@ -76,4 +76,5 @@ async function getProvider() {
 }
 
 const oidcUrl = `${AGENT_HOST}${oidcRouterPath}`
+
 export { getProvider, oidcRouterPath, oidcUrl }

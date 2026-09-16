@@ -7,5 +7,4 @@ export const europeanUnionVerifier = {
     logo_uri: `${AGENT_HOST}/assets/verifiers/eu.png`,
     client_name: 'European Union',
   },
-  requests: [],
 } as const satisfies PlaygroundVerifierOptions

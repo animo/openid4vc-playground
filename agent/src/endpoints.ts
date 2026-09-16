@@ -2,11 +2,13 @@ import {
   Hasher,
   JsonTransformer,
   Jwt,
+  MdocDeviceRequestNotSatisfiedError,
   MdocDeviceResponse,
   RecordNotFoundError,
   TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
+  W3cV2DataIntegrityVerifiablePresentation,
   W3cV2JwtVerifiablePresentation,
   W3cV2SdJwtVerifiablePresentation,
   X509Certificate,
@@ -17,7 +19,6 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
-import { funkeDeployedAccessCertificate, funkeDeployedRegistrationCertificate } from './eudiTrust.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import {
@@ -29,9 +30,15 @@ import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/inde
 import { oidcUrl } from './oidcProvider/provider.js'
 import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
-import { getVerifier, type PlaygroundVerifierOptions } from './verifier.js'
-import { verifiers } from './verifiers/index.js'
-import { dcqlQueryFromRequest, isoMdocDocRequestsFromRequest } from './verifiers/util.js'
+import { getVerifier } from './verifier.js'
+import { presentationCredentials } from './verifiers/credentials.js'
+import {
+  dcqlQueryFromRequest,
+  isoMdocDocRequestsFromRequest,
+  type PresentationRequest,
+  presentationRequestFromSelection,
+} from './verifiers/util.js'
+import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
@@ -192,14 +199,21 @@ apiRouter.get('/issuers', async (_, response: Response) => {
 
 apiRouter.get('/verifier', async (_, response: Response) => {
   return response.json({
-    presentationRequests: verifiers.flatMap((verifier) =>
-      verifier.requests.map((c, index) => ({
-        useCase: 'useCase' in verifier ? verifier.useCase : undefined,
-        display: c.name,
-        id: `${verifier.verifierId}__${index}`,
-        supportsIsoMdoc: isoMdocDocRequestsFromRequest(c) !== undefined,
-      }))
-    ),
+    credentials: presentationCredentials.map((credential) => ({
+      id: credential.id,
+      display: credential.display,
+      formats: Object.keys(credential.formats),
+      attributes: credential.attributes.map((attribute) => ({
+        id: attribute.id,
+        name: attribute.name,
+        required: attribute.required,
+        formats: [
+          ...(attribute.sdJwt && credential.formats['dc+sd-jwt'] ? ['dc+sd-jwt'] : []),
+          ...(attribute.mdoc && credential.formats.mso_mdoc ? ['mso_mdoc'] : []),
+        ],
+      })),
+      presets: credential.presets,
+    })),
   })
 })
 
@@ -260,9 +274,22 @@ apiRouter.post('/transaction-status', async (request: Request, response: Respons
 //   return response.json(chains)
 // })
 
+const zPresentationCredentialSelection = z.object({
+  credentials: z
+    .array(
+      z.object({
+        id: z.string(),
+        formats: z.array(z.enum(['dc+sd-jwt', 'mso_mdoc'])).min(1),
+        attributes: z.array(z.string()).min(1),
+      })
+    )
+    .min(1),
+  combination: z.enum(['all', 'any']),
+})
+
 const zCreatePresentationRequestBody = z.object({
   requestSignerType: z.enum(['none', 'x5c' /* 'openid-federation' */]),
-  presentationDefinitionId: z.string(),
+  request: zPresentationCredentialSelection,
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
@@ -282,7 +309,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       requestSignerType,
       transactionAuthorizationType,
       paymentAmount,
-      presentationDefinitionId,
+      request: credentialSelection,
       requestScheme,
       responseMode,
       purpose,
@@ -290,24 +317,11 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
     const x509DcsCertificate = getX509DcsCertificate()
+    const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
 
-    // Funke access certificate uses same key as the dcs certificate
-    const funkeDcsAccessCertificate = X509Certificate.fromEncodedCertificate(funkeDeployedAccessCertificate)
-    funkeDcsAccessCertificate.publicJwk.keyId = x509DcsCertificate.publicJwk.keyId
+    let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
 
-    const [verifierId, requestIndex] = presentationDefinitionId.split('__')
-    const verifier = await getVerifier(verifierId)
-
-    // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    let definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)[
-      requestIndex
-    ] as PlaygroundVerifierOptions['requests'][number]
-    if (!definition) {
-      return response.status(404).json({
-        error: 'Definition not found',
-      })
-    }
-
+    // A payment is authorized with the Wero card, so it's always required in addition to the selected credentials
     if (transactionAuthorizationType === 'payment') {
       definition = {
         ...definition,
@@ -319,6 +333,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
             fields: ['iban', 'bic', 'payment_network', 'currency'],
           },
         ],
+        credential_sets: [...(definition.credential_sets ?? []), [definition.credentials.length]],
       }
     }
 
@@ -341,7 +356,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
               date_time: new Date().toISOString(),
               payee: {
                 name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
-                id: verifierId,
+                id: verifier.verifierId,
                 logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
                 website: 'https://playground.animo.id',
               },
@@ -349,42 +364,18 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
           }
         : undefined
 
-    // When credential_sets is used we need to add the wero card to each group so that it will always be requested when also requesting a payment.
-    // If the request did not define credential_sets originally, the default set generated by dcqlQueryFromRequest already includes all credentials (including the appended wero card), so we must not push again.
-    if (transactionAuthorizationType === 'payment' && definition.credential_sets) {
-      queryLanguageDefinition.credential_sets?.forEach((cs) => {
-        cs.options.map((opts) => opts.push(credentialIds[credentialIds.length - 1]))
-      })
-    }
-
-    // Only include it in this one
-    const isEudiAuthorization = presentationDefinitionId === '044721ed-af79-45ec-bab3-de85c3e722d0__1'
     const { authorizationRequest, verificationSession, authorizationRequestObject } =
       await agent.openid4vc.verifier.createAuthorizationRequest({
         authorizationResponseRedirectUri: redirectUri,
         verifierId: verifier.verifierId,
-        verifierInfo: isEudiAuthorization
-          ? [
-              {
-                format: 'jwt',
-                data: funkeDeployedRegistrationCertificate,
-              },
-            ]
-          : undefined,
         requestSigner:
           requestSignerType === 'none'
             ? { method: 'none' }
-            : // Include the certificate from the german registrar
-              isEudiAuthorization
-              ? {
-                  method: 'x5c',
-                  x5c: [funkeDcsAccessCertificate],
-                }
-              : {
-                  method: 'x5c',
-                  x5c: [x509DcsCertificate],
-                  clientIdPrefix: 'x509_hash',
-                },
+            : {
+                method: 'x5c',
+                x5c: [x509DcsCertificate],
+                clientIdPrefix: 'x509_hash',
+              },
         transactionData:
           transactionAuthorizationType === 'qes'
             ? [
@@ -481,6 +472,23 @@ function mdocDocumentsToJson(deviceResponse: MdocDeviceResponse) {
   })
 }
 
+/**
+ * Makes mdoc values JSON serializable. Byte strings (such as a portrait) would otherwise serialize as
+ * an object with an entry per byte, and maps as an empty object.
+ */
+function mdocValueToJson(value: unknown): unknown {
+  if (value instanceof Uint8Array) return TypedArrayEncoder.toBase64(value)
+  if (value instanceof Map) {
+    return Object.fromEntries(Array.from(value, ([key, entry]) => [String(key), mdocValueToJson(entry)]))
+  }
+  if (Array.isArray(value)) return value.map(mdocValueToJson)
+  if (value && typeof value === 'object' && !('toJSON' in value && typeof value.toJSON === 'function')) {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, mdocValueToJson(entry)]))
+  }
+
+  return value
+}
+
 async function getVerificationStatus(verificationSession: OpenId4VcVerificationSessionRecord) {
   const authorizationRequestJwt = verificationSession.authorizationRequestJwt
     ? Jwt.fromSerializedJwt(verificationSession.authorizationRequestJwt)
@@ -551,9 +559,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
             presentation instanceof W3cV2JwtVerifiablePresentation ||
             presentation instanceof W3cV2SdJwtVerifiablePresentation
           ) {
-            const verifiableCredentials = Array.isArray(presentation.resolvedPresentation.verifiableCredential)
-              ? presentation.resolvedPresentation.verifiableCredential
-              : [presentation.resolvedPresentation.verifiableCredential]
+            const verifiableCredentials = [presentation.resolvedPresentation.verifiableCredential ?? []].flat()
 
             return {
               pretty: JsonTransformer.toJSON({
@@ -562,8 +568,17 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
                 type: presentation.resolvedPresentation.type,
                 holder: presentation.resolvedPresentation.holder,
 
-                verifiableCredential: verifiableCredentials.map((vc) => vc.resolvedCredential.toJSON()),
+                verifiableCredential: verifiableCredentials.map((vc) =>
+                  'resolvedCredential' in vc ? vc.resolvedCredential.toJSON() : vc
+                ),
               }),
+              encoded: presentation.encoded,
+            }
+          }
+
+          if (presentation instanceof W3cV2DataIntegrityVerifiablePresentation) {
+            return {
+              pretty: presentation.securedPresentation,
               encoded: presentation.encoded,
             }
           }
@@ -646,7 +661,7 @@ apiRouter.get('/requests/:verificationSessionId', async (request, response) => {
 })
 
 const zCreateIsoMdocRequestBody = z.object({
-  presentationDefinitionId: z.string(),
+  request: zPresentationCredentialSelection,
   useReaderAuth: z.boolean().default(false),
 })
 
@@ -657,23 +672,12 @@ const zVerifyIsoMdocResponseBody = z.object({
 
 apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: Response) => {
   try {
-    const { presentationDefinitionId, useReaderAuth } = await zCreateIsoMdocRequestBody.parseAsync(request.body)
+    const { request: credentialSelection, useReaderAuth } = await zCreateIsoMdocRequestBody.parseAsync(request.body)
 
-    const [verifierId, requestIndex] = presentationDefinitionId.split('__')
-    // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    const definition = (verifiers.find((v) => v.verifierId === verifierId)?.requests as any)?.[
-      requestIndex
-    ] as PlaygroundVerifierOptions['requests'][number]
-    if (!definition) {
-      return response.status(404).json({
-        message: 'Definition not found',
-      })
-    }
-
-    const docRequests = isoMdocDocRequestsFromRequest(definition)
-    if (!docRequests) {
+    const isoMdocRequest = isoMdocDocRequestsFromRequest(presentationRequestFromSelection(credentialSelection))
+    if (!isoMdocRequest) {
       return response.status(400).json({
-        message: 'Definition can not be expressed as an ISO 18013-7 DeviceRequest',
+        message: 'Request can not be expressed as an ISO 18013-7 DeviceRequest',
       })
     }
 
@@ -686,7 +690,10 @@ apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: R
     }
 
     const { verificationSession, request: dcApiRequest } = await agent.mdoc.createDcApiVerificationSession({
-      docRequests,
+      docRequests: isoMdocRequest.docRequests,
+      // Nothing in the DeviceRequest marks the doc requests as alternatives, this only changes how the
+      // response is matched. The wallet has to apply the same interpretation.
+      treatAmbiguousMultipleDocRequestsAsAlternatives: isoMdocRequest.docRequestsAsAlternatives,
       // Reader authentication signs over the session transcript, which binds this single origin.
       readerAuth: useReaderAuth ? { certificate: getX509DcsCertificate(), origin } : undefined,
     })
@@ -695,7 +702,8 @@ apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: R
       verificationSessionId: verificationSession.id,
       responseStatus: verificationSession.state,
       request: dcApiRequest,
-      docRequests,
+      docRequests: isoMdocRequest.docRequests,
+      docRequestsAsAlternatives: isoMdocRequest.docRequestsAsAlternatives,
     })
   } catch (error) {
     return response.status(400).json({
@@ -726,6 +734,7 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
     const {
       verificationSession,
       deviceResponse,
+      deviceRequestMatch,
       origin: verifiedOrigin,
     } = await agent.mdoc.verifyDcApiResponse({
       verificationSessionId,
@@ -743,6 +752,7 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
       responseStatus: verificationSession.state,
       origin: verifiedOrigin,
       deviceResponse: JsonTransformer.toJSON({ documents: mdocDocumentsToJson(deviceResponse) }),
+      deviceRequestMatch: mdocValueToJson(deviceRequestMatch),
     })
   } catch (error) {
     if (error instanceof RecordNotFoundError) {
@@ -779,6 +789,9 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
         verificationSessionExpiresAt: verificationSession?.expiresAt,
         verificationSessionIsExpired: verificationSession?.isExpired,
         deviceRequest: verificationSession?.deviceRequestBase64Url,
+        deviceRequestDefinition: verificationSession?.deviceRequestDefinition,
+        deviceRequestMatch:
+          error instanceof MdocDeviceRequestNotSatisfiedError ? mdocValueToJson(error.deviceRequestMatch) : undefined,
         sessionTranscript: verificationSession?.sessionTranscript,
         trustedCertificates,
         errorChain,
@@ -788,6 +801,8 @@ apiRouter.post('/iso-mdoc/requests/verify', async (request: Request, response: R
     return response.status(500).send({
       error: formatErrorChain(error),
       errorChain: errorChain.map(({ name, message }) => `${name}: ${message}`),
+      deviceRequestMatch:
+        error instanceof MdocDeviceRequestNotSatisfiedError ? mdocValueToJson(error.deviceRequestMatch) : undefined,
     })
   }
 })

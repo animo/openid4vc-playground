@@ -184,7 +184,7 @@ const MiniRadioItem = React.forwardRef<
 })
 MiniRadioItem.displayName = 'MiniRadioItem'
 
-export { CardRadioItem, MiniRadioItem, RadioGroup, RadioGroupItem, CredentialCardRadioItem }
+export { CardRadioItem, CredentialCardRadioItem, MiniRadioItem, RadioGroup, RadioGroupItem }
 
 const iconMap = {
   default: InfoIcon,

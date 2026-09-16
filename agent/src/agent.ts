@@ -43,6 +43,8 @@ export const agent = new Agent({
   dependencies: agentDependencies,
   config: {
     logger: new ConsoleLogger(LogLevel.Trace),
+    // Allows signed requests when running locally without an HTTPS tunnel (e.g. http://localhost)
+    allowInsecureHttpUrls: AGENT_HOST.startsWith('http://'),
   },
   modules: {
     askar: new AskarModule({

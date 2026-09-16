@@ -1,4 +1,4 @@
-FROM node:22 AS base
+FROM node:24 AS base
 COPY package.json /app/package.json
 COPY agent/package.json /app/agent/package.json
 COPY app/package.json /app/app/package.json
