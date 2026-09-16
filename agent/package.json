@@ -22,7 +22,7 @@
     "@types/node": "^24.13.4",
     "@types/oidc-provider": "^9.12.1",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "~7.0.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
