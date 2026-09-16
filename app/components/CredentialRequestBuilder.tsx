@@ -99,7 +99,7 @@ export function CredentialRequestBuilder({
       <div className="flex flex-col">
         <span className="text-accent font-medium text-lg">Credentials</span>
         <p className="text-gray-500 text-sm">Select one or more credentials to request from the wallet.</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 py-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 py-3">
           {credentials.map((credential) => (
             <CredentialCardCheckboxItem
               key={credential.id}
