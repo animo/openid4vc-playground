@@ -400,7 +400,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
                 id: verifier.verifierId,
                 logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
-                website: 'https://playground.animo.id',
+                website: 'https://eudi-payments.animo.id',
               },
             },
           }
