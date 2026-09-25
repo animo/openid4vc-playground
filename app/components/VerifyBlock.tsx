@@ -101,6 +101,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     pasoVerification?: {
       accepted: boolean
       checks: Array<{ check: string; passed: boolean; detail: string }>
+      decryptedRiskSignals?: unknown
     }
   }>()
   const [credentials, setCredentials] = useState<PresentationCredential[]>()
@@ -701,6 +702,17 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                     </div>
                   ))}
                 </div>
+              </CollapsibleSection>
+            )}
+            {requestStatus.pasoVerification?.decryptedRiskSignals !== undefined && (
+              // Only this deployment can show this: the presentation carries a JWE compact string, and
+              // [PaSO Risk Signals] Section 6.1 leaves the plaintext to the holder of the issuer
+              // decryption key — which here is the same process that verifies the proof.
+              <CollapsibleSection title="Issuer Decrypted Risk Signals" initial="open">
+                <HighLight
+                  code={JSON.stringify(requestStatus.pasoVerification.decryptedRiskSignals, null, 2)}
+                  language="json"
+                />
               </CollapsibleSection>
             )}
           </div>

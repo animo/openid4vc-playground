@@ -11,6 +11,7 @@ import {
 import { dcsId, getX509DcsCertificate } from '../keyMethods/index.js'
 import { dateToSeconds } from '../utils/date.js'
 import { computeSriIntegrity, restrictPasoMetadataToLocales } from './metadata.js'
+import { getPasoRiskSignalsEncryptionJwk } from './riskSignalsEncryption.js'
 
 /**
  * The signed credential metadata JWTs this Attestation Provider has issued, cached by locale set.
@@ -32,6 +33,32 @@ const issuedMetadataJwts = new Map<string, { jwt: string; expiresAt: number }>()
 const metadataValiditySeconds = 24 * 60 * 60
 
 const issuedMetadataJwtsPath = join(process.cwd(), '.paso', 'issued-credential-metadata.json')
+
+/**
+ * Bumped whenever the metadata document itself changes shape, so cached JWTs of an older shape are
+ * never served again.
+ *
+ * The cache is keyed on the locales alone otherwise, and a JWT served from it would be a JWT without
+ * the `encrypted` flag and without `risk_signals_encryption_keys` — which a wallet would honour by
+ * sending plaintext risk signals that the Authorizing Party, resolving against the *current*
+ * metadata, then has to reject (see `verify.ts`).
+ */
+const metadataDocumentVersion = 'v2-risk-signal-encryption'
+
+/**
+ * The credential metadata document as served, for the locales of this JWT.
+ *
+ * [PaSO Risk Signals] Section 7.3 has the issuer publish its encryption keys under
+ * `risk_signals_encryption_keys`, and the signed JWT is what makes them integrity-verified — a key
+ * a wallet picked up anywhere else "SHALL be treated as absent". The keys are added here rather than
+ * declared alongside the rest of the metadata because they only exist once the agent has started.
+ */
+export function getPasoCredentialMetadataDocument(servedLocales: string[]) {
+  return {
+    ...restrictPasoMetadataToLocales(openHorizonBankPasoCredentialMetadata, servedLocales),
+    risk_signals_encryption_keys: { keys: [getPasoRiskSignalsEncryptionJwk()] },
+  }
+}
 
 function loadIssuedMetadataJwts() {
   try {
@@ -62,7 +89,7 @@ loadIssuedMetadataJwts()
 export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Promise<string> {
   if (!dcsId) throw new Error('The DCS signing key is not available')
 
-  const cacheKey = servedLocales.join(',')
+  const cacheKey = `${metadataDocumentVersion}:${servedLocales.join(',')}`
   const cached = issuedMetadataJwts.get(cacheKey)
   if (cached && cached.expiresAt > Date.now() + 60_000) return cached.jwt
 
@@ -84,7 +111,7 @@ export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Pro
       additionalClaims: {
         format: 'dc+sd-jwt',
         credential_metadata_uri: `${AGENT_HOST}/paso-credential-metadata`,
-        credential_metadata: restrictPasoMetadataToLocales(openHorizonBankPasoCredentialMetadata, servedLocales),
+        credential_metadata: getPasoCredentialMetadataDocument(servedLocales),
       },
     }),
     protectedHeaderOptions: {

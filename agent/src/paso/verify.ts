@@ -5,6 +5,7 @@ import { getIssuedPasoMetadataIntegrityValues, getPasoTransactionDataTypeMetadat
 import { computeSriIntegrity, lookupLanguageTag } from './metadata.js'
 import { pasoPaymentTransactionDataType, validatePasoPaymentPayload } from './paymentRulebook.js'
 import { resolveEffectiveRiskSignalSet } from './riskSignals.js'
+import { decryptPasoRiskSignals } from './riskSignalsEncryption.js'
 
 /**
  * The Authorizing Party side of PaSO, per [PaSO Proof Verify].
@@ -29,6 +30,15 @@ export interface PasoVerificationCheck {
 export interface PasoVerificationResult {
   accepted: boolean
   checks: PasoVerificationCheck[]
+  /**
+   * The plaintext `risk_signals` array, when it arrived encrypted and this deployment could decrypt.
+   *
+   * Reported separately from the checks because it is the one part of the proof package that is not
+   * visible in the presentation itself: the KB-JWT carries a JWE compact string, and only the holder
+   * of the issuer decryption key can say what is inside it ([PaSO Risk Signals] Section 6.1). A
+   * third-party Authorizing Party would have nothing to put here.
+   */
+  decryptedRiskSignals?: unknown
 }
 
 /**
@@ -236,64 +246,116 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     record('risk_signal_profile', false, `Referenced profile '${profile}' cannot be resolved`)
   }
 
-  checks.push(
-    ...verifyRiskSignals({
-      riskSignals: proofClaims.risk_signals,
-      effectiveSignalSet: riskSignalResolution.signals,
-      encryptionRequired: riskSignalResolution.encryptionRequired,
-      responseMode: String(requestPayload.response_mode ?? 'fragment'),
-    })
-  )
+  const riskSignals = await verifyRiskSignals({
+    riskSignals: proofClaims.risk_signals,
+    effectiveSignalSet: riskSignalResolution.signals,
+    encryptionRequired: riskSignalResolution.encryptionRequired,
+    responseMode: String(requestPayload.response_mode ?? 'fragment'),
+  })
+  checks.push(...riskSignals.checks)
 
-  return { accepted: checks.every((check) => check.passed), checks }
+  return {
+    accepted: checks.every((check) => check.passed),
+    checks,
+    decryptedRiskSignals: riskSignals.decrypted,
+  }
 }
 
-function verifyRiskSignals(options: {
+interface RiskSignalVerification {
+  checks: PasoVerificationCheck[]
+  /** The plaintext array, only when it arrived encrypted and decryption succeeded. */
+  decrypted?: unknown
+}
+
+async function verifyRiskSignals(options: {
   riskSignals: unknown
   effectiveSignalSet: Array<{ type: string; required: boolean; maxAge?: number }>
   encryptionRequired: boolean
   responseMode: string
-}): PasoVerificationCheck[] {
+}): Promise<RiskSignalVerification> {
   const { riskSignals, effectiveSignalSet, encryptionRequired, responseMode } = options
   const required = effectiveSignalSet.filter((signal) => signal.required)
   const checks: PasoVerificationCheck[] = []
 
-  // Section 6.1 splits verification where encryption is required: without the issuer decryption key
-  // the Authorizing Party can confirm only that the value *is* an encrypted structure, and "if
-  // encryption was required but the value is plaintext, the Authorizing Party SHALL reject the
-  // transaction". The per-signal checks below move to whoever holds that key.
-  if (encryptionRequired) {
-    const isEncrypted = typeof riskSignals === 'string'
-    return [
-      {
-        check: 'risk_signals',
-        passed: isEncrypted,
-        detail: isEncrypted
-          ? 'Encrypted as this transaction data type requires; the per-signal checks belong to the holder of the issuer decryption key'
-          : 'This transaction data type requires encrypted risk signals, but the value is not an encrypted structure',
-      },
-    ]
-  }
-
+  // Checked before the encryption branch: with nothing required there is no array for the wallet to
+  // have encrypted, and Section 7.7's "expect an encrypted structure" is about the value that would
+  // otherwise have been the plaintext one.
   if (required.length === 0) {
-    return [{ check: 'risk_signals', passed: true, detail: 'No risk signal resolved as required' }]
+    return { checks: [{ check: 'risk_signals', passed: true, detail: 'No risk signal resolved as required' }] }
   }
 
-  if (typeof riskSignals === 'string') {
-    return [
-      {
-        check: 'risk_signals',
-        passed: false,
-        detail: 'Received an encrypted structure, but this transaction data type does not require encryption',
-      },
-    ]
+  // Section 6.1 splits verification where encryption is required. The Authorizing Party's own half is
+  // the whole of what a *third-party* deployment could do: confirm that the value is an encrypted
+  // structure, and reject a plaintext one. The other half — the per-signal checks — belongs to the
+  // holder of the issuer decryption key, which in this first-party playground is this same process,
+  // so both halves run below and the split stays visible in the reported checks.
+  let signalsToCheck = riskSignals
+  let decrypted: unknown
+  if (encryptionRequired) {
+    if (typeof riskSignals !== 'string') {
+      return {
+        checks: [
+          {
+            check: 'risk_signals_encrypted',
+            passed: false,
+            detail:
+              'This transaction data type requires encrypted risk signals, but the value is not an encrypted structure',
+          },
+        ],
+      }
+    }
+
+    checks.push({
+      check: 'risk_signals_encrypted',
+      passed: true,
+      detail: 'A JWE compact string, as this transaction data type requires',
+    })
+
+    try {
+      decrypted = await decryptPasoRiskSignals(riskSignals)
+      signalsToCheck = decrypted
+      checks.push({
+        check: 'risk_signals_decryption',
+        passed: true,
+        detail: 'Decrypted with the issuer encryption key published in the signed credential metadata',
+      })
+    } catch (error) {
+      return {
+        checks: [
+          ...checks,
+          {
+            check: 'risk_signals_decryption',
+            passed: false,
+            detail: error instanceof Error ? error.message : 'Unknown error',
+          },
+        ],
+      }
+    }
   }
 
-  if (!Array.isArray(riskSignals)) {
-    return [{ check: 'risk_signals', passed: false, detail: 'The risk_signals claim is absent or not an array' }]
+  if (typeof signalsToCheck === 'string') {
+    return {
+      checks: [
+        {
+          check: 'risk_signals',
+          passed: false,
+          detail: 'Received an encrypted structure, but this transaction data type does not require encryption',
+        },
+      ],
+    }
   }
 
-  const envelopes = riskSignals as Array<Record<string, unknown>>
+  if (!Array.isArray(signalsToCheck)) {
+    return {
+      checks: [
+        ...checks,
+        { check: 'risk_signals', passed: false, detail: 'The risk_signals claim is absent or not an array' },
+      ],
+      decrypted,
+    }
+  }
+
+  const envelopes = signalsToCheck as Array<Record<string, unknown>>
   const now = Date.now()
 
   for (const signal of required) {
@@ -360,7 +422,7 @@ function verifyRiskSignals(options: {
     })
   }
 
-  return checks
+  return { checks, decrypted }
 }
 
 /** The PaSO transaction data entry of a request, if it has one. */

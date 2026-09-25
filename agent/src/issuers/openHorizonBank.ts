@@ -386,13 +386,19 @@ export const openHorizonBankCredentialsData = {
  * replace, and because a wallet without a dedicated UI needs the rest.
  *
  * The risk signals are enumerated directly rather than by referencing a profile, which
- * [PaSO Risk Signals] Section 4.1 step 3 provides for. Referencing the published Default profile
- * would be the more idiomatic declaration, but that profile sets `encrypted: true`, and Section 7.3
- * then requires a wallet that cannot encrypt to the issuer's key to refuse the transaction outright
- * rather than send the signals in the clear. Enumerating what a first-party SCA deployment actually
- * needs — the response mode, and the authentication methods the Default profile deliberately leaves
- * to ecosystems that require SCA — keeps the declaration honest without demanding a capability no
- * wallet here has. An ecosystem that wants the full Default bundle has to implement Section 7 first.
+ * [PaSO Risk Signals] Section 4.1 step 3 provides for. The published Default profile would be the
+ * more idiomatic declaration, but it deliberately omits `amr` — the one signal a Strong Customer
+ * Authentication policy turns on — and adds six measured signals a wallet can only report as
+ * `unavailable` here. Enumerating what a first-party SCA deployment actually needs keeps the
+ * declaration honest.
+ *
+ * `encrypted` is trigger 2 of [PaSO Risk Signals] Section 7.2: the wallet encrypts the whole
+ * `risk_signals` array to the key this issuer publishes under `risk_signals_encryption_keys` (see
+ * `paso/riskSignalsEncryption.ts`) and the Authorizing Party decrypts it to run the per-signal
+ * checks. Section 7.8 cautions against combining encryption with `amr` *in a third-party flow*,
+ * because an Authorizing Party that is not the issuer could then no longer see how the user
+ * authenticated. This deployment is both, so the caution does not apply — and the combination is
+ * exactly what makes the split verification of Section 6.1 visible in the playground.
  */
 export const openHorizonBankPasoCredentialMetadata = {
   display: [
@@ -467,6 +473,7 @@ export const openHorizonBankPasoCredentialMetadata = {
         { type: 'urn:paso:risk:global:response_mode:1', required: true, max_age: 600 },
         { type: 'urn:paso:risk:global:amr:1', required: true, max_age: 600 },
       ],
+      encrypted: true,
     },
   },
 }

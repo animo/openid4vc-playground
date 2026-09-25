@@ -10,15 +10,12 @@ import { createDidWeb, getWebDidDocument } from './didWeb.js'
 import { apiRouter } from './endpoints.js'
 import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer.js'
 import { issuers } from './issuers/index.js'
-import {
-  openHorizonBankPasoCredentialMetadata,
-  openHorizonbankCredentialMetadata,
-  openHorizonIssuerId,
-} from './issuers/openHorizonBank.js'
+import { openHorizonbankCredentialMetadata, openHorizonIssuerId } from './issuers/openHorizonBank.js'
 import { dcsId, getCertificateRevocationList, getX509DcsCertificate, setupX509Certificate } from './keyMethods/index.js'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider.js'
-import { getPasoCredentialMetadataJwt } from './paso/credentialMetadata.js'
-import { pasoSupportedLocales, resolvePasoServedLocales, restrictPasoMetadataToLocales } from './paso/metadata.js'
+import { getPasoCredentialMetadataDocument, getPasoCredentialMetadataJwt } from './paso/credentialMetadata.js'
+import { pasoSupportedLocales, resolvePasoServedLocales } from './paso/metadata.js'
+import { setupPasoRiskSignalsEncryptionKey } from './paso/riskSignalsEncryption.js'
 import { dateToSeconds } from './utils/date.js'
 import { createOrUpdateVerifier } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
@@ -121,6 +118,7 @@ async function run() {
   }
 
   await setupX509Certificate()
+  await setupPasoRiskSignalsEncryptionKey()
   await getWebDidDocument().catch(async () => {
     const { publicJwk } = await agent.kms.createKey({
       type: {
@@ -212,8 +210,9 @@ async function run() {
     }
 
     // Section 2 serves the unsigned form for inspection only — a wallet may not rely on it for a
-    // PaSO Credential.
-    return response.json(restrictPasoMetadataToLocales(openHorizonBankPasoCredentialMetadata, servedLocales))
+    // PaSO Credential, and [PaSO Risk Signals] Section 7.3 says the same of the encryption key it
+    // carries: not integrity-verified, so treated as absent.
+    return response.json(getPasoCredentialMetadataDocument(servedLocales))
   })
 
   app.use('/crl', async (_, response) => {
