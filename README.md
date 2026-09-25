@@ -30,6 +30,8 @@ Welcome to the repository of Animo's OpenID4VC Playground. This interactive play
 <p align="center">
   <a href="#installation">Installation</a> 
   &nbsp;|&nbsp;
+  <a href="./PAYMENTS.md">Payments</a>
+  &nbsp;|&nbsp;
   <a href="#contributing">Contributing</a>
   &nbsp;|&nbsp;
   <a href="#license">License</a>

@@ -30,6 +30,8 @@ import {
 } from './issuers/openHorizonBank.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
+import { getPasoCredentialMetadataDocument, getPasoCredentialMetadataJwt } from './paso/credentialMetadata.js'
+import { pasoSupportedLocales, resolvePasoServedLocales } from './paso/metadata.js'
 import { createPasoPaymentTransactionDataEntry } from './paso/request.js'
 import { getPasoTransactionDataEntry, type PasoVerificationResult, verifyPasoProofPackage } from './paso/verify.js'
 import { formatErrorChain, getErrorChain } from './utils/error.js'
@@ -735,6 +737,47 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     dcqlQuery,
   }
 }
+
+/**
+ * The PaSO signed credential metadata endpoint, per [PaSO Proof Metadata] Section 2.
+ *
+ * `Accept-Language` is a **SHALL** on the wallet and the provider decides which locales the JWT
+ * covers, so a request without it is answered 400 as Section 2 allows. The JWT itself has to be
+ * stable enough that the Authorizing Party can check `metadata_integrity` against it — see
+ * `paso/credentialMetadata.ts`.
+ *
+ * It lives on the `/api` router, unlike the TS 12 endpoint in `server.ts`, because `/api` is what the
+ * deployment routes to this agent. At the root the reverse proxy hands the path to the frontend
+ * instead, and a wallet fetching the `credential_metadata_uri` of a PaSO Credential gets the app's
+ * HTML — which it can only read as "this is not a PaSO Credential".
+ */
+apiRouter.use('/paso-credential-metadata', async (request: Request, response: Response) => {
+  const acceptLanguage = request.headers['accept-language']
+  if (!acceptLanguage) {
+    return response.status(400).json({ error: 'Accept-Language header is required' })
+  }
+
+  const servedLocales = resolvePasoServedLocales(acceptLanguage)
+  if (servedLocales.length === 0) {
+    return response
+      .status(400)
+      .json({ error: `None of the requested locales is supported. Supported: ${pasoSupportedLocales.join(', ')}` })
+  }
+
+  // Section 2: "If the `Accept` header is absent or does not express a preference, the Attestation
+  // Provider SHALL default to `application/json`." Listing both types with JSON first is what makes
+  // that hold — `request.accepts('application/jwt')` alone is true for a bare `*/*`, which is
+  // precisely the no-preference case, and would serve the signed form to a client that never asked
+  // for it.
+  if (request.accepts(['application/json', 'application/jwt']) === 'application/jwt') {
+    return response.contentType('application/jwt').send(await getPasoCredentialMetadataJwt(servedLocales))
+  }
+
+  // The unsigned form, for inspection only — a wallet may not rely on it for a PaSO Credential, and
+  // [PaSO Risk Signals] Section 7.3 says the same of the encryption key it carries: not
+  // integrity-verified, so treated as absent.
+  return response.json(getPasoCredentialMetadataDocument(servedLocales))
+})
 
 /**
  * The Transaction Ingestion Endpoint of [PaSO Proof Verify] Section 4.
