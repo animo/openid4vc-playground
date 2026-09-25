@@ -5,7 +5,7 @@ import { eudiPidSdJwt } from '../issuers/credentials/eudiPidSdJwt.js'
 import { mobileDriversLicenseMdoc } from '../issuers/credentials/mDLMdoc.js'
 import { photoIdMdoc } from '../issuers/credentials/photoIdMdoc.js'
 import { mvrcMdoc } from '../issuers/mvrc.js'
-import { weroScaConfiguration } from '../issuers/openHorizonBank.js'
+import { weroPasoConfiguration, weroScaConfiguration } from '../issuers/openHorizonBank.js'
 
 export type PresentationCredentialFormat = 'dc+sd-jwt' | 'mso_mdoc'
 
@@ -74,6 +74,21 @@ function namespacedAttribute(
   required: boolean
 ): PresentationCredentialAttribute {
   return { id, name, required, mdoc: id, mdocNamespace: namespace }
+}
+
+/** Shared by the TS 12 and PaSO Wero cards, which hold the same attributes under different types. */
+const weroCardAttributes = [
+  attribute('account_holder', 'Account holder', true),
+  attribute('iban', 'IBAN', true),
+  attribute('bic', 'BIC', true),
+  attribute('currency', 'Currency', true),
+  attribute('payment_network', 'Payment network', true),
+]
+
+const weroPaymentDetailsPreset = {
+  id: 'payment-details',
+  name: 'Payment details',
+  attributes: ['iban', 'bic', 'payment_network', 'currency'],
 }
 
 const photoIdNamespace = 'org.iso.23220.1'
@@ -385,16 +400,29 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
     formats: {
       'dc+sd-jwt': { vcts: [weroScaConfiguration.vct] },
     },
-    attributes: [
-      attribute('account_holder', 'Account holder', true),
-      attribute('iban', 'IBAN', true),
-      attribute('bic', 'BIC', true),
-      attribute('currency', 'Currency', true),
-      attribute('payment_network', 'Payment network', true),
-    ],
-    presets: [
-      { id: 'payment-details', name: 'Payment details', attributes: ['iban', 'bic', 'payment_network', 'currency'] },
-    ],
+    attributes: weroCardAttributes,
+    presets: [weroPaymentDetailsPreset],
+  },
+  /**
+   * The PaSO Wero card, requestable on its own.
+   *
+   * A separate entry rather than a second `vct` on the one above, because the two are different
+   * credential types holding the same attributes: the TS 12 card and the PaSO card have their own
+   * `vct` and their own — mutually incompatible — `credential_metadata_uri`. Requesting them
+   * together would have a wallet answer with whichever it happened to hold.
+   *
+   * Worth having without a payment transaction attached: it is the only way to check that the card
+   * itself was issued and matches, separately from whether a PaSO transaction can be authorized
+   * with it.
+   */
+  {
+    id: 'wero-card-paso',
+    display: weroPasoConfiguration.display[0],
+    formats: {
+      'dc+sd-jwt': { vcts: [weroPasoConfiguration.vct] },
+    },
+    attributes: weroCardAttributes,
+    presets: [weroPaymentDetailsPreset],
   },
 ]
 

@@ -124,6 +124,76 @@ export function presentationRequestFromSelection(selection: PresentationCredenti
   }
 }
 
+const sdJwtFieldPath = (field: SdJwtCredential['fields'][number]) => (typeof field === 'string' ? field : field.path)
+
+/**
+ * Adds the credential a payment is authorized with, or reuses the one the request already asks for.
+ *
+ * A payment always needs its card, and the playground also offers that card for selection like any
+ * other credential — so both can be asked for at once. Appending it unconditionally then requested
+ * the same card twice: the wallet shows one card as two separate requirements and asks the user to
+ * share it twice, while the transaction data targets only one of the two queries.
+ *
+ * Reusing the selected query means honouring what was selected *and* what the payment needs, so the
+ * payment fields are added on top of the chosen attributes rather than replacing them.
+ *
+ * The card must also end up **required**. Under an `any` combination every selected credential is
+ * an alternative of the others, which a payment cannot express — and [PaSO Core] Section 7.3 has a
+ * wallet refuse a request whose PaSO-targeted credential is not required in every alternative. That
+ * is reported rather than quietly rewritten: an alternatives set may equally be the two *formats* of
+ * one credential, and silently dropping the card from it would pin the request to the other format.
+ */
+export function withPaymentCredential(
+  request: PresentationRequest,
+  paymentCredential: SdJwtCredential
+): { request: PresentationRequest; credentialIndex: number } | { error: string } {
+  const credentialIndex = request.credentials.findIndex(
+    (credential) =>
+      credential.format === 'dc+sd-jwt' && credential.vcts.some((vct) => paymentCredential.vcts.includes(vct))
+  )
+
+  if (credentialIndex === -1) {
+    const appendedIndex = request.credentials.length
+    return {
+      request: {
+        ...request,
+        credentials: [...request.credentials, paymentCredential],
+        credential_sets: [...(request.credential_sets ?? []), [appendedIndex]],
+      },
+      credentialIndex: appendedIndex,
+    }
+  }
+
+  const isRequired = request.credential_sets?.some((set) => set.length === 1 && set[0] === credentialIndex) ?? false
+  if (!isRequired) {
+    return {
+      error:
+        'The payment card is selected as one of several alternatives, so a payment cannot be authorized with it. Select it on its own, or combine the selected credentials with "all".',
+    }
+  }
+
+  const existing = request.credentials[credentialIndex] as SdJwtCredential
+  const existingPaths = existing.fields.map(sdJwtFieldPath)
+
+  return {
+    request: {
+      ...request,
+      credentials: request.credentials.map((credential, index) =>
+        index === credentialIndex
+          ? {
+              ...existing,
+              fields: [
+                ...existing.fields,
+                ...paymentCredential.fields.filter((field) => !existingPaths.includes(sdJwtFieldPath(field))),
+              ],
+            }
+          : credential
+      ),
+    },
+    credentialIndex,
+  }
+}
+
 export function pidMdocCredential({ fields, field_options }: Pick<MdocCredential, 'fields' | 'field_options'>) {
   return {
     format: 'mso_mdoc',

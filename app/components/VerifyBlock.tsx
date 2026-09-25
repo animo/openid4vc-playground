@@ -39,7 +39,7 @@ export type CreateRequestOptions = Parameters<typeof createRequest>[0]
 export type CreateRequestResponse = Awaited<ReturnType<typeof createRequest>>
 
 export type ResponseMode = 'direct_post' | 'direct_post.jwt' | 'dc_api' | 'dc_api.jwt'
-export type TransactionAuthorizationType = 'none' | 'qes' | 'payment'
+export type TransactionAuthorizationType = 'none' | 'qes' | 'payment' | 'paso-payment'
 
 /**
  * Which protocol(s) to hand to the Digital Credentials API. `mdoc` uses the ISO/IEC TS 18013-7
@@ -98,6 +98,10 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     transactionDataSubmission?: Record<string, unknown>
     dcqlSubmission?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
+    pasoVerification?: {
+      accepted: boolean
+      checks: Array<{ check: string; passed: boolean; detail: string }>
+    }
   }>()
   const [credentials, setCredentials] = useState<PresentationCredential[]>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
@@ -508,21 +512,23 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
                 <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-                <SelectItem value="payment">Payment</SelectItem>
+                <SelectItem value="payment">Payment (EUDI ARF TS 12)</SelectItem>
+                <SelectItem value="paso-payment">Payment (PaSO)</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
-        {usesOpenId4Vp && transactionAuthorizationType === 'payment' && (
-          <div>
-            <Label htmlFor="payment-amount">Payment amount (EUR)</Label>
-            <Input
-              name="payment-amount"
-              value={paymentAmount || ''}
-              onChange={({ target }) => setPaymentAmount(target.value)}
-            />
-          </div>
-        )}
+        {usesOpenId4Vp &&
+          (transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment') && (
+            <div>
+              <Label htmlFor="payment-amount">Payment amount (EUR)</Label>
+              <Input
+                name="payment-amount"
+                value={paymentAmount || ''}
+                onChange={({ target }) => setPaymentAmount(target.value)}
+              />
+            </div>
+          )}
         {usesOpenId4Vp && (
           <div className="flex flex-col gap-2">
             <Label htmlFor="response-mode">Use Response Encryption</Label>
@@ -677,6 +683,24 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             {requestStatus.transactionDataSubmission && (
               <CollapsibleSection title="Transaction Data Submission">
                 <HighLight code={JSON.stringify(requestStatus.transactionDataSubmission, null, 2)} language="json" />
+              </CollapsibleSection>
+            )}
+            {requestStatus.pasoVerification && (
+              <CollapsibleSection
+                title={`PaSO Authorizing Party Verification — ${requestStatus.pasoVerification.accepted ? 'accepted' : 'rejected'}`}
+                initial="open"
+              >
+                <div className="flex flex-col gap-1 py-2">
+                  {requestStatus.pasoVerification.checks.map((check) => (
+                    <div key={check.check} className="flex gap-2 text-sm">
+                      <span className={check.passed ? 'text-green-600' : 'text-red-600'}>
+                        {check.passed ? '\u2713' : '\u2717'}
+                      </span>
+                      <span className="font-mono shrink-0">{check.check}</span>
+                      <span className="text-gray-600 break-all">{check.detail}</span>
+                    </div>
+                  ))}
+                </div>
               </CollapsibleSection>
             )}
           </div>

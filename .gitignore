@@ -6,3 +6,7 @@ dist
 .env.local
 .next
 out
+
+# The signed PaSO credential metadata JWTs this agent has issued, kept across restarts so the
+# Authorizing Party can still check `metadata_integrity` against them.
+.paso

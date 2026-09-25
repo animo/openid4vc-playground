@@ -10,9 +10,15 @@ import { createDidWeb, getWebDidDocument } from './didWeb.js'
 import { apiRouter } from './endpoints.js'
 import { createOrUpdateIssuer, type PlaygroundIssuerOptions } from './issuer.js'
 import { issuers } from './issuers/index.js'
-import { openHorizonbankCredentialMetadata, openHorizonIssuerId } from './issuers/openHorizonBank.js'
+import {
+  openHorizonBankPasoCredentialMetadata,
+  openHorizonbankCredentialMetadata,
+  openHorizonIssuerId,
+} from './issuers/openHorizonBank.js'
 import { dcsId, getCertificateRevocationList, getX509DcsCertificate, setupX509Certificate } from './keyMethods/index.js'
 import { getProvider, oidcRouterPath, oidcUrl } from './oidcProvider/provider.js'
+import { getPasoCredentialMetadataJwt } from './paso/credentialMetadata.js'
+import { pasoSupportedLocales, resolvePasoServedLocales, restrictPasoMetadataToLocales } from './paso/metadata.js'
 import { dateToSeconds } from './utils/date.js'
 import { createOrUpdateVerifier } from './verifier.js'
 import { verifiers } from './verifiers/index.js'
@@ -178,6 +184,36 @@ async function run() {
     }
 
     return response.status(404)
+  })
+
+  /**
+   * The PaSO signed credential metadata endpoint, per [PaSO Proof Metadata] Section 2.
+   *
+   * Two things the TS 12 endpoint above gets away with and this one may not: `Accept-Language` is a
+   * **SHALL** on the wallet and the provider decides which locales the JWT covers (Section 2 lets it
+   * answer 400 when the header is missing), and the JWT must be stable enough that the Authorizing
+   * Party can check `metadata_integrity` against it — see `paso/credentialMetadata.ts`.
+   */
+  app.use('/paso-credential-metadata', async (request: Request, response: Response) => {
+    const acceptLanguage = request.headers['accept-language']
+    if (!acceptLanguage) {
+      return response.status(400).json({ error: 'Accept-Language header is required' })
+    }
+
+    const servedLocales = resolvePasoServedLocales(acceptLanguage)
+    if (servedLocales.length === 0) {
+      return response
+        .status(400)
+        .json({ error: `None of the requested locales is supported. Supported: ${pasoSupportedLocales.join(', ')}` })
+    }
+
+    if (request.accepts('application/jwt')) {
+      return response.contentType('application/jwt').send(await getPasoCredentialMetadataJwt(servedLocales))
+    }
+
+    // Section 2 serves the unsigned form for inspection only — a wallet may not rely on it for a
+    // PaSO Credential.
+    return response.json(restrictPasoMetadataToLocales(openHorizonBankPasoCredentialMetadata, servedLocales))
   })
 
   app.use('/crl', async (_, response) => {
