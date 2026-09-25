@@ -38,12 +38,13 @@ const issuedMetadataJwtsPath = join(process.cwd(), '.paso', 'issued-credential-m
  * Bumped whenever the metadata document itself changes shape, so cached JWTs of an older shape are
  * never served again.
  *
- * The cache is keyed on the locales alone otherwise, and a JWT served from it would be a JWT without
- * the `encrypted` flag and without `risk_signals_encryption_keys` — which a wallet would honour by
- * sending plaintext risk signals that the Authorizing Party, resolving against the *current*
- * metadata, then has to reject (see `verify.ts`).
+ * The cache is keyed on the locales alone otherwise, so a JWT served from it would be one written
+ * before the change: without `risk_signals_encryption_keys`, which has the wallet send plaintext risk
+ * signals that the Authorizing Party then rejects (see `verify.ts`), or with the old
+ * `credential_metadata_uri`, which [PaSO Proof Metadata] Section 8 has the wallet compare against the
+ * URI it fetched from — a mismatch fails verification outright.
  */
-const metadataDocumentVersion = 'v2-risk-signal-encryption'
+const metadataDocumentVersion = 'v3-metadata-uri-under-api'
 
 /**
  * The credential metadata document as served, for the locales of this JWT.
@@ -110,7 +111,7 @@ export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Pro
       exp: dateToSeconds(expiry),
       additionalClaims: {
         format: 'dc+sd-jwt',
-        credential_metadata_uri: `${AGENT_HOST}/paso-credential-metadata`,
+        credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
         credential_metadata: getPasoCredentialMetadataDocument(servedLocales),
       },
     }),

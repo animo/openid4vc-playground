@@ -174,7 +174,7 @@ export const weroPasoConfiguration = {
   },
   display: [weroPasoCardDisplay],
   credential_metadata: { display: [weroPasoCardDisplay], claims: weroClaimsMetadata },
-  credential_metadata_uri: `${AGENT_HOST}/paso-credential-metadata`,
+  credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
 } satisfies SdJwtConfiguration
 
 const now = new Date()
