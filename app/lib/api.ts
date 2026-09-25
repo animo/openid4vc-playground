@@ -155,7 +155,7 @@ export async function createRequest(data: {
   transactionAuthorizationType: TransactionAuthorizationType
   paymentAmount?: string
 }) {
-  if (data.transactionAuthorizationType !== 'payment') {
+  if (data.transactionAuthorizationType !== 'payment' && data.transactionAuthorizationType !== 'paso-payment') {
     delete data.paymentAmount
   }
   const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/requests/create`, {

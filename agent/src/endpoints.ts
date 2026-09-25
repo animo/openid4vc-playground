@@ -19,15 +19,19 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import {
   updatePaymentStatusForWeroCredential,
+  weroPasoConfiguration,
   weroScaConfiguration,
   weroScaThirdPartyConfiguration,
 } from './issuers/openHorizonBank.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
+import { createPasoPaymentTransactionDataEntry } from './paso/request.js'
+import { getPasoTransactionDataEntry, type PasoVerificationResult, verifyPasoProofPackage } from './paso/verify.js'
 import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier } from './verifier.js'
@@ -37,6 +41,7 @@ import {
   isoMdocDocRequestsFromRequest,
   type PresentationRequest,
   presentationRequestFromSelection,
+  withPaymentCredential,
 } from './verifiers/util.js'
 import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment.js'
 
@@ -293,7 +298,7 @@ const zCreatePresentationRequestBody = z.object({
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
-  transactionAuthorizationType: z.enum(['none', 'qes', 'payment']),
+  transactionAuthorizationType: z.enum(['none', 'qes', 'payment', 'paso-payment']),
   paymentAmount: z.string().optional(),
   redirectUriBase: z.url().optional(),
 })
@@ -321,20 +326,39 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
 
-    // A payment is authorized with the Wero card, so it's always required in addition to the selected credentials
-    if (transactionAuthorizationType === 'payment') {
-      definition = {
-        ...definition,
-        credentials: [
-          ...definition.credentials,
-          {
-            format: 'dc+sd-jwt',
-            vcts: ['eu.europa.wero.card'],
-            fields: ['iban', 'bic', 'payment_network', 'currency'],
-          },
-        ],
-        credential_sets: [...(definition.credential_sets ?? []), [definition.credentials.length]],
+    // A payment is authorized with the Wero card, so it is always required — but it is also
+    // selectable in its own right, so the request may already ask for it. PaSO uses its own
+    // credential type: its metadata declares the PaSO transaction data types, and [PaSO Core]
+    // Section 7.3 requires the entry to target exactly one credential query.
+    let paymentCredentialIndex: number | undefined
+    if (transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment') {
+      const withPayment = withPaymentCredential(definition, {
+        format: 'dc+sd-jwt',
+        vcts: [transactionAuthorizationType === 'paso-payment' ? weroPasoConfiguration.vct : 'eu.europa.wero.card'],
+        fields: ['iban', 'bic', 'payment_network', 'currency'],
+      })
+
+      if ('error' in withPayment) {
+        return response.status(400).json({ message: withPayment.error })
       }
+
+      definition = withPayment.request
+      paymentCredentialIndex = withPayment.credentialIndex
+    }
+
+    // [PaSO Core] Section 3: "The Wallet SHALL reject unsigned PaSO presentation requests." Sending
+    // one would only produce a request every conforming wallet refuses, so refuse it here instead.
+    if (transactionAuthorizationType === 'paso-payment' && requestSignerType === 'none') {
+      return response
+        .status(400)
+        .json({ message: 'PaSO payment requests must be signed. Choose the x5c request signer.' })
+    }
+
+    // The Basic Payments rulebook makes `amount` mandatory, and [PaSO View] Section 3 fixes its
+    // shape. Without a value the entry would carry the string "undefined EUR", which a conforming
+    // wallet refuses with a payload error that says nothing about the empty form field behind it.
+    if (transactionAuthorizationType === 'paso-payment' && !paymentAmount?.trim()) {
+      return response.status(400).json({ message: 'A PaSO payment request needs a payment amount.' })
     }
 
     agent.config.logger.debug(`Requesting definition ${JSON.stringify(definition, null, 2)}`)
@@ -344,11 +368,29 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     const responseCode = randomUUID()
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
+    const pasoTransactionEntry =
+      transactionAuthorizationType === 'paso-payment' && paymentCredentialIndex !== undefined
+        ? await createPasoPaymentTransactionDataEntry({
+            credentialQueryId: credentialIds[paymentCredentialIndex],
+            amount: `${paymentAmount} EUR`,
+            payeeName: verifier.clientMetadata?.client_name ?? 'Utopia Government',
+            // The rulebook changed this from a payment-network identifier to the Payee's national tax
+            // identifier or business registry number, which the Authorizing Party verifies against the
+            // registry. A made-up but well-formed Dutch RSIN stands in for one here.
+            payeeId: 'NL857098159B01',
+            // Not the verifier's `logo_uri`: that asset is a 1024px, 1.8 MB avatar, and
+            // [PaSO View] Section 3 caps a payee logo at 512 KiB. A logo rendered at ~60px on a
+            // consent screen has no use for more, and the oversized one makes the entry
+            // incompatible in every conforming wallet.
+            payeeLogoUrl: `${AGENT_HOST}/assets/verifiers/government-payee.png`,
+          })
+        : undefined
+
     const paymentTransactionEntry =
-      transactionAuthorizationType === 'payment'
+      transactionAuthorizationType === 'payment' && paymentCredentialIndex !== undefined
         ? {
             type: 'urn:eudi:sca:eu.europa.ec:payment:single:1',
-            credential_ids: [credentialIds[credentialIds.length - 1]] as [string, ...string[]],
+            credential_ids: [credentialIds[paymentCredentialIndex]] as [string, ...string[]],
             transaction_data_hashes_alg: ['sha-256'] as [string, ...string[]],
             payload: {
               transaction_id: randomUUID(),
@@ -377,25 +419,27 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 clientIdPrefix: 'x509_hash',
               },
         transactionData:
-          transactionAuthorizationType === 'qes'
-            ? [
-                {
-                  credential_ids: credentialIds as [string, ...string[]],
-                  type: 'qes_authorization',
-                  transaction_data_hashes_alg: ['sha-256'],
-                  signatureQualifier: 'eu_eidas_qes',
-                  documentDigests: [
-                    {
-                      hash: 'some-hash',
-                      label: 'Declaration of Independence.pdf',
-                      hashAlgorithmOID: 'something',
-                    },
-                  ],
-                },
-              ]
-            : transactionAuthorizationType === 'payment' && paymentTransactionEntry
-              ? [paymentTransactionEntry]
-              : undefined,
+          transactionAuthorizationType === 'paso-payment'
+            ? [pasoTransactionEntry as NonNullable<typeof pasoTransactionEntry>]
+            : transactionAuthorizationType === 'qes'
+              ? [
+                  {
+                    credential_ids: credentialIds as [string, ...string[]],
+                    type: 'qes_authorization',
+                    transaction_data_hashes_alg: ['sha-256'],
+                    signatureQualifier: 'eu_eidas_qes',
+                    documentDigests: [
+                      {
+                        hash: 'some-hash',
+                        label: 'Declaration of Independence.pdf',
+                        hashAlgorithmOID: 'something',
+                      },
+                    ],
+                  },
+                ]
+              : transactionAuthorizationType === 'payment' && paymentTransactionEntry
+                ? [paymentTransactionEntry]
+                : undefined,
         dcql: {
           query: queryLanguageDefinition,
         },
@@ -487,6 +531,44 @@ function mdocValueToJson(value: unknown): unknown {
   }
 
   return value
+}
+
+/**
+ * A readable stand-in for the `issuer` of an [SD-JWT-VC] presentation.
+ *
+ * Credo hands back parsed `X509Certificate` instances, and `JSON.stringify` walks their whole ASN.1
+ * tree: a few hundred lines of byte-indexed objects per certificate, which buries everything else in
+ * the verification output. The certificate's own text encoding says the same thing in a form someone
+ * can read, and is what the `/x509` endpoint already serves.
+ *
+ * Only the `x5c` form needs this. A `did` issuer is a string already.
+ */
+function sdJwtVcIssuerToJson(issuer: unknown): unknown {
+  if (!issuer || typeof issuer !== 'object' || !('method' in issuer) || issuer.method !== 'x5c') return issuer
+
+  const { x5c, ...rest } = issuer as { method: 'x5c'; x5c: X509Certificate[]; issuer?: string }
+  return { ...rest, x5c: x5c.map((certificate) => certificate.toString('text')) }
+}
+
+/**
+ * Runs the PaSO verification once per verification session and remembers the outcome.
+ *
+ * `getVerificationStatus` is a polling endpoint, and [PaSO Proof Verify] Section 3 step 4 has the
+ * Authorizing Party keep a `jti` replay cache. Verifying on every poll would put the transaction's
+ * own `jti` in that cache on the first call and then report every later poll as a replay.
+ */
+const pasoVerifications = new LimitedSizeCollection<PasoVerificationResult>()
+
+async function getOrRunPasoVerification(
+  verificationSessionId: string,
+  run: () => Promise<PasoVerificationResult>
+): Promise<PasoVerificationResult> {
+  const cached = pasoVerifications.get(verificationSessionId)
+  if (cached) return cached
+
+  const result = await run()
+  pasoVerifications.set(verificationSessionId, result)
+  return result
 }
 
 async function getVerificationStatus(verificationSession: OpenId4VcVerificationSessionRecord) {
@@ -586,6 +668,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
           return {
             pretty: {
               ...presentation,
+              issuer: sdJwtVcIssuerToJson(presentation.issuer),
               compact: undefined,
             },
             encoded: presentation.compact,
@@ -600,6 +683,31 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
         }))
       : undefined
 
+    // The Authorizing Party half of the flow. The playground is a first-party deployment
+    // ([PaSO Core] Section 3), so the same process that signed the request also verifies the proof
+    // package against it — no forwarding needed. `/api/paso/transactions` below is the same check
+    // exposed for a third-party Relying Party to POST to.
+    const signedRequest = verificationSession.authorizationRequestJwt
+    const pasoVerification =
+      signedRequest && getPasoTransactionDataEntry(signedRequest)
+        ? await getOrRunPasoVerification(verificationSession.id, () =>
+            verifyPasoProofPackage({
+              signedRequest,
+              vpToken: Object.fromEntries(
+                Object.entries(verified.dcql?.presentations ?? {}).map(([queryId, entries]) => [
+                  queryId,
+                  [entries].flat().map((entry) => (entry as { compact?: string }).compact ?? ''),
+                ])
+              ),
+            }).catch((error) => ({
+              accepted: false,
+              checks: [
+                { check: 'paso', passed: false, detail: error instanceof Error ? error.message : 'Unknown error' },
+              ],
+            }))
+          )
+        : undefined
+
     agent.config.logger.debug(`presentations ${JSON.stringify(presentations)}`)
 
     return {
@@ -610,6 +718,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
 
       presentations: presentations,
       transactionDataSubmission: verified.transactionData,
+      pasoVerification,
 
       dcqlQuery,
       dcqlSubmission: verified.dcql
@@ -626,6 +735,45 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
     dcqlQuery,
   }
 }
+
+/**
+ * The Transaction Ingestion Endpoint of [PaSO Proof Verify] Section 4.
+ *
+ * Optional in the spec ("The Authorizing Party MAY expose an HTTP endpoint"), and the way a
+ * third-party Relying Party hands a proof package to an Authorizing Party that did not create the
+ * request. The status codes are the ones Section 4.2 fixes: 200 accepted, 400 malformed or failed
+ * check, 409 replayed `jti`.
+ *
+ * Not implemented: the JWE form of Section 4.3. The endpoint accepts `application/json` only, so a
+ * Relying Party forwarding over an untrusted path gets no confidentiality — which is exactly why
+ * Section 4.3 makes encryption a SHOULD.
+ */
+apiRouter.post('/paso/transactions', async (request: Request, response: Response) => {
+  const parseResult = await z
+    .object({ signed_request: z.string(), vp_token: z.union([z.string(), z.record(z.string(), z.unknown())]) })
+    .safeParseAsync(typeof request.body === 'string' ? JSON.parse(request.body) : request.body)
+
+  if (!parseResult.success) {
+    return response.status(400).json({ error: 'The proof package is malformed', details: parseResult.error.issues })
+  }
+
+  try {
+    const result = await verifyPasoProofPackage({
+      signedRequest: parseResult.data.signed_request,
+      vpToken: parseResult.data.vp_token as Record<string, string[] | string>,
+    })
+
+    if (result.accepted) return response.json({ status: 'accepted', checks: result.checks })
+
+    const replayed = result.checks.some((check) => check.check === 'jti_uniqueness' && !check.passed)
+    return response.status(replayed ? 409 : 400).json({
+      error: replayed ? 'The jti has already been processed' : 'A verification check failed',
+      checks: result.checks,
+    })
+  } catch (error) {
+    return response.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' })
+  }
+})
 
 apiRouter.post('/requests/verify-dc', async (request: Request, response: Response) => {
   const { verificationSessionId, data } = await zReceiveDcResponseBody.parseAsync(request.body)
