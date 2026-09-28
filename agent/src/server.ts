@@ -169,7 +169,7 @@ async function run() {
         protectedHeaderOptions: {
           alg: Kms.KnownJwaSignatureAlgorithms.ES256,
           typ: 'credential-metadata+jwt',
-          x5c: [getX509DcsCertificate().toString('pem')],
+          x5c: [getX509DcsCertificate().toString('base64')],
         },
       })
       return response.send(jws)

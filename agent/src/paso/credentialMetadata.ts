@@ -44,7 +44,7 @@ const issuedMetadataJwtsPath = join(process.cwd(), '.paso', 'issued-credential-m
  * `credential_metadata_uri`, which [PaSO Proof Metadata] Section 8 has the wallet compare against the
  * URI it fetched from — a mismatch fails verification outright.
  */
-const metadataDocumentVersion = 'v3-metadata-uri-under-api'
+const metadataDocumentVersion = 'v4-x5c-base64-der'
 
 /**
  * The credential metadata document as served, for the locales of this JWT.
@@ -123,7 +123,9 @@ export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Pro
       // sending a longer chain here than the credential carries would fail that comparison. The
       // wallet still validates it against its trust store: the chain builder pulls the Animo root in
       // from the trusted certificates.
-      x5c: [getX509DcsCertificate().toString('pem')],
+      //
+      // [RFC7515] Section 4.1.6: each entry is the base64 (not base64url) DER encoding, not PEM.
+      x5c: [getX509DcsCertificate().toString('base64')],
     },
   })
 
