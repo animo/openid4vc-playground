@@ -106,6 +106,10 @@ export async function decryptPasoRiskSignals(jwe: string): Promise<unknown> {
         algorithm: 'ECDH-ES',
         keyId: pasoRiskSignalsEncryptionKeyId,
         externalPublicJwk: Kms.PublicJwk.fromUnknown(header.epk).toJson() as Kms.KmsJwkPublicEc,
+        // Part of the Concat KDF input ([RFC7518] Section 4.6.2), so a wallet that sets them derives
+        // a different key than one computed without them.
+        apu: typeof header.apu === 'string' ? TypedArrayEncoder.fromBase64Url(header.apu) : undefined,
+        apv: typeof header.apv === 'string' ? TypedArrayEncoder.fromBase64Url(header.apv) : undefined,
       },
     },
   })

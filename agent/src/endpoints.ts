@@ -363,6 +363,17 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       return response.status(400).json({ message: 'A PaSO payment request needs a payment amount.' })
     }
 
+    // [PaSO View] Section 3 `iso_currency_amount`: exactly the [ISO4217] number of fractional digits,
+    // which is 2 for EUR. `100` becomes `100.00`; anything that is not a plain amount is refused
+    // rather than passed on for the wallet to reject.
+    const pasoAmountMatch = /^(\d+)(?:\.(\d{1,2}))?$/.exec(paymentAmount?.trim() ?? '')
+    if (transactionAuthorizationType === 'paso-payment' && !pasoAmountMatch) {
+      return response.status(400).json({
+        message: `'${paymentAmount}' is not a valid EUR amount. Use digits and at most two decimals, e.g. 42.50.`,
+      })
+    }
+    const pasoAmount = pasoAmountMatch ? `${pasoAmountMatch[1]}.${(pasoAmountMatch[2] ?? '').padEnd(2, '0')} EUR` : ''
+
     agent.config.logger.debug(`Requesting definition ${JSON.stringify(definition, null, 2)}`)
 
     const queryLanguageDefinition = dcqlQueryFromRequest(definition, purpose)
@@ -374,7 +385,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       transactionAuthorizationType === 'paso-payment' && paymentCredentialIndex !== undefined
         ? await createPasoPaymentTransactionDataEntry({
             credentialQueryId: credentialIds[paymentCredentialIndex],
-            amount: `${paymentAmount} EUR`,
+            amount: pasoAmount,
             payeeName: verifier.clientMetadata?.client_name ?? 'Utopia Government',
             // The rulebook changed this from a payment-network identifier to the Payee's national tax
             // identifier or business registry number, which the Authorizing Party verifies against the
@@ -559,16 +570,19 @@ function sdJwtVcIssuerToJson(issuer: unknown): unknown {
  * Authorizing Party keep a `jti` replay cache. Verifying on every poll would put the transaction's
  * own `jti` in that cache on the first call and then report every later poll as a replay.
  */
-const pasoVerifications = new LimitedSizeCollection<PasoVerificationResult>()
+// The promise rather than the result: the UI polls every 500ms without waiting for the previous
+// poll, and a verification slower than that would otherwise start a second run that fails its own
+// `jti` as a replay.
+const pasoVerifications = new LimitedSizeCollection<Promise<PasoVerificationResult>>()
 
-async function getOrRunPasoVerification(
+function getOrRunPasoVerification(
   verificationSessionId: string,
   run: () => Promise<PasoVerificationResult>
 ): Promise<PasoVerificationResult> {
   const cached = pasoVerifications.get(verificationSessionId)
   if (cached) return cached
 
-  const result = await run()
+  const result = run()
   pasoVerifications.set(verificationSessionId, result)
   return result
 }
@@ -687,14 +701,16 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
 
     // The Authorizing Party half of the flow. The playground is a first-party deployment
     // ([PaSO Core] Section 3), so the same process that signed the request also verifies the proof
-    // package against it — no forwarding needed. `/api/paso/transactions` below is the same check
-    // exposed for a third-party Relying Party to POST to.
+    // package against it — no forwarding needed, and Credo has already verified the OpenID4VP layer.
     const signedRequest = verificationSession.authorizationRequestJwt
     const pasoVerification =
       signedRequest && getPasoTransactionDataEntry(signedRequest)
         ? await getOrRunPasoVerification(verificationSession.id, () =>
             verifyPasoProofPackage({
               signedRequest,
+              // The session moves to `ResponseVerified` when the response arrives, and nothing
+              // updates it after that, so this is the receipt time freshness is measured from.
+              receivedAt: verificationSession.updatedAt ?? verificationSession.createdAt,
               vpToken: Object.fromEntries(
                 Object.entries(verified.dcql?.presentations ?? {}).map(([queryId, entries]) => [
                   queryId,
@@ -752,6 +768,9 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
  * HTML — which it can only read as "this is not a PaSO Credential".
  */
 apiRouter.use('/paso-credential-metadata', async (request: Request, response: Response) => {
+  // The body depends on both, so a shared cache must not hand one client's answer to another.
+  response.vary('Accept').vary('Accept-Language')
+
   const acceptLanguage = request.headers['accept-language']
   if (!acceptLanguage) {
     return response.status(400).json({ error: 'Accept-Language header is required' })
@@ -777,45 +796,6 @@ apiRouter.use('/paso-credential-metadata', async (request: Request, response: Re
   // [PaSO Risk Signals] Section 7.3 says the same of the encryption key it carries: not
   // integrity-verified, so treated as absent.
   return response.json(getPasoCredentialMetadataDocument(servedLocales))
-})
-
-/**
- * The Transaction Ingestion Endpoint of [PaSO Proof Verify] Section 4.
- *
- * Optional in the spec ("The Authorizing Party MAY expose an HTTP endpoint"), and the way a
- * third-party Relying Party hands a proof package to an Authorizing Party that did not create the
- * request. The status codes are the ones Section 4.2 fixes: 200 accepted, 400 malformed or failed
- * check, 409 replayed `jti`.
- *
- * Not implemented: the JWE form of Section 4.3. The endpoint accepts `application/json` only, so a
- * Relying Party forwarding over an untrusted path gets no confidentiality — which is exactly why
- * Section 4.3 makes encryption a SHOULD.
- */
-apiRouter.post('/paso/transactions', async (request: Request, response: Response) => {
-  const parseResult = await z
-    .object({ signed_request: z.string(), vp_token: z.union([z.string(), z.record(z.string(), z.unknown())]) })
-    .safeParseAsync(typeof request.body === 'string' ? JSON.parse(request.body) : request.body)
-
-  if (!parseResult.success) {
-    return response.status(400).json({ error: 'The proof package is malformed', details: parseResult.error.issues })
-  }
-
-  try {
-    const result = await verifyPasoProofPackage({
-      signedRequest: parseResult.data.signed_request,
-      vpToken: parseResult.data.vp_token as Record<string, string[] | string>,
-    })
-
-    if (result.accepted) return response.json({ status: 'accepted', checks: result.checks })
-
-    const replayed = result.checks.some((check) => check.check === 'jti_uniqueness' && !check.passed)
-    return response.status(replayed ? 409 : 400).json({
-      error: replayed ? 'The jti has already been processed' : 'A verification check failed',
-      checks: result.checks,
-    })
-  } catch (error) {
-    return response.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' })
-  }
 })
 
 apiRouter.post('/requests/verify-dc', async (request: Request, response: Response) => {

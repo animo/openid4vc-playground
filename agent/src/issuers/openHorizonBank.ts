@@ -401,11 +401,15 @@ export const openHorizonBankCredentialsData = {
  * exactly what makes the split verification of Section 6.1 visible in the playground.
  */
 export const openHorizonBankPasoCredentialMetadata = {
+  // [PaSO Proof Metadata] Section 4: this is the full [OID4VCI] `credential_metadata` object, and
+  // Section 3 has the wallet use nothing unsigned for a PaSO Credential — so the card branding and
+  // claim labels have to be in here, or a conforming wallet shows the card without them.
   display: [
-    { name: 'Wero Bank Account (PaSO)', locale: 'en' },
-    { name: 'Wero Bankkonto (PaSO)', locale: 'de' },
-    { name: 'Wero Bankrekening (PaSO)', locale: 'nl' },
+    weroPasoCardDisplay,
+    { ...weroPasoCardDisplay, name: 'Wero Bankkonto (PaSO)', locale: 'de' },
+    { ...weroPasoCardDisplay, name: 'Wero Bankrekening (PaSO)', locale: 'nl' },
   ],
+  claims: weroClaimsMetadata,
   transaction_data_types: {
     'urn:paso:sca:global:payment:1': {
       claims: [
