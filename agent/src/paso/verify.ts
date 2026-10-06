@@ -1,6 +1,4 @@
-import { Hasher, JwsService, Jwt, TypedArrayEncoder, X509Certificate, X509Service } from '@credo-ts/core'
-import { agent } from '../agent.js'
-import { getX509RootCertificate } from '../keyMethods/index.js'
+import { Hasher, Jwt, TypedArrayEncoder } from '@credo-ts/core'
 import { getIssuedPasoMetadataIntegrityValues, getPasoTransactionDataTypeMetadata } from './credentialMetadata.js'
 import { computeSriIntegrity, lookupLanguageTag } from './metadata.js'
 import { pasoPaymentTransactionDataType, validatePasoPaymentPayload } from './paymentRulebook.js'
@@ -53,10 +51,6 @@ function decodeJwtPayload(compact: string): Record<string, unknown> {
   return JSON.parse(TypedArrayEncoder.toUtf8String(TypedArrayEncoder.fromBase64Url(compact.split('.')[1])))
 }
 
-function decodeJwtHeader(compact: string): Record<string, unknown> {
-  return JSON.parse(TypedArrayEncoder.toUtf8String(TypedArrayEncoder.fromBase64Url(compact.split('.')[0])))
-}
-
 /** The Key Binding JWT of an SD-JWT VC presentation: the segment after the final `~`. */
 function getKeyBindingJwt(compactSdJwtVc: string): string | undefined {
   const keyBindingJwt = compactSdJwtVc.split('~').pop()
@@ -68,6 +62,11 @@ export interface PasoProofPackage {
   signedRequest: string
   /** The `vp_token` exactly as the Wallet returned it. */
   vpToken: Record<string, string[] | string> | string
+  /**
+   * When the Authorizing Party received the proof package. [PaSO Risk Signals] Section 6 step 3
+   * measures freshness from that instant, not from whenever verification happens to run.
+   */
+  receivedAt?: Date
 }
 
 export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Promise<PasoVerificationResult> {
@@ -77,33 +76,10 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     return passed
   }
 
-  // 1. Request verification.
+  // The OpenID4VP layer — the request signature, the credential, and the Key Binding JWT with its
+  // audience and nonce — is Credo's, and has already been verified by the time a session reaches
+  // `ResponseVerified`. What follows is only what PaSO adds on top.
   const requestPayload = decodeJwtPayload(proofPackage.signedRequest)
-  const requestHeader = decodeJwtHeader(proofPackage.signedRequest)
-
-  try {
-    const x5c = requestHeader.x5c as string[] | undefined
-    if (!x5c?.length) throw new Error('The Authorization Request carries no x5c certificate chain')
-
-    const jwsService = agent.dependencyManager.resolve(JwsService)
-    const { isValid } = await jwsService.verifyJws(agent.context, {
-      jws: proofPackage.signedRequest,
-      jwsSigner: { method: 'x5c', x5c, jwk: X509Certificate.fromEncodedCertificate(x5c[0]).publicJwk },
-    })
-    if (!isValid) throw new Error('Signature verification failed')
-
-    // `trustedCertificates` is what makes this a trust check. Without it
-    // `validateCertificateChain` verifies the chain's internal structure and stops there, which
-    // accepts any self-signed chain — and Section 3 step 1 asks the Authorizing Party to "verify the
-    // Relying Party's identity from the request", not merely that someone signed it.
-    await X509Service.validateCertificateChain(agent.context, {
-      certificateChain: x5c,
-      trustedCertificates: [getX509RootCertificate().toString('pem')],
-    })
-    record('request_signature', true, `Signed by ${String(requestPayload.client_id)}`)
-  } catch (error) {
-    record('request_signature', false, error instanceof Error ? error.message : 'Unknown error')
-  }
 
   // The PaSO-targeted entry. `transaction_data` entries are base64url-encoded JSON objects.
   const encodedEntries = Array.isArray(requestPayload.transaction_data)
@@ -126,7 +102,7 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   }
   record('transaction_data', true, `Found ${pasoEntry.decoded.type}`)
 
-  // 2 & 3. Credential and holder binding proof verification.
+  // The presentation of the PaSO credential, for the SCA response claims in its Key Binding JWT.
   const [credentialQueryId] = pasoEntry.decoded.credential_ids
   const vpToken = typeof proofPackage.vpToken === 'string' ? {} : proofPackage.vpToken
   const presentationValue = vpToken[credentialQueryId]
@@ -137,19 +113,6 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     return { accepted: false, checks }
   }
 
-  try {
-    await agent.sdJwtVc.verify({
-      compactSdJwtVc: presentation,
-      keyBinding: {
-        audience: String(requestPayload.client_id),
-        nonce: String(requestPayload.nonce),
-      },
-    })
-    record('credential_and_holder_binding', true, 'Credential signature, validity and Key Binding JWT verified')
-  } catch (error) {
-    record('credential_and_holder_binding', false, error instanceof Error ? error.message : 'Unknown error')
-  }
-
   const keyBindingJwt = getKeyBindingJwt(presentation)
   if (!keyBindingJwt) {
     record('holder_binding_proof', false, 'The presentation carries no Key Binding JWT')
@@ -157,12 +120,17 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   }
   const proofClaims = decodeJwtPayload(keyBindingJwt)
 
+  const responseMode = String(requestPayload.response_mode ?? 'fragment')
+
   // 4. SCA response claims, per [PaSO Core] Section 6.1.
-  const hashAlgorithm = String(proofClaims.transaction_data_hash_alg ?? 'sha-256')
+  // Required by [PaSO Core] Section 6.1, so its absence is a failure rather than an implied sha-256.
+  const hashAlgorithm = proofClaims.transaction_data_hash_alg
   record(
     'transaction_data_hash_alg',
     hashAlgorithm === 'sha-256',
-    `Reported ${hashAlgorithm}${hashAlgorithm === 'sha-256' ? '' : ', which this Authorizing Party does not accept'}`
+    hashAlgorithm === undefined
+      ? 'Absent, but required'
+      : `Reported ${String(hashAlgorithm)}${hashAlgorithm === 'sha-256' ? '' : ', which this Authorizing Party does not accept'}`
   )
 
   const expectedTransactionDataHash = TypedArrayEncoder.toBase64Url(Hasher.hash(pasoEntry.encoded, 'sha-256'))
@@ -217,9 +185,10 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
       : `The credential metadata has no complete display coverage for '${displayLocale}'`
   )
 
+  // Only remembered once the whole package is accepted, below: a rejected package must not burn the
+  // `jti` of a later, valid submission of the same proof.
   const jti = String(proofClaims.jti ?? '')
   const isReplay = jti.length === 0 || seenJtiValues.has(jti)
-  if (!isReplay) seenJtiValues.add(jti)
   record('jti_uniqueness', !isReplay, isReplay ? `'${jti}' has already been processed` : `'${jti}' is fresh`)
 
   record(
@@ -250,12 +219,16 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     riskSignals: proofClaims.risk_signals,
     effectiveSignalSet: riskSignalResolution.signals,
     encryptionRequired: riskSignalResolution.encryptionRequired,
-    responseMode: String(requestPayload.response_mode ?? 'fragment'),
+    responseMode,
+    receivedAt: proofPackage.receivedAt ?? new Date(),
   })
   checks.push(...riskSignals.checks)
 
+  const accepted = checks.every((check) => check.passed)
+  if (accepted) seenJtiValues.add(jti)
+
   return {
-    accepted: checks.every((check) => check.passed),
+    accepted,
     checks,
     decryptedRiskSignals: riskSignals.decrypted,
   }
@@ -272,8 +245,9 @@ async function verifyRiskSignals(options: {
   effectiveSignalSet: Array<{ type: string; required: boolean; maxAge?: number }>
   encryptionRequired: boolean
   responseMode: string
+  receivedAt: Date
 }): Promise<RiskSignalVerification> {
-  const { riskSignals, effectiveSignalSet, encryptionRequired, responseMode } = options
+  const { riskSignals, effectiveSignalSet, encryptionRequired, responseMode, receivedAt } = options
   const required = effectiveSignalSet.filter((signal) => signal.required)
   const checks: PasoVerificationCheck[] = []
 
@@ -356,7 +330,7 @@ async function verifyRiskSignals(options: {
   }
 
   const envelopes = signalsToCheck as Array<Record<string, unknown>>
-  const now = Date.now()
+  const now = receivedAt.getTime()
 
   for (const signal of required) {
     const envelope = envelopes.find((candidate) => candidate.type === signal.type)
@@ -375,6 +349,11 @@ async function verifyRiskSignals(options: {
 
     if (!statusIsValid || !valueMatchesStatus || !timestampIsValid) {
       checks.push({ check: `risk_signal:${signal.type}`, passed: false, detail: 'Envelope is malformed' })
+      continue
+    }
+
+    if (collectedAt - now > 60 * 1000) {
+      checks.push({ check: `risk_signal:${signal.type}`, passed: false, detail: 'Collected in the future' })
       continue
     }
 
@@ -397,7 +376,17 @@ async function verifyRiskSignals(options: {
       continue
     }
 
-    if (signal.type === 'urn:paso:risk:global:amr:1' && status === 'ok') {
+    // `amr` is the SCA evidence itself, so an `unavailable` or `denied` answer is no evidence at all.
+    if (signal.type === 'urn:paso:risk:global:amr:1' && status !== 'ok') {
+      checks.push({
+        check: `risk_signal:${signal.type}`,
+        passed: false,
+        detail: `status '${String(status)}', so there is no evidence of strong customer authentication`,
+      })
+      continue
+    }
+
+    if (signal.type === 'urn:paso:risk:global:amr:1') {
       // The Basic Payments rulebook delegates the acceptance criteria to the Authorizing Party. Under
       // [PSD2] Article 4(30) that means two independent categories, which is what we ask for here.
       const methods = (envelope.value as string[]) ?? []

@@ -37,9 +37,10 @@ the PaSO SCA response claims.
 
 Once the wallet responds, the page shows:
 
-- **PaSO Authorizing Party Verification** — every check of [PaSO Proof Verify] Section 3, pass or fail:
-  request signature, transaction data hash, `request_integrity`, `metadata_integrity`, `jti` replay,
-  payload conformance against the Basic Payments rulebook, and the risk signals.
+- **PaSO Authorizing Party Verification** — the PaSO checks of [PaSO Proof Verify] Section 3, pass or
+  fail: transaction data hash, `request_integrity`, `metadata_integrity`, `jti` replay, payload
+  conformance against the Basic Payments rulebook, and the risk signals. The request signature, the
+  credential and its Key Binding JWT are verified by the OpenID4VP layer before any of these run.
 - **Issuer Decrypted Risk Signals** — the plaintext signal envelopes. This deployment publishes an
   encryption key for the payment type, so the wallet encrypts the whole `risk_signals` array to it
   and the value in the KB-JWT is a JWE. Only the holder of the decryption key — here, the same
@@ -116,7 +117,7 @@ verification output:
   "pasoVerification": {
     "accepted": true,
     "checks": [
-      { "check": "request_signature", "passed": true, "detail": "Signed by x509_hash:…" },
+      { "check": "transaction_data_hash", "passed": true, "detail": "Matches the transaction data entry in the request" },
       { "check": "risk_signals_encrypted", "passed": true, "detail": "A JWE compact string, as this transaction data type requires" },
       { "check": "risk_signal:urn:paso:risk:global:amr:1", "passed": true, "detail": "Reported pin, hwk — 2 of the three [PSD2] factor categories" }
     ],
@@ -128,23 +129,6 @@ verification output:
 ```
 
 `accepted` is false if any check failed — PaSO has the Authorizing Party reject the transaction then.
-
-### Forward a proof package
-
-The Transaction Ingestion Endpoint, for a Relying Party that did not create the request:
-
-```bash
-curl -X POST https://eudi-payments.animo.id/api/paso/transactions \
-  -H 'Content-Type: application/json' \
-  -d '{ "signed_request": "eyJhbGciOi…", "vp_token": { "0": ["eyJhbGciOi…"] } }'
-```
-
-The `vp_token` keys are the DCQL credential query ids — `"0"`, `"1"`, … in the order the credentials
-appear in `dcqlQuery`.
-
-`200` accepted, `400` malformed or a failed check, `409` replayed `jti`. The response carries the
-checks, never the decrypted risk signals — handing those back to the Relying Party is exactly what
-encrypting them prevents.
 
 ### Issuer metadata and trust
 

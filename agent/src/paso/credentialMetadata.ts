@@ -44,7 +44,7 @@ const issuedMetadataJwtsPath = join(process.cwd(), '.paso', 'issued-credential-m
  * `credential_metadata_uri`, which [PaSO Proof Metadata] Section 8 has the wallet compare against the
  * URI it fetched from — a mismatch fails verification outright.
  */
-const metadataDocumentVersion = 'v4-x5c-base64-der'
+const metadataDocumentVersion = 'v5-x5c-base64-der-with-claims'
 
 /**
  * The credential metadata document as served, for the locales of this JWT.
