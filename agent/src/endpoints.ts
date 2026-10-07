@@ -328,17 +328,41 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
 
     let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
 
+    // WPA Rulebook Section 4.3: the Wero Payment Attestation "SHALL be used solely to perform SCA for
+    // authorising a Wero payment", and Section 4.4 has the Acceptor PSP request it with a PaSO
+    // payment entry. Any other request for it is refused here rather than sent for a wallet to refuse.
+    const requestsPaymentAttestation = definition.credentials.some(
+      (credential) => credential.format === 'dc+sd-jwt' && credential.vcts.includes(weroPasoConfiguration.vct)
+    )
+    if (requestsPaymentAttestation && transactionAuthorizationType !== 'paso-payment') {
+      return response.status(400).json({
+        message:
+          'The Wero Payment Attestation can only be requested to authorize a payment. Choose the "Payment (PaSO)" transaction authorization.',
+      })
+    }
+
     // A payment is authorized with the Wero card, so it is always required — but it is also
     // selectable in its own right, so the request may already ask for it. PaSO uses its own
     // credential type: its metadata declares the PaSO transaction data types, and [PaSO Core]
     // Section 7.3 requires the entry to target exactly one credential query.
     let paymentCredentialIndex: number | undefined
     if (transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment') {
-      const withPayment = withPaymentCredential(definition, {
-        format: 'dc+sd-jwt',
-        vcts: [transactionAuthorizationType === 'paso-payment' ? weroPasoConfiguration.vct : 'eu.europa.wero.card'],
-        fields: ['iban', 'bic', 'payment_network', 'currency'],
-      })
+      const withPayment = withPaymentCredential(
+        definition,
+        transactionAuthorizationType === 'paso-payment'
+          ? {
+              format: 'dc+sd-jwt',
+              vcts: [weroPasoConfiguration.vct],
+              // What the Authorizing Party checks or routes on (WPA Rulebook Section 4.5). None of the
+              // WPA's claims is selectively disclosable, so the wallet discloses them all regardless.
+              fields: ['category', 'sub', 'masked_iban'],
+            }
+          : {
+              format: 'dc+sd-jwt',
+              vcts: ['eu.europa.wero.card'],
+              fields: ['iban', 'bic', 'payment_network', 'currency'],
+            }
+      )
 
       if ('error' in withPayment) {
         return response.status(400).json({ message: withPayment.error })
@@ -560,7 +584,7 @@ function sdJwtVcIssuerToJson(issuer: unknown): unknown {
   if (!issuer || typeof issuer !== 'object' || !('method' in issuer) || issuer.method !== 'x5c') return issuer
 
   const { x5c, ...rest } = issuer as { method: 'x5c'; x5c: X509Certificate[]; issuer?: string }
-  return { ...rest, x5c: x5c.map((certificate) => certificate.toString('text')) }
+  return { ...rest, x5c: x5c.map((certificate) => certificate.toString('base64')) }
 }
 
 /**

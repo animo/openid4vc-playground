@@ -11,10 +11,12 @@ Base URL: `https://eudi-payments.animo.id`.
 
 ## 1. Get a card
 
-**Issue** tab → issuer **Open Horizon Bank** → **Wero Bank Account (PaSO)**. Leave the rest as is,
+**Issue** tab → issuer **Open Horizon Bank** → **Wero Payment Attestation**. Leave the rest as is,
 submit, and scan the QR with Paradym Wallet.
 
-The PaSO card has its own `vct`, separate from the older cards on the same issuer. At issuance the
+The PaSO card is a Wero Payment Attestation (WPA) as defined by the WPA Attestation Rulebook v1.0:
+`vct` `https://wero.epicompany.eu/payment_attestation/v1`, the claims `category`, `sub`, `masked_iban`
+and `psu_id`, none of them selectively disclosable, bound to a P-256 key. At issuance the
 wallet also fetches and verifies the issuer's signed credential metadata, which is what later lets it
 display the payment and encrypt the risk signals.
 
@@ -22,8 +24,9 @@ display the payment and encrypt the risk signals.
 
 **Verify** tab:
 
-1. Select the **Wero Bank Account (PaSO)** card and its attributes. (Any selection works — the payment
-   card is added to the request automatically if you leave it out.)
+1. Select the **Wero Payment Attestation** card and its attributes. (Any selection works — the payment
+   card is added to the request automatically if you leave it out.) Without `Payment (PaSO)` the
+   request is refused: the rulebook allows the WPA only to authorize a Wero payment.
 2. **Transaction Authorization** → `Payment (PaSO)`.
 3. **Payment amount (EUR)** → e.g. `42.50`.
 4. **Request Signer Type** → `x509 Certificate`. PaSO rejects unsigned requests, so this is mandatory.
@@ -39,7 +42,9 @@ Once the wallet responds, the page shows:
 
 - **PaSO Authorizing Party Verification** — the PaSO checks of [PaSO Proof Verify] Section 3, pass or
   fail: transaction data hash, `request_integrity`, `metadata_integrity`, `jti` replay, payload
-  conformance against the Basic Payments rulebook, and the risk signals. The request signature, the
+  conformance against the Basic Payments rulebook, the risk signals, and the WPA checks of WPA Rulebook
+  Section 4.5 (`vct` and `category`, validity window, status, and the issuance record behind `sub`).
+  The Wallet Unit Attestation status check is not implemented yet. The request signature, the
   credential and its Key Binding JWT are verified by the OpenID4VP layer before any of these run.
 - **Issuer Decrypted Risk Signals** — the plaintext signal envelopes. This deployment publishes an
   encryption key for the payment type, so the wallet encrypts the whole `risk_signals` array to it
@@ -77,7 +82,7 @@ curl -X POST https://eudi-payments.animo.id/api/requests/create \
     "request": {
       "combination": "all",
       "credentials": [
-        { "id": "wero-card-paso", "formats": ["dc+sd-jwt"], "attributes": ["iban", "bic", "currency", "payment_network"] }
+        { "id": "wero-card-paso", "formats": ["dc+sd-jwt"], "attributes": ["category", "sub", "masked_iban"] }
       ]
     }
   }'

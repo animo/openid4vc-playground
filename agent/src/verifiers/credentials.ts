@@ -85,6 +85,13 @@ const weroCardAttributes = [
   attribute('payment_network', 'Payment network', true),
 ]
 
+const weroPaymentAttestationAttributes = [
+  attribute('category', 'Attestation category', true),
+  attribute('sub', 'Wero ID', true),
+  attribute('masked_iban', 'Masked IBAN', true),
+  attribute('psu_id', 'Customer number', false),
+]
+
 const weroPaymentDetailsPreset = {
   id: 'payment-details',
   name: 'Payment details',
@@ -404,16 +411,14 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
     presets: [weroPaymentDetailsPreset],
   },
   /**
-   * The PaSO Wero card, requestable on its own.
+   * The Wero Payment Attestation, the PaSO card.
    *
-   * A separate entry rather than a second `vct` on the one above, because the two are different
-   * credential types holding the same attributes: the TS 12 card and the PaSO card have their own
-   * `vct` and their own — mutually incompatible — `credential_metadata_uri`. Requesting them
-   * together would have a wallet answer with whichever it happened to hold.
+   * A separate entry rather than a second `vct` on the one above: the TS 12 card and the WPA are
+   * different credential types with their own `vct` and their own — mutually incompatible —
+   * `credential_metadata_uri`.
    *
-   * Worth having without a payment transaction attached: it is the only way to check that the card
-   * itself was issued and matches, separately from whether a PaSO transaction can be authorized
-   * with it.
+   * Only requestable together with a PaSO payment: WPA Rulebook Section 4.3 allows the WPA solely to
+   * authorize a Wero payment, so `/requests/create` refuses any other request for it.
    */
   {
     id: 'wero-card-paso',
@@ -421,8 +426,8 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
     formats: {
       'dc+sd-jwt': { vcts: [weroPasoConfiguration.vct] },
     },
-    attributes: weroCardAttributes,
-    presets: [weroPaymentDetailsPreset],
+    attributes: weroPaymentAttestationAttributes,
+    presets: [],
   },
 ]
 

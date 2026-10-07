@@ -10,7 +10,7 @@ export const openHorizonIssuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
 
 const weroCardDisplay = {
   locale: 'en',
-  name: 'Wero Bank Account',
+  name: 'Wero Bank Account (TS12)',
   text_color: '#1D1C1C',
   background_color: '#fff48d',
   background_image: {
@@ -21,7 +21,7 @@ const weroCardDisplay = {
 
 const weroCardThirdPartyDisplay = {
   locale: 'en',
-  name: 'Wero Bank Account (Third Party)',
+  name: 'Wero Bank Account (TS12, Third Party)',
   text_color: '#1D1C1C',
   background_color: '#fff48d',
   background_image: {
@@ -138,7 +138,7 @@ export const weroScaThirdPartyConfiguration = {
 
 const weroPasoCardDisplay = {
   locale: 'en',
-  name: 'Wero Bank Account (PaSO)',
+  name: 'Wero Payment Attestation',
   text_color: '#1D1C1C',
   background_color: '#fff48d',
   background_image: {
@@ -148,34 +148,82 @@ const weroPasoCardDisplay = {
 } as const satisfies CredentialConfigurationDisplay
 
 /**
- * A PaSO Credential, as opposed to the TS 12 SCA Attestations above.
+ * Claim metadata for the Wero Payment Attestation, so a wallet can label its attributes.
  *
- * Separate `vct` and separate `credential_metadata_uri` on purpose: PaSO moved the payload's
- * structural authority from the claims metadata to the Transaction Data Type Rulebook and requires
- * the metadata JWT to be kept in signed form, so the two metadata documents are not interchangeable
- * and a wallet has to be able to tell which kind of credential it holds.
+ * Same locale conventions as {@link weroClaimsMetadata}. `masked_iban` and `sub` carry a single
+ * untagged entry: "IBAN" is the same in every language, and the Wero ID is a scheme identifier.
+ */
+const weroPaymentAttestationClaimsMetadata: NonNullable<SdJwtConfiguration['credential_metadata']>['claims'] = [
+  { path: ['masked_iban'], display: [{ name: 'IBAN' }] },
+  { path: ['sub'], display: [{ name: 'Wero ID' }] },
+  {
+    path: ['psu_id'],
+    display: [
+      { locale: 'en', name: 'Customer number' },
+      { locale: 'nl', name: 'Klantnummer' },
+      { locale: 'de', name: 'Kundennummer' },
+      { locale: 'fr', name: 'Numéro client' },
+      { locale: 'pt', name: 'Número de cliente' },
+      { locale: 'fi', name: 'Asiakasnumero' },
+      { locale: 'sv', name: 'Kundnummer' },
+      { locale: 'sw', name: 'Kundnummer' },
+      { locale: 'sq', name: 'Numri i klientit' },
+      { locale: 'al', name: 'Numri i klientit' },
+    ],
+  },
+  {
+    path: ['category'],
+    display: [
+      { locale: 'en', name: 'Attestation category' },
+      { locale: 'nl', name: 'Attestatiecategorie' },
+      { locale: 'de', name: 'Attestierungskategorie' },
+      { locale: 'fr', name: "Catégorie d'attestation" },
+      { locale: 'pt', name: 'Categoria do atestado' },
+      { locale: 'fi', name: 'Todistuksen luokka' },
+      { locale: 'sv', name: 'Intygskategori' },
+      { locale: 'sw', name: 'Intygskategori' },
+      { locale: 'sq', name: 'Kategoria e vërtetimit' },
+      { locale: 'al', name: 'Kategoria e vërtetimit' },
+    ],
+  },
+]
+
+/**
+ * The Wero Payment Attestation (WPA), a PaSO Credential, as opposed to the TS 12 SCA Attestations
+ * above.
+ *
+ * Follows the WPA Attestation Rulebook v1.0: the rulebook's `vct`, SD-JWT VC only (Section 3), and a
+ * device-bound P-256 key (Section 4.7) — hence `ES256` as the only proof algorithm, and `jwk` as the
+ * only binding method so the key lands in `cnf.jwk`. Key attestations are not required yet.
+ *
+ * Separate `credential_metadata_uri` on purpose: PaSO moved the payload's structural authority from
+ * the claims metadata to the Transaction Data Type Rulebook and requires the metadata JWT to be kept
+ * in signed form, so the two metadata documents are not interchangeable.
  */
 export const weroPasoConfiguration = {
   format: OpenId4VciCredentialFormatProfile.SdJwtDc,
-  vct: 'eu.europa.wero.card.paso',
+  vct: 'https://wero.epicompany.eu/payment_attestation/v1',
   scope: 'wero-card-paso-sd-jwt',
   cryptographic_binding_methods_supported: ['jwk'],
-  credential_signing_alg_values_supported: [
-    Kms.KnownJwaSignatureAlgorithms.EdDSA,
-    Kms.KnownJwaSignatureAlgorithms.ES256,
-  ],
+  credential_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
   proof_types_supported: {
     jwt: {
-      proof_signing_alg_values_supported: [
-        Kms.KnownJwaSignatureAlgorithms.ES256,
-        Kms.KnownJwaSignatureAlgorithms.EdDSA,
-      ],
+      proof_signing_alg_values_supported: [Kms.KnownJwaSignatureAlgorithms.ES256],
     },
   },
   display: [weroPasoCardDisplay],
-  credential_metadata: { display: [weroPasoCardDisplay], claims: weroClaimsMetadata },
+  credential_metadata: { display: [weroPasoCardDisplay], claims: weroPaymentAttestationClaimsMetadata },
   credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
 } satisfies SdJwtConfiguration
+
+/** WPA Rulebook Section 2.1: the `category` value for a non-qualified EAA. */
+export const weroPaymentAttestationCategory = 'urn:etsi:esi:eaa:eu:non-qualified'
+
+/**
+ * The account behind the WPA, `NL91ABNA0417164300`, masked as WPA Rulebook Section 2.2 requires:
+ * the first and last four characters in clear, everything between replaced by `*`.
+ */
+const weroPaymentAttestationMaskedIban = 'NL91**********4300'
 
 const now = new Date()
 const expiry = new Date()
@@ -231,19 +279,24 @@ const weroScaThirdPartyData = {
   },
 } as const satisfies StaticSdJwtSignInput
 
+/**
+ * WPA Rulebook Sections 2.2–2.5 and 3.2. No claim is selectively disclosable, so there is no
+ * disclosure frame and the issued SD-JWT is the signed JWT followed by a single `~`.
+ *
+ * `sub` is a per-issuance UUID set by the credential request mapper (see `issuer.ts`), standing in
+ * for the EPI routing identifier of a newly enrolled PSU. `iss` and `cnf` are added at signing.
+ */
 const weroPasoData = {
   credentialConfigurationId: weroPasoConfiguration.scope,
   format: weroPasoConfiguration.format,
   credential: {
     payload: {
-      ...weroPayloadClaims,
-      iat: dateToSeconds(now),
-      nbf: dateToSeconds(now),
-      exp: dateToSeconds(expiry),
       vct: weroPasoConfiguration.vct,
-    },
-    disclosureFrame: {
-      _sd: Object.keys(weroPayloadClaims),
+      category: weroPaymentAttestationCategory,
+      masked_iban: weroPaymentAttestationMaskedIban,
+      psu_id: 'open-horizon-psu-a7f3c291',
+      iat: dateToSeconds(now),
+      exp: dateToSeconds(expiry),
     },
   },
 } as const satisfies StaticSdJwtSignInput
@@ -366,6 +419,33 @@ export async function updatePaymentStatusForWeroCredential(
   }, 20_000)
 }
 
+/**
+ * What the Issuing PSP keeps about a WPA it issued, so that it can verify presentations against its
+ * own records, per WPA Rulebook Section 4.5 step 8 and Chapter 6.
+ *
+ * Keyed on `sub`, which is a fresh UUID per issuance here. `holderKeys` are the device-bound keys the
+ * credentials were issued to — one per credential of a batch — and a presentation has to be bound
+ * to one of them.
+ */
+export interface WeroPaymentAttestationRecord {
+  status: 'active' | 'invalidated'
+  holderKeys: Array<Record<string, unknown>>
+}
+
+const weroPaymentAttestationRecordId = (sub: string) => `wero-payment-attestation-${sub}`
+
+export async function saveWeroPaymentAttestationRecord(sub: string, holderKeys: Array<Record<string, unknown>>) {
+  await agent.genericRecords.save({
+    id: weroPaymentAttestationRecordId(sub),
+    content: { status: 'active', holderKeys } satisfies WeroPaymentAttestationRecord,
+  })
+}
+
+export async function findWeroPaymentAttestationRecord(sub: string) {
+  const record = await agent.genericRecords.findById(weroPaymentAttestationRecordId(sub))
+  return record?.content as WeroPaymentAttestationRecord | undefined
+}
+
 export const openHorizonBankCredentialsData = {
   [weroScaData.credentialConfigurationId]: weroScaData,
   [weroScaThirdPartyData.credentialConfigurationId]: weroScaThirdPartyData,
@@ -406,10 +486,10 @@ export const openHorizonBankPasoCredentialMetadata = {
   // claim labels have to be in here, or a conforming wallet shows the card without them.
   display: [
     weroPasoCardDisplay,
-    { ...weroPasoCardDisplay, name: 'Wero Bankkonto (PaSO)', locale: 'de' },
-    { ...weroPasoCardDisplay, name: 'Wero Bankrekening (PaSO)', locale: 'nl' },
+    { ...weroPasoCardDisplay, name: 'Wero-Zahlungsattestierung', locale: 'de' },
+    { ...weroPasoCardDisplay, name: 'Wero-betaalattestatie', locale: 'nl' },
   ],
-  claims: weroClaimsMetadata,
+  claims: weroPaymentAttestationClaimsMetadata,
   transaction_data_types: {
     'urn:paso:sca:global:payment:1': {
       claims: [
