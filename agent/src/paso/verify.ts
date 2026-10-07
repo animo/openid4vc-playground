@@ -1,4 +1,10 @@
 import { Hasher, Jwt, TypedArrayEncoder } from '@credo-ts/core'
+import {
+  findWeroPaymentAttestationRecord,
+  weroPasoConfiguration,
+  weroPaymentAttestationCategory,
+} from '../issuers/openHorizonBank.js'
+import { dateToSeconds } from '../utils/date.js'
 import { getIssuedPasoMetadataIntegrityValues, getPasoTransactionDataTypeMetadata } from './credentialMetadata.js'
 import { computeSriIntegrity, lookupLanguageTag } from './metadata.js'
 import { pasoPaymentTransactionDataType, validatePasoPaymentPayload } from './paymentRulebook.js'
@@ -120,6 +126,11 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   }
   const proofClaims = decodeJwtPayload(keyBindingJwt)
 
+  // The Wero Payment Attestation checks of WPA Rulebook Section 4.5, steps 4, 5, 7 and 8. Steps 2
+  // and 3 (issuer signature, key binding) are Credo's. Step 6, the Wallet Unit Attestation status
+  // check, is not implemented: the WPA is not issued against a WUA yet.
+  checks.push(...(await verifyWeroPaymentAttestation(presentation, proofPackage.receivedAt ?? new Date())))
+
   const responseMode = String(requestPayload.response_mode ?? 'fragment')
 
   // 4. SCA response claims, per [PaSO Core] Section 6.1.
@@ -232,6 +243,70 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     checks,
     decryptedRiskSignals: riskSignals.decrypted,
   }
+}
+
+/** WPA Rulebook Section 4.5 steps 4, 5, 7 and 8, against the issuer-signed JWT of the presentation. */
+async function verifyWeroPaymentAttestation(presentation: string, receivedAt: Date): Promise<PasoVerificationCheck[]> {
+  const checks: PasoVerificationCheck[] = []
+  const credential = decodeJwtPayload(presentation.split('~')[0])
+  const now = dateToSeconds(receivedAt)
+
+  // 4. WPA type.
+  const isWpa = credential.vct === weroPasoConfiguration.vct && credential.category === weroPaymentAttestationCategory
+  checks.push({
+    check: 'wpa_type',
+    passed: isWpa,
+    detail: isWpa
+      ? 'vct and category are those of a Wero Payment Attestation'
+      : `Expected vct '${weroPasoConfiguration.vct}' and category '${weroPaymentAttestationCategory}', received '${String(credential.vct)}' and '${String(credential.category)}'`,
+  })
+
+  // 5. Validity window, with the same minute of clock skew the risk signal checks allow.
+  const iat = credential.iat
+  const exp = credential.exp
+  const isWithinValidity = typeof iat === 'number' && typeof exp === 'number' && iat <= now + 60 && now < exp
+  checks.push({
+    check: 'wpa_validity',
+    passed: isWithinValidity,
+    detail:
+      typeof iat === 'number' && typeof exp === 'number'
+        ? `Valid from ${new Date(iat * 1000).toISOString()} until ${new Date(exp * 1000).toISOString()}`
+        : 'The iat and exp claims are required',
+  })
+
+  // 7. Per-credential status. Credo resolves and checks a `status` claim while verifying the
+  // presentation, and fails it when the entry is revoked or suspended, so reaching this point means
+  // it passed.
+  checks.push({
+    check: 'wpa_status',
+    passed: true,
+    detail:
+      credential.status !== undefined
+        ? 'The referenced Token Status List entry was checked while verifying the presentation'
+        : 'No per-credential status list; lifecycle control relies on the issuance records below',
+  })
+
+  // 8. Lifecycle, against this Issuing PSP's own records: issued here, not invalidated, and bound to
+  // one of the keys it was issued to.
+  const record = typeof credential.sub === 'string' ? await findWeroPaymentAttestationRecord(credential.sub) : undefined
+  const cnfJwk = (credential.cnf as { jwk?: Record<string, unknown> } | undefined)?.jwk
+  const isIssuedKey =
+    cnfJwk !== undefined &&
+    (record?.holderKeys.some((key) => ['kty', 'crv', 'x', 'y'].every((member) => key[member] === cnfJwk[member])) ??
+      false)
+  checks.push({
+    check: 'wpa_lifecycle',
+    passed: record?.status === 'active' && isIssuedKey,
+    detail: !record
+      ? `No issuance record for sub '${String(credential.sub)}'`
+      : record.status !== 'active'
+        ? 'The attestation has been invalidated by the Issuing PSP'
+        : isIssuedKey
+          ? 'Issued by this PSP, still active, and bound to the key it was issued to'
+          : 'The cnf key is not one this attestation was issued to',
+  })
+
+  return checks
 }
 
 interface RiskSignalVerification {

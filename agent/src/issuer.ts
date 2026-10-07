@@ -27,7 +27,13 @@ import { bdrIssuer } from './issuers/bdr.js'
 import { issuers, issuersCredentialsData } from './issuers/index.js'
 import { kolnIssuer } from './issuers/koln.js'
 import { krankenkasseIssuer } from './issuers/krankenkasse.js'
-import { weroScaConfiguration, weroScaThirdPartyConfiguration } from './issuers/openHorizonBank.js'
+import {
+  openHorizonIssuerId,
+  saveWeroPaymentAttestationRecord,
+  weroPasoConfiguration,
+  weroScaConfiguration,
+  weroScaThirdPartyConfiguration,
+} from './issuers/openHorizonBank.js'
 import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
@@ -96,6 +102,8 @@ export interface PlaygroundIssuerOptions
 export type SerializableSdJwtVcSignOptions = Omit<OpenId4VciSignSdJwtCredentials, 'type' | 'credentials'> & {
   credentials: Array<
     Omit<SdJwtVcSignOptions, 'holder' | 'issuer'> & {
+      /** The `iss` claim. Credo only sets it from the issuer, and omits it when this is absent. */
+      iss?: string
       holder:
         | {
             method: 'did'
@@ -137,7 +145,7 @@ export function serializableSignOptionsToSignOptions({
         type: 'credentials',
         format,
         ...rest,
-        credentials: credentials.map((credential) => ({
+        credentials: credentials.map(({ iss, ...credential }) => ({
           ...credential,
           holder:
             credential.holder.method === 'did'
@@ -152,6 +160,7 @@ export function serializableSignOptionsToSignOptions({
           issuer: {
             method: 'x5c',
             x5c: [getX509DcsCertificate()],
+            issuer: iss,
           },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -582,6 +591,38 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
         transaction_status_token,
       },
     })
+  }
+
+  // The Wero Payment Attestation: a fresh `sub` per issuance, `iss` set to the Credential Issuer
+  // Identifier (WPA Rulebook Section 2.5), and a record of the holder keys so the Authorizing Party
+  // can check presentations against its own issuance records (Section 4.5 step 8).
+  if (
+    signOptions &&
+    credentialData.format === ClaimFormat.SdJwtDc &&
+    normalizedCredentialConfigurationId === weroPasoConfiguration.scope
+  ) {
+    const sub = randomUUID() as string
+    const iss = (await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)).credentialIssuer.credential_issuer
+    const sdJwtSignOptions = signOptions as SerializableSdJwtVcSignOptions
+
+    const holderKeys = sdJwtSignOptions.credentials.map((credential) => {
+      if (credential.holder.method !== 'jwk') {
+        throw new Error('The Wero Payment Attestation is bound to a jwk, not a did')
+      }
+      return credential.holder.jwk
+    })
+
+    signOptions = {
+      ...sdJwtSignOptions,
+      credentials: sdJwtSignOptions.credentials.map((credential) => ({
+        ...credential,
+        iss,
+        payload: { ...credential.payload, sub },
+      })),
+    } satisfies SerializableSdJwtVcSignOptions
+
+    await saveWeroPaymentAttestationRecord(sub, holderKeys)
+    agent.config.logger.info(`issuer: saved Wero Payment Attestation record for sub ${sub}`)
   }
 
   const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
