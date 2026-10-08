@@ -87,6 +87,9 @@ async function run() {
         )
       ),
       dpopSigningAlgValuesSupported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+      // Advertises wallet attestations (attest_jwt_client_auth) in the authorization server metadata
+      clientAttestationSigningAlgValuesSupported: [Kms.KnownJwaSignatureAlgorithms.ES256],
+      clientAttestationPopSigningAlgValuesSupported: [Kms.KnownJwaSignatureAlgorithms.ES256],
       accessTokenSignerKeyType: {
         kty: 'EC',
         crv: 'P-256',
