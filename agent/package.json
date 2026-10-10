@@ -9,7 +9,7 @@
     "@openwallet-foundation/askar-nodejs": "^0.6.0",
     "@openwallet-foundation/askar-shared": "^0.6.0",
     "@owf/mdoc": "0.8.0-alpha-20260915061504",
-    "@peculiar/x509": "^2.0.0",
+    "@peculiar/x509": "^2.1.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
