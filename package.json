@@ -5,7 +5,7 @@
     "style:fix": "biome check --write --unsafe ."
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.13"
+    "@biomejs/biome": "2.5.14"
   },
   "packageManager": "pnpm@12.3.4"
 }
