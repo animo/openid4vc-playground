@@ -19,7 +19,6 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
-import { AGENT_HOST } from './constants.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import {
@@ -38,6 +37,7 @@ import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier } from './verifier.js'
 import { presentationCredentials } from './verifiers/credentials.js'
+import { turboKeysVerifier } from './verifiers/turboKeys.js'
 import {
   dcqlQueryFromRequest,
   isoMdocDocRequestsFromRequest,
@@ -324,7 +324,12 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
     const x509DcsCertificate = getX509DcsCertificate()
-    const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
+    // A payment is requested by the merchant being paid, so the wallet shows it as the payee.
+    const isPaymentRequest =
+      transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment'
+    const verifier = await getVerifier(
+      isPaymentRequest ? turboKeysVerifier.verifierId : utopiaGovernmentVerifier.verifierId
+    )
 
     let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
 
@@ -346,7 +351,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     // credential type: its metadata declares the PaSO transaction data types, and [PaSO Core]
     // Section 7.3 requires the entry to target exactly one credential query.
     let paymentCredentialIndex: number | undefined
-    if (transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment') {
+    if (isPaymentRequest) {
       const withPayment = withPaymentCredential(
         definition,
         transactionAuthorizationType === 'paso-payment'
@@ -410,16 +415,13 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         ? await createPasoPaymentTransactionDataEntry({
             credentialQueryId: credentialIds[paymentCredentialIndex],
             amount: pasoAmount,
-            payeeName: verifier.clientMetadata?.client_name ?? 'Utopia Government',
+            payeeName: verifier.clientMetadata?.client_name ?? 'TurboKeys',
             // The rulebook changed this from a payment-network identifier to the Payee's national tax
             // identifier or business registry number, which the Authorizing Party verifies against the
             // registry. A made-up but well-formed Dutch RSIN stands in for one here.
             payeeId: 'NL857098159B01',
-            // Not the verifier's `logo_uri`: that asset is a 1024px, 1.8 MB avatar, and
-            // [PaSO View] Section 3 caps a payee logo at 512 KiB. A logo rendered at ~60px on a
-            // consent screen has no use for more, and the oversized one makes the entry
-            // incompatible in every conforming wallet.
-            payeeLogoUrl: `${AGENT_HOST}/assets/verifiers/government-payee.png`,
+            // [PaSO View] Section 3 caps a payee logo at 512 KiB; the TurboKeys logo is 85 KB.
+            payeeLogoUrl: turboKeysVerifier.clientMetadata.logo_uri,
           })
         : undefined
 
