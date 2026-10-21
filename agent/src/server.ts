@@ -22,6 +22,8 @@ const dirname = import.meta.dirname
 
 async function run() {
   await agent.initialize()
+  // Before the issuers: their metadata is signed with the document signer certificate.
+  await setupX509Certificate()
 
   for (const issuer of issuers as PlaygroundIssuerOptions[]) {
     const { tags, credentialConfigurationsSupported, ...restIssuer } = issuer
@@ -95,6 +97,9 @@ async function run() {
         kty: 'EC',
         crv: 'P-256',
       },
+      // Served as signed OID4VCI issuer metadata to wallets that accept `application/jwt`, so a
+      // wallet that trusts the root certificate trusts every issuer without listing them one by one.
+      metadataSigner: { method: 'x5c', x5c: [getX509DcsCertificate()] },
       authorizationServerConfigs: [
         {
           type: 'chained',
@@ -118,7 +123,6 @@ async function run() {
     await createOrUpdateVerifier(verifier)
   }
 
-  await setupX509Certificate()
   await setupPasoRiskSignalsEncryptionKey()
   await getWebDidDocument().catch(async () => {
     const { publicJwk } = await agent.kms.createKey({
