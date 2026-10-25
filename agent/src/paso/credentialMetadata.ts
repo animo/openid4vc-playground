@@ -2,8 +2,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { JwsService, JwtPayload, Kms } from '@credo-ts/core'
 import { agent } from '../agent.js'
-import { AGENT_HOST } from '../constants.js'
 import {
+  type OpenHorizonBankPasoCard,
+  openHorizonBankPasoCards,
   openHorizonBankPasoCredentialMetadata,
   openHorizonIssuerId,
   weroPasoConfiguration,
@@ -54,9 +55,15 @@ const metadataDocumentVersion = 'v5-x5c-base64-der-with-claims'
  * a wallet picked up anywhere else "SHALL be treated as absent". The keys are added here rather than
  * declared alongside the rest of the metadata because they only exist once the agent has started.
  */
-export function getPasoCredentialMetadataDocument(servedLocales: string[]) {
+export function getPasoCredentialMetadataDocument(
+  servedLocales: string[],
+  card: OpenHorizonBankPasoCard = 'wero-payment-attestation'
+) {
   return {
-    ...restrictPasoMetadataToLocales(openHorizonBankPasoCredentialMetadata, servedLocales),
+    ...restrictPasoMetadataToLocales(
+      { ...openHorizonBankPasoCredentialMetadata, display: openHorizonBankPasoCards[card].display },
+      servedLocales
+    ),
     risk_signals_encryption_keys: { keys: [getPasoRiskSignalsEncryptionJwk()] },
   }
 }
@@ -87,10 +94,18 @@ function persistIssuedMetadataJwts() {
 
 loadIssuedMetadataJwts()
 
-export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Promise<string> {
+export async function getPasoCredentialMetadataJwt(
+  servedLocales: string[],
+  card: OpenHorizonBankPasoCard = 'wero-payment-attestation'
+): Promise<string> {
   if (!dcsId) throw new Error('The DCS signing key is not available')
 
-  const cacheKey = `${metadataDocumentVersion}:${servedLocales.join(',')}`
+  // The Wero Payment Attestation keeps the key it had before there was more than one card, so the
+  // JWTs already issued for it are served again rather than replaced.
+  const cacheKey =
+    card === 'wero-payment-attestation'
+      ? `${metadataDocumentVersion}:${servedLocales.join(',')}`
+      : `${metadataDocumentVersion}:${card}:${servedLocales.join(',')}`
   const cached = issuedMetadataJwts.get(cacheKey)
   if (cached && cached.expiresAt > Date.now() + 60_000) return cached.jwt
 
@@ -111,8 +126,8 @@ export async function getPasoCredentialMetadataJwt(servedLocales: string[]): Pro
       exp: dateToSeconds(expiry),
       additionalClaims: {
         format: 'dc+sd-jwt',
-        credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
-        credential_metadata: getPasoCredentialMetadataDocument(servedLocales),
+        credential_metadata_uri: openHorizonBankPasoCards[card].credentialMetadataUri,
+        credential_metadata: getPasoCredentialMetadataDocument(servedLocales, card),
       },
     }),
     protectedHeaderOptions: {

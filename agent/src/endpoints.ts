@@ -26,6 +26,7 @@ import { agent } from './agent.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import {
+  type OpenHorizonBankPasoCard,
   updatePaymentStatusForWeroCredential,
   weroPasoConfiguration,
   weroScaConfiguration,
@@ -41,6 +42,7 @@ import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier } from './verifier.js'
 import { presentationCredentials } from './verifiers/credentials.js'
+import { isPlaygroundVerifierId } from './verifiers/index.js'
 import { turboKeysVerifier } from './verifiers/turboKeys.js'
 import {
   dcqlQueryFromRequest,
@@ -53,6 +55,19 @@ import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment.js'
 
 const responseCodeMap = new LimitedSizeCollection<string>()
 
+const zPresentationCredentialSelection = z.object({
+  credentials: z
+    .array(
+      z.object({
+        id: z.string(),
+        formats: z.array(z.enum(['dc+sd-jwt', 'mso_mdoc'])).min(1),
+        attributes: z.array(z.string()).min(1),
+      })
+    )
+    .min(1),
+  combination: z.enum(['all', 'any']),
+})
+
 const zCreateOfferRequest = z.object({
   credentialSupportedIds: z.array(z.string()),
   authorization: z.enum(['pin', 'none', 'presentation', 'browser']).default('none'),
@@ -60,6 +75,14 @@ const zCreateOfferRequest = z.object({
   requireWalletAttestation: z.boolean().default(false),
   requireKeyAttestation: z.boolean().default(false),
   deferBy: z.enum(['none', '1m', '1h', '1d']).optional().default('none'),
+  // The presentation during issuance, for the 'presentation' authorization. Without it the PID is
+  // requested by the Utopia Government verifier.
+  presentation: z
+    .object({
+      verifierId: z.string().optional(),
+      request: zPresentationCredentialSelection.optional(),
+    })
+    .optional(),
 })
 
 const zAddX509CertificateRequest = z.object({
@@ -99,7 +122,30 @@ function extractPaymentTransactionData(
 }
 
 apiRouter.post('/offers/create', async (request: Request, response: Response) => {
-  const createOfferRequest = zCreateOfferRequest.parse(request.body)
+  const parseResult = zCreateOfferRequest.safeParse(request.body)
+  if (!parseResult.success) {
+    return response.status(400).json({ message: z.prettifyError(parseResult.error) })
+  }
+  const createOfferRequest = parseResult.data
+
+  const { presentation } = createOfferRequest
+  if (presentation && createOfferRequest.authorization !== 'presentation') {
+    return response
+      .status(400)
+      .json({ message: "'presentation' can only be used with the 'presentation' authorization." })
+  }
+  if (presentation?.verifierId && !isPlaygroundVerifierId(presentation.verifierId)) {
+    return response.status(400).json({ message: `Unknown verifier '${presentation.verifierId}'` })
+  }
+  if (presentation?.request) {
+    // The request is built again when the wallet starts the presentation, but an invalid selection
+    // should fail here rather than halfway through the wallet's issuance flow.
+    try {
+      presentationRequestFromSelection(presentation.request)
+    } catch (error) {
+      return response.status(400).json({ message: error instanceof Error ? error.message : 'Invalid request' })
+    }
+  }
 
   // TODO: support multiple credential isuance
   const configurationId = createOfferRequest.requireKeyAttestation
@@ -145,6 +191,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
         : undefined,
     issuanceMetadata: {
       deferInterval,
+      presentation,
     } satisfies IssuanceMetadata,
   })
 
@@ -322,19 +369,6 @@ apiRouter.post('/transaction-status', async (request: Request, response: Respons
 //   return response.json(chains)
 // })
 
-const zPresentationCredentialSelection = z.object({
-  credentials: z
-    .array(
-      z.object({
-        id: z.string(),
-        formats: z.array(z.enum(['dc+sd-jwt', 'mso_mdoc'])).min(1),
-        attributes: z.array(z.string()).min(1),
-      })
-    )
-    .min(1),
-  combination: z.enum(['all', 'any']),
-})
-
 const zCreatePresentationRequestBody = z.object({
   requestSignerType: z.enum(['none', 'x5c' /* 'openid-federation' */]),
   request: zPresentationCredentialSelection,
@@ -344,6 +378,9 @@ const zCreatePresentationRequestBody = z.object({
   transactionAuthorizationType: z.enum(['none', 'qes', 'payment', 'paso-payment']),
   paymentAmount: z.string().optional(),
   redirectUriBase: z.url().optional(),
+  // Signs the request instead of the Utopia Government verifier. Payments are always requested by
+  // the TurboKeys merchant, so it can't be combined with a payment.
+  verifierId: z.string().optional(),
 })
 
 const zReceiveDcResponseBody = z.object({
@@ -362,14 +399,24 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       responseMode,
       purpose,
       redirectUriBase,
+      verifierId,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
 
     const x509DcsCertificate = getX509DcsCertificate()
     // A payment is requested by the merchant being paid, so the wallet shows it as the payee.
     const isPaymentRequest =
       transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment'
+    if (verifierId && isPaymentRequest) {
+      return response
+        .status(400)
+        .json({ message: "A payment is always requested by TurboKeys, so 'verifierId' can't be set for a payment." })
+    }
+    if (verifierId && !isPlaygroundVerifierId(verifierId)) {
+      return response.status(400).json({ message: `Unknown verifier '${verifierId}'` })
+    }
+
     const verifier = await getVerifier(
-      isPaymentRequest ? turboKeysVerifier.verifierId : utopiaGovernmentVerifier.verifierId
+      isPaymentRequest ? turboKeysVerifier.verifierId : (verifierId ?? utopiaGovernmentVerifier.verifierId)
     )
 
     let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
@@ -834,7 +881,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
  * instead, and a wallet fetching the `credential_metadata_uri` of a PaSO Credential gets the app's
  * HTML — which it can only read as "this is not a PaSO Credential".
  */
-apiRouter.use('/paso-credential-metadata', async (request: Request, response: Response) => {
+const servePasoCredentialMetadata = (card: OpenHorizonBankPasoCard) => async (request: Request, response: Response) => {
   // The body depends on both, so a shared cache must not hand one client's answer to another.
   response.vary('Accept').vary('Accept-Language')
 
@@ -856,14 +903,21 @@ apiRouter.use('/paso-credential-metadata', async (request: Request, response: Re
   // precisely the no-preference case, and would serve the signed form to a client that never asked
   // for it.
   if (request.accepts(['application/json', 'application/jwt']) === 'application/jwt') {
-    return response.contentType('application/jwt').send(await getPasoCredentialMetadataJwt(servedLocales))
+    return response.contentType('application/jwt').send(await getPasoCredentialMetadataJwt(servedLocales, card))
   }
 
   // The unsigned form, for inspection only — a wallet may not rely on it for a PaSO Credential, and
   // [PaSO Risk Signals] Section 7.3 says the same of the encryption key it carries: not
   // integrity-verified, so treated as absent.
-  return response.json(getPasoCredentialMetadataDocument(servedLocales))
-})
+  return response.json(getPasoCredentialMetadataDocument(servedLocales, card))
+}
+
+// Each card has its own signed metadata. `use` matches by prefix, so the longer path goes first.
+apiRouter.use(
+  '/paso-credential-metadata/open-horizon-debit-card',
+  servePasoCredentialMetadata('open-horizon-debit-card')
+)
+apiRouter.use('/paso-credential-metadata', servePasoCredentialMetadata('wero-payment-attestation'))
 
 apiRouter.post('/requests/verify-dc', async (request: Request, response: Response) => {
   const { verificationSessionId, data } = await zReceiveDcResponseBody.parseAsync(request.body)

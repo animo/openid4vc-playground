@@ -216,6 +216,33 @@ export const weroPasoConfiguration = {
   credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
 } satisfies SdJwtConfiguration
 
+const openHorizonDebitCardDisplay = {
+  locale: 'en',
+  name: 'Personal Debit Card',
+  text_color: '#F2F4F7',
+  background_color: '#1B2735',
+  background_image: {
+    uri: `${AGENT_HOST}/assets/credentials/open_horizon_debit_card.png`,
+    url: `${AGENT_HOST}/assets/credentials/open_horizon_debit_card.png`,
+  },
+} as const satisfies CredentialConfigurationDisplay
+
+/**
+ * The same Wero Payment Attestation, branded as the bank's own debit card: Open Horizon Bank on a
+ * dark card with the Wero mark where a card network's logo would sit.
+ *
+ * The rulebook fixes the `vct`, so this only differs in its display. The display of a PaSO Credential
+ * also has to be in its signed credential metadata, and that is one document per
+ * `credential_metadata_uri`, so this card gets its own (see `openHorizonBankPasoCards`).
+ */
+export const openHorizonDebitCardConfiguration = {
+  ...weroPasoConfiguration,
+  scope: 'open-horizon-debit-card-paso-sd-jwt',
+  display: [openHorizonDebitCardDisplay],
+  credential_metadata: { display: [openHorizonDebitCardDisplay], claims: weroPaymentAttestationClaimsMetadata },
+  credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata/open-horizon-debit-card`,
+} satisfies SdJwtConfiguration
+
 /** WPA Rulebook Section 2.1: the `category` value for a non-qualified EAA. */
 export const weroPaymentAttestationCategory = 'urn:etsi:esi:eaa:eu:non-qualified'
 
@@ -301,6 +328,11 @@ const weroPasoData = {
   },
 } as const satisfies StaticSdJwtSignInput
 
+const openHorizonDebitCardData = {
+  ...weroPasoData,
+  credentialConfigurationId: openHorizonDebitCardConfiguration.scope,
+} as const satisfies StaticSdJwtSignInput
+
 export const openHorizonBankIssuer = {
   tags: [weroCardDisplay.name, 'TS12 Payment', 'PaSO Payment'],
   issuerId: openHorizonIssuerId,
@@ -321,6 +353,12 @@ export const openHorizonBankIssuer = {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroPasoConfiguration,
         data: weroPasoData,
+      },
+    },
+    {
+      [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
+        configuration: openHorizonDebitCardConfiguration,
+        data: openHorizonDebitCardData,
       },
     },
   ],
@@ -450,6 +488,7 @@ export const openHorizonBankCredentialsData = {
   [weroScaData.credentialConfigurationId]: weroScaData,
   [weroScaThirdPartyData.credentialConfigurationId]: weroScaThirdPartyData,
   [weroPasoData.credentialConfigurationId]: weroPasoData,
+  [openHorizonDebitCardData.credentialConfigurationId]: openHorizonDebitCardData,
 }
 
 /**
@@ -480,15 +519,36 @@ export const openHorizonBankCredentialsData = {
  * authenticated. This deployment is both, so the caution does not apply — and the combination is
  * exactly what makes the split verification of Section 6.1 visible in the playground.
  */
+/**
+ * The PaSO Credentials this issuer offers, each with the signed credential metadata it is served
+ * under. They share the `vct` and the transaction data types, and differ only in their branding.
+ */
+export const openHorizonBankPasoCards = {
+  'wero-payment-attestation': {
+    credentialMetadataUri: weroPasoConfiguration.credential_metadata_uri,
+    display: [
+      weroPasoCardDisplay,
+      { ...weroPasoCardDisplay, name: 'Wero-Zahlungsattestierung', locale: 'de' },
+      { ...weroPasoCardDisplay, name: 'Wero-betaalattestatie', locale: 'nl' },
+    ],
+  },
+  'open-horizon-debit-card': {
+    credentialMetadataUri: openHorizonDebitCardConfiguration.credential_metadata_uri,
+    display: [
+      openHorizonDebitCardDisplay,
+      { ...openHorizonDebitCardDisplay, name: 'Persönliche Debitkarte', locale: 'de' },
+      { ...openHorizonDebitCardDisplay, name: 'Persoonlijke betaalpas', locale: 'nl' },
+    ],
+  },
+}
+
+export type OpenHorizonBankPasoCard = keyof typeof openHorizonBankPasoCards
+
 export const openHorizonBankPasoCredentialMetadata = {
   // [PaSO Proof Metadata] Section 4: this is the full [OID4VCI] `credential_metadata` object, and
   // Section 3 has the wallet use nothing unsigned for a PaSO Credential — so the card branding and
   // claim labels have to be in here, or a conforming wallet shows the card without them.
-  display: [
-    weroPasoCardDisplay,
-    { ...weroPasoCardDisplay, name: 'Wero-Zahlungsattestierung', locale: 'de' },
-    { ...weroPasoCardDisplay, name: 'Wero-betaalattestatie', locale: 'nl' },
-  ],
+  display: openHorizonBankPasoCards['wero-payment-attestation'].display,
   claims: weroPaymentAttestationClaimsMetadata,
   transaction_data_types: {
     'urn:paso:sca:global:payment:1': {

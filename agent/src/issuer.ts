@@ -28,6 +28,7 @@ import { issuers, issuersCredentialsData } from './issuers/index.js'
 import { kolnIssuer } from './issuers/koln.js'
 import { krankenkasseIssuer } from './issuers/krankenkasse.js'
 import {
+  openHorizonDebitCardConfiguration,
   openHorizonIssuerId,
   saveWeroPaymentAttestationRecord,
   weroPasoConfiguration,
@@ -41,7 +42,13 @@ import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
 import { credentialResponseMetadata } from './utils/credentialResponseMetadata.js'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
 import { getVerifier } from './verifier.js'
-import { dcqlQueryFromRequest, pidMdocCredential, pidSdJwtCredential } from './verifiers/util.js'
+import {
+  dcqlQueryFromRequest,
+  type PresentationCredentialSelection,
+  pidMdocCredential,
+  pidSdJwtCredential,
+  presentationRequestFromSelection,
+} from './verifiers/util.js'
 import { utopiaGovernmentVerifier } from './verifiers/utopiaGovernment.js'
 
 export type CredentialConfigurationDisplay = NonNullable<
@@ -132,6 +139,15 @@ export type SerializableSignCredentialOptions = SerializableSdJwtVcSignOptions |
 export interface IssuanceMetadata extends Record<string, unknown> {
   deferInterval?: number
   signOptions?: SerializableSignCredentialOptions
+
+  /**
+   * The presentation during issuance. Without a verifier the Utopia Government verifier requests it,
+   * and without a request it requests the PID.
+   */
+  presentation?: {
+    verifierId?: string
+    request?: PresentationCredentialSelection
+  }
 }
 
 export function serializableSignOptionsToSignOptions({
@@ -226,10 +242,12 @@ export function getIssuerIdForCredentialConfigurationId(credentialConfigurationI
 
 export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerificationSession = async ({
   agentContext,
+  issuanceSession,
   scopes,
   requestedCredentialConfigurations,
 }) => {
-  const verifier = await getVerifier(utopiaGovernmentVerifier.verifierId)
+  const presentation = (issuanceSession.issuanceMetadata as IssuanceMetadata | undefined)?.presentation
+  const verifier = await getVerifier(presentation?.verifierId ?? utopiaGovernmentVerifier.verifierId)
   const verifierApi = agentContext.dependencyManager.resolve(OpenId4VcVerifierApi)
 
   const [, credentialConfiguration] = Object.entries(requestedCredentialConfigurations)[0]
@@ -239,6 +257,10 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
   }
 
   const credentialName = credentialConfiguration.credential_metadata?.display?.[0]?.name ?? 'card'
+  const requestedPresentation = presentation?.request
+    ? presentationRequestFromSelection(presentation.request)
+    : undefined
+
   const authorizationRequest = await verifierApi.createAuthorizationRequest({
     verifierId: verifier.verifierId,
     requestSigner: {
@@ -247,55 +269,61 @@ export const getVerificationSessionForIssuanceSession: OpenId4VciGetVerification
     },
     version: 'v1',
     dcql: {
-      // User needs to present either german PID in SD-JWT, or EUDI PID in SD-JWT/mDOC
-      query: dcqlQueryFromRequest({
-        name: 'Identity card',
-        purpose: `To issue your ${credentialName} we need to verify your identity card`,
-        credentials: [
-          pidSdJwtCredential({
-            fields: [
-              'given_name',
-              'family_name',
-              'birthdate',
-              'issuing_authority',
-              'issuing_country',
-              'address',
-              'place_of_birth',
-              'nationalities',
-            ],
-          }),
-          pidMdocCredential({
-            fields: [
-              'given_name',
-              'family_name',
-              'birth_date',
-              'issuing_country',
-              'issuing_authority',
-              'resident_street',
-              'resident_postal_code',
-              'resident_city',
-              'place_of_birth',
-              'nationality',
-            ],
-          }),
-          pidSdJwtCredential({
-            fields: [
-              'given_name',
-              'family_name',
-              'birthdate',
-              'place_of_birth',
-              'address',
-              'nationalities',
+      // Without a request passed in with the offer, the user needs to present either german PID in
+      // SD-JWT, or EUDI PID in SD-JWT/mDOC
+      query: requestedPresentation
+        ? dcqlQueryFromRequest(
+            requestedPresentation,
+            `To issue your ${credentialName} we need to verify your ${requestedPresentation.name}`
+          )
+        : dcqlQueryFromRequest({
+            name: 'Identity card',
+            purpose: `To issue your ${credentialName} we need to verify your identity card`,
+            credentials: [
+              pidSdJwtCredential({
+                fields: [
+                  'given_name',
+                  'family_name',
+                  'birthdate',
+                  'issuing_authority',
+                  'issuing_country',
+                  'address',
+                  'place_of_birth',
+                  'nationalities',
+                ],
+              }),
+              pidMdocCredential({
+                fields: [
+                  'given_name',
+                  'family_name',
+                  'birth_date',
+                  'issuing_country',
+                  'issuing_authority',
+                  'resident_street',
+                  'resident_postal_code',
+                  'resident_city',
+                  'place_of_birth',
+                  'nationality',
+                ],
+              }),
+              pidSdJwtCredential({
+                fields: [
+                  'given_name',
+                  'family_name',
+                  'birthdate',
+                  'place_of_birth',
+                  'address',
+                  'nationalities',
 
-              // Mandatory metadata
-              'date_of_expiry',
-              'issuing_country',
-              'issuing_authority',
+                  // Mandatory metadata
+                  'date_of_expiry',
+                  'issuing_country',
+                  'issuing_authority',
+                ],
+              }),
             ],
+            credential_sets: [[0, 1, 2]],
           }),
-        ],
-        credential_sets: [[0, 1, 2]],
-      }),
     },
     responseMode: 'direct_post.jwt',
   })
@@ -324,8 +352,11 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   }
 
   let signOptions: SerializableSignCredentialOptions | undefined
+  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
 
-  if (issuanceSession.presentation?.required) {
+  // The claims below are taken from the PID of the default presentation during issuance. A request
+  // passed in with the offer may not include those claims, so then the credential is issued as is.
+  if (issuanceSession.presentation?.required && !issuanceMetadata.presentation?.request) {
     const presentation = verification?.dcql?.presentations
       ? Object.values(verification?.dcql?.presentations)[0]?.[0]
       : undefined
@@ -599,7 +630,8 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   if (
     signOptions &&
     credentialData.format === ClaimFormat.SdJwtDc &&
-    normalizedCredentialConfigurationId === weroPasoConfiguration.scope
+    (normalizedCredentialConfigurationId === weroPasoConfiguration.scope ||
+      normalizedCredentialConfigurationId === openHorizonDebitCardConfiguration.scope)
   ) {
     const sub = randomUUID() as string
     const iss = (await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)).credentialIssuer.credential_issuer
@@ -625,7 +657,6 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     agent.config.logger.info(`issuer: saved Wero Payment Attestation record for sub ${sub}`)
   }
 
-  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
   if (issuanceMetadata.deferInterval) {
     issuanceMetadata.signOptions = signOptions
 
