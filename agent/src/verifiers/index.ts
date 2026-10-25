@@ -23,6 +23,10 @@ export const verifiers = [
   huVerifier,
 ]
 
+export function isPlaygroundVerifierId(verifierId: string) {
+  return verifiers.some((verifier) => verifier.verifierId === verifierId)
+}
+
 export const verifierTrustChains = [
   // --- Turbo keys ---
   {
