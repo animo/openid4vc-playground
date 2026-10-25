@@ -1,4 +1,4 @@
-import { CheckIcon, CopyIcon } from '@radix-ui/react-icons'
+import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { RadioGroup } from '@radix-ui/react-radio-group'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { createOffer, getIssuers, type Issuers } from '../lib/api'
+import { useInterval } from '@/lib/hooks'
+import { createOffer, getIssuers, getOfferStatus, type Issuers, type OfferStatus } from '../lib/api'
 import { PlaygroundAlert } from './PlaygroundAlert'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
 import { Switch } from './ui/switch'
 import { TypographyH3 } from './ui/typography'
@@ -19,6 +21,21 @@ import { X509Certificates } from './X509Certificates'
 const credentialFormatMap = {
   'dc+sd-jwt': 'SD-JWT VC (dc+sd-jwt)',
   mso_mdoc: 'mDOC',
+}
+
+function getOfferProgress({ state, presentation }: OfferStatus) {
+  if (state === 'Completed') return 'Credential has been issued.'
+  if (state === 'Error' || presentation?.state === 'Error') return 'Credential has not been issued.'
+  if (state === 'CredentialRequestReceived' || state === 'CredentialsPartiallyIssued') {
+    return 'Credential request has been received. Waiting for the credential to be issued...'
+  }
+  if (presentation?.state === 'ResponseVerified') {
+    return 'Presentation has been verified. Waiting for the wallet to request the credential...'
+  }
+  if (presentation?.verificationSessionId) {
+    return 'Presentation has been requested. Waiting for the wallet to share the credential...'
+  }
+  return 'Credential offer has been retrieved. Waiting for the wallet to request the credential...'
 }
 
 export function IssueTab({
@@ -41,6 +58,13 @@ export function IssueTab({
 
   const [credentialOfferUri, setCredentialOfferUri] = useState<string>()
   const [userPin, setUserPin] = useState<string>()
+  const [issuanceSessionId, setIssuanceSessionId] = useState<string>()
+  const [offerStatus, setOfferStatus] = useState<OfferStatus>()
+
+  const isIssued = offerStatus?.state === 'Completed'
+  const presentationFailed = offerStatus?.presentation?.state === 'Error'
+  const issuanceFailed = offerStatus?.state === 'Error'
+  const offerHasBeenRetrieved = offerStatus !== undefined && offerStatus.state !== 'OfferCreated'
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
   const router = useRouter()
@@ -79,6 +103,17 @@ export function IssueTab({
     hasScrolledToIssueRef.current = true
     issueButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [issuers, searchParams])
+
+  useInterval({
+    callback: async () => {
+      if (!issuanceSessionId) return
+
+      const offerStatus = await getOfferStatus({ issuanceSessionId })
+      setOfferStatus(offerStatus)
+    },
+    interval: 500,
+    enabled: issuanceSessionId !== undefined && !isIssued && !presentationFailed && !issuanceFailed,
+  })
 
   // Update URL when state changes
   useEffect(() => {
@@ -127,6 +162,8 @@ export function IssueTab({
       throw new Error('No credential type')
     }
 
+    setIssuanceSessionId(undefined)
+    setOfferStatus(undefined)
     const offer = await createOffer({
       credentialSupportedId,
       authorization: selectedAuthorization,
@@ -137,6 +174,7 @@ export function IssueTab({
     })
     setCredentialOfferUri(offer.credentialOffer)
     setUserPin(offer.issuanceSession.userPin)
+    setIssuanceSessionId(offer.issuanceSession.id)
   }
 
   const copyConfiguration = async () => {
@@ -350,7 +388,9 @@ export function IssueTab({
           />
         </div>
         <div className="flex justify-center items-center bg-gray-200 min-h-64 w-full rounded-md">
-          {credentialOfferUri ? (
+          {offerStatus && offerHasBeenRetrieved ? (
+            <p className="text-gray-500 break-all">{getOfferProgress(offerStatus)}</p>
+          ) : credentialOfferUri ? (
             <TooltipProvider>
               <Tooltip>
                 <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
@@ -404,6 +444,24 @@ export function IssueTab({
         >
           Issue Credential
         </Button>
+        {(isIssued || presentationFailed || issuanceFailed) && (
+          <Alert variant={isIssued ? 'success' : 'warning'}>
+            {isIssued ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
+            <AlertTitle className={isIssued ? 'mt-0.5' : ''}>
+              {isIssued
+                ? 'Credential Issued'
+                : presentationFailed
+                  ? 'Presentation Unsuccessful'
+                  : 'Issuance Unsuccessful'}
+            </AlertTitle>
+            {!isIssued && (
+              <AlertDescription className="mt-2">
+                {(presentationFailed ? offerStatus?.presentation?.error : offerStatus?.error) ??
+                  'Unknown error occurred'}
+              </AlertDescription>
+            )}
+          </Alert>
+        )}
         <X509Certificates />
       </form>
     </Card>
