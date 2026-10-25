@@ -1,7 +1,7 @@
 import type { ResponseMode, TransactionAuthorizationType } from '../components/VerifyBlock'
 import { NEXT_PUBLIC_API_URL } from './constants'
 
-export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { userPin?: string } }
+export type CreateOfferReturn = { credentialOffer: string; issuanceSession: { id: string; userPin?: string } }
 export async function createOffer({
   credentialSupportedId,
   authorization,
@@ -37,6 +37,27 @@ export async function createOffer({
   }
 
   return await response.json()
+}
+
+export type OfferStatus = {
+  issuanceSessionId: string
+  state: string
+  error?: string
+  presentation?: {
+    verificationSessionId?: string
+    state?: string
+    error?: string
+  }
+}
+
+export async function getOfferStatus({ issuanceSessionId }: { issuanceSessionId: string }): Promise<OfferStatus> {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/offers/${issuanceSessionId}`)
+
+  if (!response.ok) {
+    throw new Error('Failed to get offer status')
+  }
+
+  return response.json()
 }
 
 export type PresentationCredentialFormat = 'dc+sd-jwt' | 'mso_mdoc'

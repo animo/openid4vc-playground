@@ -14,7 +14,11 @@ import {
   X509Certificate,
   X509ModuleConfig,
 } from '@credo-ts/core'
-import { type OpenId4VcVerificationSessionRecord, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
+import {
+  OpenId4VcIssuanceSessionState,
+  type OpenId4VcVerificationSessionRecord,
+  OpenId4VcVerificationSessionState,
+} from '@credo-ts/openid4vc'
 import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
@@ -145,6 +149,43 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
   })
 
   return response.json(offer)
+})
+
+apiRouter.get('/offers/:issuanceSessionId', async (request, response) => {
+  try {
+    const issuanceSession = await agent.openid4vc.issuer.getIssuanceSessionById(request.params.issuanceSessionId)
+
+    // The issuance session only moves to Error when the wallet continues after a failed presentation,
+    // so the state of the linked verification session is how a failed presentation is detected.
+    let presentation: { verificationSessionId?: string; state?: string; error?: string } | undefined
+    if (issuanceSession.presentation?.required) {
+      const verificationSessionId = issuanceSession.presentation.openId4VcVerificationSessionId
+      presentation = { verificationSessionId }
+
+      if (verificationSessionId) {
+        try {
+          const verificationSession = await agent.openid4vc.verifier.getVerificationSessionById(verificationSessionId)
+          presentation.state = verificationSession.state
+          presentation.error = verificationSession.errorMessage
+        } catch (error) {
+          if (!(error instanceof RecordNotFoundError)) throw error
+          presentation.error = 'Verification session not found'
+        }
+      }
+    }
+
+    return response.json({
+      issuanceSessionId: issuanceSession.id,
+      state: issuanceSession.state,
+      error: issuanceSession.state === OpenId4VcIssuanceSessionState.Error ? issuanceSession.errorMessage : undefined,
+      presentation,
+    })
+  } catch (error) {
+    if (error instanceof RecordNotFoundError) {
+      return response.status(404).send('Issuance session not found')
+    }
+    return response.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' })
+  }
 })
 
 apiRouter.get('/x509', async (_, response: Response) => {
