@@ -1,4 +1,5 @@
 import { Hasher, Jwt, TypedArrayEncoder } from '@credo-ts/core'
+import { agent } from '../agent.js'
 import {
   findWeroPaymentAttestationRecord,
   weroPasoConfiguration,
@@ -245,20 +246,40 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   }
 }
 
+/**
+ * The credential's `vct` and every type it extends. Just its own `vct` when the type metadata can't
+ * be resolved, which a type extending the WPA type then fails the WPA check on.
+ */
+async function resolveVctValues(presentation: string): Promise<string[]> {
+  const sdJwtVc = agent.sdJwtVc.fromCompact(presentation)
+  try {
+    const resolved = await agent.sdJwtVc.fetchTypeMetadata(sdJwtVc, {
+      throwErrorOnFetchError: false,
+      throwErrorOnUnsupportedVctValue: false,
+    })
+    if (resolved) return resolved.vctValues
+  } catch (error) {
+    agent.config.logger.warn('Could not resolve the type metadata of a payment attestation', { error })
+  }
+  return [sdJwtVc.payload.vct as string]
+}
+
 /** WPA Rulebook Section 4.5 steps 4, 5, 7 and 8, against the issuer-signed JWT of the presentation. */
 async function verifyWeroPaymentAttestation(presentation: string, receivedAt: Date): Promise<PasoVerificationCheck[]> {
   const checks: PasoVerificationCheck[] = []
   const credential = decodeJwtPayload(presentation.split('~')[0])
   const now = dateToSeconds(receivedAt)
 
-  // 4. WPA type.
-  const isWpa = credential.vct === weroPasoConfiguration.vct && credential.category === weroPaymentAttestationCategory
+  // 4. WPA type. A bank's own type that extends the WPA type is a WPA too, so the `extends` chain is
+  // checked rather than the `vct` itself.
+  const vctValues = await resolveVctValues(presentation)
+  const isWpa = vctValues.includes(weroPasoConfiguration.vct) && credential.category === weroPaymentAttestationCategory
   checks.push({
     check: 'wpa_type',
     passed: isWpa,
     detail: isWpa
       ? 'vct and category are those of a Wero Payment Attestation'
-      : `Expected vct '${weroPasoConfiguration.vct}' and category '${weroPaymentAttestationCategory}', received '${String(credential.vct)}' and '${String(credential.category)}'`,
+      : `Expected a vct that is or extends '${weroPasoConfiguration.vct}' and category '${weroPaymentAttestationCategory}', received '${vctValues.join("' extending '")}' and '${String(credential.category)}'`,
   })
 
   // 5. Validity window, with the same minute of clock skew the risk signal checks allow.

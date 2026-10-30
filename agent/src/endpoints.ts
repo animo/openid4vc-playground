@@ -38,6 +38,13 @@ import { getPasoCredentialMetadataDocument, getPasoCredentialMetadataJwt } from 
 import { pasoSupportedLocales, resolvePasoServedLocales } from './paso/metadata.js'
 import { createPasoPaymentTransactionDataEntry } from './paso/request.js'
 import { getPasoTransactionDataEntry, type PasoVerificationResult, verifyPasoProofPackage } from './paso/verify.js'
+import {
+  getIssuerTypeMetadata,
+  renderSvgTemplate,
+  serializeTypeMetadata,
+  weroPaymentAttestationTypeMetadata,
+  weroPaymentAttestationTypeMetadataPath,
+} from './typeMetadata.js'
 import { formatErrorChain, getErrorChain } from './utils/error.js'
 import { LimitedSizeCollection } from './utils/LimitedSizeCollection.js'
 import { getVerifier } from './verifier.js'
@@ -918,6 +925,22 @@ apiRouter.use(
   servePasoCredentialMetadata('open-horizon-debit-card')
 )
 apiRouter.use('/paso-credential-metadata', servePasoCredentialMetadata('wero-payment-attestation'))
+
+// The SD-JWT VC type metadata this agent publishes. Each issuer's document has its own URL as `vct`.
+apiRouter.get(weroPaymentAttestationTypeMetadataPath, (_, response) =>
+  response.type('json').send(serializeTypeMetadata(weroPaymentAttestationTypeMetadata))
+)
+apiRouter.get('/vct/:issuerId/:configurationId', (request, response) => {
+  const typeMetadata = getIssuerTypeMetadata(request.params.issuerId, request.params.configurationId)
+  if (!typeMetadata) return response.status(404).json({ error: 'Type metadata not found' })
+  return response.type('json').send(serializeTypeMetadata(typeMetadata))
+})
+apiRouter.get('/vct/:issuerId/:configurationId/svg/:locale', (request, response) => {
+  const { issuerId, configurationId, locale } = request.params
+  const svg = renderSvgTemplate(issuerId, configurationId, locale)
+  if (!svg) return response.status(404).json({ error: 'SVG template not found' })
+  return response.type('image/svg+xml').send(svg)
+})
 
 apiRouter.post('/requests/verify-dc', async (request: Request, response: Response) => {
   const { verificationSessionId, data } = await zReceiveDcResponseBody.parseAsync(request.body)
