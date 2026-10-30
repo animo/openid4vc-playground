@@ -7,7 +7,6 @@ import {
   openHorizonBankPasoCards,
   openHorizonBankPasoCredentialMetadata,
   openHorizonIssuerId,
-  weroPasoConfiguration,
 } from '../issuers/openHorizonBank.js'
 import { dcsId, getX509DcsCertificate } from '../keyMethods/index.js'
 import { dateToSeconds } from '../utils/date.js'
@@ -101,11 +100,12 @@ export async function getPasoCredentialMetadataJwt(
   if (!dcsId) throw new Error('The DCS signing key is not available')
 
   // The Wero Payment Attestation keeps the key it had before there was more than one card, so the
-  // JWTs already issued for it are served again rather than replaced.
+  // JWTs already issued for it are served again rather than replaced. The other cards' keys carry
+  // their `vct`, which is the JWT's `sub`, so a card that gets its own type gets new JWTs.
   const cacheKey =
     card === 'wero-payment-attestation'
       ? `${metadataDocumentVersion}:${servedLocales.join(',')}`
-      : `${metadataDocumentVersion}:${card}:${servedLocales.join(',')}`
+      : `${metadataDocumentVersion}:${card}:${openHorizonBankPasoCards[card].vct}:${servedLocales.join(',')}`
   const cached = issuedMetadataJwts.get(cacheKey)
   if (cached && cached.expiresAt > Date.now() + 60_000) return cached.jwt
 
@@ -120,8 +120,8 @@ export async function getPasoCredentialMetadataJwt(
       // what [PaSO Proof Metadata] Section 6 step 4 compares against. Not the internal issuer UUID.
       iss: (await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)).credentialIssuer.credential_issuer,
       // [PaSO Proof Metadata] Section 6 step 6 binds the JWT to the credential by comparing `sub`
-      // with the credential's `vct`. A placeholder here fails verification in the wallet.
-      sub: weroPasoConfiguration.vct,
+      // with the credential's `vct`, so each card's JWT names that card's own type.
+      sub: openHorizonBankPasoCards[card].vct,
       iat: dateToSeconds(now),
       exp: dateToSeconds(expiry),
       additionalClaims: {

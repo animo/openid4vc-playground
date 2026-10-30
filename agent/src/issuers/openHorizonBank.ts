@@ -5,6 +5,7 @@ import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
 import type { StaticSdJwtSignInput } from '../types.js'
 import { dateToSeconds } from '../utils/date.js'
+import { getVctUrl } from '../utils/getVctUrl.js'
 
 export const openHorizonIssuerId = '7cc028a3-8ce2-432a-bf19-5621068586df'
 
@@ -227,19 +228,32 @@ const openHorizonDebitCardDisplay = {
   },
 } as const satisfies CredentialConfigurationDisplay
 
+const openHorizonDebitCardScope = 'open-horizon-debit-card-paso-sd-jwt'
+
 /**
  * The same Wero Payment Attestation, branded as the bank's own debit card: Open Horizon Bank on a
  * dark card with the Wero mark where a card network's logo would sit.
  *
- * The rulebook fixes the `vct`, so this only differs in its display. The display of a PaSO Credential
- * also has to be in its signed credential metadata, and that is one document per
- * `credential_metadata_uri`, so this card gets its own (see `openHorizonBankPasoCards`).
+ * Its `vct` is the bank's own type, served by this agent, which extends the WPA type and adds the
+ * card design as an SVG template (see the `typeMetadata` of its issuer entry). Everything that checks
+ * for a WPA follows the `extends` chain rather than comparing `vct` values, so this is still a WPA
+ * everywhere. The display of a PaSO Credential also has to be in its signed credential metadata, and
+ * that is one document per `credential_metadata_uri`, so this card gets its own (see
+ * `openHorizonBankPasoCards`).
  */
 export const openHorizonDebitCardConfiguration = {
   ...weroPasoConfiguration,
-  scope: 'open-horizon-debit-card-paso-sd-jwt',
+  vct: getVctUrl(openHorizonIssuerId, openHorizonDebitCardScope),
+  scope: openHorizonDebitCardScope,
   display: [openHorizonDebitCardDisplay],
-  credential_metadata: { display: [openHorizonDebitCardDisplay], claims: weroPaymentAttestationClaimsMetadata },
+  credential_metadata: {
+    display: [
+      openHorizonDebitCardDisplay,
+      { ...openHorizonDebitCardDisplay, name: 'Persönliche Debitkarte', locale: 'de' },
+      { ...openHorizonDebitCardDisplay, name: 'Persoonlijke betaalpas', locale: 'nl' },
+    ],
+    claims: weroPaymentAttestationClaimsMetadata,
+  },
   credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata/open-horizon-debit-card`,
 } satisfies SdJwtConfiguration
 
@@ -331,6 +345,10 @@ const weroPasoData = {
 const openHorizonDebitCardData = {
   ...weroPasoData,
   credentialConfigurationId: openHorizonDebitCardConfiguration.scope,
+  credential: {
+    ...weroPasoData.credential,
+    payload: { ...weroPasoData.credential.payload, vct: openHorizonDebitCardConfiguration.vct },
+  },
 } as const satisfies StaticSdJwtSignInput
 
 export const openHorizonBankIssuer = {
@@ -359,6 +377,10 @@ export const openHorizonBankIssuer = {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: openHorizonDebitCardConfiguration,
         data: openHorizonDebitCardData,
+        typeMetadata: {
+          extends: weroPasoConfiguration.vct,
+          svgTemplate: 'open_horizon_debit_card.svg',
+        },
       },
     },
   ],
@@ -521,10 +543,12 @@ export const openHorizonBankCredentialsData = {
  */
 /**
  * The PaSO Credentials this issuer offers, each with the signed credential metadata it is served
- * under. They share the `vct` and the transaction data types, and differ only in their branding.
+ * under. They share the transaction data types and differ in their branding. The debit card has its
+ * own `vct`, which extends the Wero Payment Attestation's.
  */
 export const openHorizonBankPasoCards = {
   'wero-payment-attestation': {
+    vct: weroPasoConfiguration.vct,
     credentialMetadataUri: weroPasoConfiguration.credential_metadata_uri,
     display: [
       weroPasoCardDisplay,
@@ -533,12 +557,9 @@ export const openHorizonBankPasoCards = {
     ],
   },
   'open-horizon-debit-card': {
+    vct: openHorizonDebitCardConfiguration.vct,
     credentialMetadataUri: openHorizonDebitCardConfiguration.credential_metadata_uri,
-    display: [
-      openHorizonDebitCardDisplay,
-      { ...openHorizonDebitCardDisplay, name: 'Persönliche Debitkarte', locale: 'de' },
-      { ...openHorizonDebitCardDisplay, name: 'Persoonlijke betaalpas', locale: 'nl' },
-    ],
+    display: openHorizonDebitCardConfiguration.credential_metadata.display,
   },
 }
 

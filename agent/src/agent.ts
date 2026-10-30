@@ -1,5 +1,14 @@
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, ConsoleLogger, joinUriParts, LogLevel, X509Module } from '@credo-ts/core'
+import {
+  Agent,
+  ConsoleLogger,
+  IntegrityVerifier,
+  joinUriParts,
+  LogLevel,
+  SdJwtVcModule,
+  TypedArrayEncoder,
+  X509Module,
+} from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
@@ -53,6 +62,25 @@ export const agent = new Agent({
       store: {
         id: 'openid4vc-playground',
         key: AGENT_WALLET_KEY,
+      },
+    }),
+    sdJwtVc: new SdJwtVcModule({
+      // The type metadata this agent publishes resolves without a request. That includes the WPA type
+      // metadata until its publisher serves it, so the debit card's `extends` chain resolves.
+      customTypeMetadataResolver: async (vct, integrity, { defaultResolver, ...options }) => {
+        // Imported here, as the issuers it is built from import this agent.
+        const { getPublishedTypeMetadata, serializeTypeMetadata } = await import('./typeMetadata.js')
+        const typeMetadata = getPublishedTypeMetadata(vct)
+        if (!typeMetadata) return defaultResolver(options)
+
+        // A `vct#integrity` or `extends#integrity` is checked against the document as it is served.
+        if (integrity) {
+          IntegrityVerifier.verifyIntegrity(
+            TypedArrayEncoder.fromUtf8String(serializeTypeMetadata(typeMetadata)),
+            integrity
+          )
+        }
+        return typeMetadata
       },
     }),
     openid4vc: new OpenId4VcModule({

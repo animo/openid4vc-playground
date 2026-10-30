@@ -102,6 +102,15 @@ export interface PlaygroundIssuerOptions
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
       credentialMetadataUri?: string
+      /** Additions to the type metadata served for a `vct` made with `getVctUrl`. */
+      typeMetadata?: {
+        extends?: string
+        /**
+         * An SVG template in `agent/assets`, served per display locale with `{{credential_name}}` set to
+         * that display's name. Other placeholders are the wallet's to fill in from the claims.
+         */
+        svgTemplate?: string
+      }
     }
   }>
 }

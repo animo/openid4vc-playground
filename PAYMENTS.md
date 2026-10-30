@@ -20,6 +20,12 @@ and `psu_id`, none of them selectively disclosable, bound to a P-256 key. At iss
 wallet also fetches and verifies the issuer's signed credential metadata, which is what later lets it
 display the payment and encrypt the risk signals.
 
+**Personal Debit Card** is the same WPA with the bank's own design. Its `vct`,
+`https://eudi-payments.animo.id/api/vct/7cc028a3-8ce2-432a-bf19-5621068586df/open-horizon-debit-card-paso-sd-jwt`, extends the WPA `vct` and
+carries an SVG template of the card with the masked IBAN, one per locale. The WPA publisher doesn't serve the WPA type
+metadata yet, so this deployment serves it at `/api/vct/wero/payment_attestation/v1`, and wallets map
+the WPA `vct` there for now. Checks for a WPA follow the `extends` chain.
+
 ## 2. Request a payment
 
 **Verify** tab:
