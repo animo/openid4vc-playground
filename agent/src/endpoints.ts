@@ -79,7 +79,6 @@ const zPresentationCredentialSelection = z.object({
 const zCreateOfferRequest = z.object({
   credentialSupportedIds: z.array(z.string()),
   authorization: z.enum(['pin', 'none', 'presentation', 'browser']).default('none'),
-  requireDpop: z.boolean().default(false),
   requireWalletAttestation: z.boolean().default(false),
   requireKeyAttestation: z.boolean().default(false),
   deferBy: z.enum(['none', '1m', '1h', '1d']).optional().default('none'),
@@ -172,10 +171,10 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
     credentialConfigurationIds: [configurationId],
     version: 'v1',
     authorization: {
-      requireDpop: createOfferRequest.requireDpop,
       requireWalletAttestation: createOfferRequest.requireWalletAttestation,
     },
-    generateRefreshTokens: !!createOfferRequest.deferBy,
+    // Lets the wallet get a new access token when it fetches the deferred credential later
+    generateRefreshTokens: createOfferRequest.deferBy !== 'none',
     preAuthorizedCodeFlowConfig:
       authorization === 'pin' || authorization === 'none'
         ? {

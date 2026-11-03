@@ -70,7 +70,6 @@ export function IssueTab({
   const [selectedFormat, setSelectedFormat] = useState<string>()
   const [requireKeyAttestation, setRequireKeyAttestation] = useState<boolean>(false)
   const [requireWalletAttestation, setRequireWalletAttestation] = useState<boolean>(false)
-  const [requireDpop, setRequireDpop] = useState<boolean>(false)
 
   const [selectedAuthorization, setSelectedAuthorization] = useState<string>('none')
   const [selectedDeferBy, setDeferBy] = useState<string>('none')
@@ -79,6 +78,7 @@ export function IssueTab({
   const [userPin, setUserPin] = useState<string>()
   const [issuanceSessionId, setIssuanceSessionId] = useState<string>()
   const [offerStatus, setOfferStatus] = useState<OfferStatus>()
+  const [offerError, setOfferError] = useState<string>()
 
   const isIssued = offerStatus?.state === 'Completed'
   const presentationFailed = offerStatus?.presentation?.state === 'Error'
@@ -124,7 +124,6 @@ export function IssueTab({
       )
       if (query.authorization) setSelectedAuthorization(query.authorization)
       if (query.deferBy) setDeferBy(query.deferBy)
-      if (query.dpop) setRequireDpop(query.dpop === 'true')
       if (query.walletAttestation) setRequireWalletAttestation(query.walletAttestation === 'true')
       if (query.keyAttestation) setRequireKeyAttestation(query.keyAttestation === 'true')
     })
@@ -158,7 +157,6 @@ export function IssueTab({
     if (selectedFormat) params.set('format', selectedFormat)
     if (selectedAuthorization) params.set('authorization', selectedAuthorization)
     if (selectedDeferBy) params.set('deferBy', selectedDeferBy)
-    params.set('dpop', `${requireDpop}`)
     params.set('keyAttestation', `${requireKeyAttestation}`)
     params.set('walletAttestation', `${requireWalletAttestation}`)
     if (credentialType !== undefined) params.set('credentialType', `${credentialType}`)
@@ -181,7 +179,6 @@ export function IssueTab({
     credentialType,
     router,
     searchParams,
-    requireDpop,
     requireKeyAttestation,
     requireWalletAttestation,
   ])
@@ -196,14 +193,21 @@ export function IssueTab({
 
     setIssuanceSessionId(undefined)
     setOfferStatus(undefined)
-    const offer = await createOffer({
-      credentialSupportedId,
-      authorization: selectedAuthorization,
-      deferBy: selectedDeferBy,
-      requireDpop,
-      requireKeyAttestation,
-      requireWalletAttestation,
-    })
+    setOfferError(undefined)
+    let offer: Awaited<ReturnType<typeof createOffer>>
+    try {
+      offer = await createOffer({
+        credentialSupportedId,
+        authorization: selectedAuthorization,
+        deferBy: selectedDeferBy,
+        requireKeyAttestation,
+        requireWalletAttestation,
+      })
+    } catch (error) {
+      setCredentialOfferUri(undefined)
+      setOfferError(error instanceof Error ? error.message : 'Unknown error occurred')
+      return
+    }
     setCredentialOfferUri(offer.credentialOffer)
     setUserPin(offer.issuanceSession.userPin)
     setIssuanceSessionId(offer.issuanceSession.id)
@@ -331,7 +335,7 @@ export function IssueTab({
                 You first need to obtain the credential that will be presented during issuance. The configuration is
                 already selected for you.{' '}
                 <a
-                  href="/?authorization=presentation&credentialType=1&deferBy=none&dpop=false&format=dc%2Bsd-jwt&issuerId=b39e71cf-9cf1-4723-a9cd-66f42a510b36&keyAttestation=false&tab=issue&walletAttestation=false&scrollToIssue=true"
+                  href="/?authorization=presentation&credentialType=1&deferBy=none&format=dc%2Bsd-jwt&issuerId=b39e71cf-9cf1-4723-a9cd-66f42a510b36&keyAttestation=false&tab=issue&walletAttestation=false&scrollToIssue=true"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-900 underline underline-offset-2"
@@ -358,12 +362,6 @@ export function IssueTab({
           </Field>
 
           <div className="space-y-4">
-            <SwitchField
-              id="require-dpop"
-              label="Require DPoP"
-              checked={requireDpop}
-              onCheckedChange={setRequireDpop}
-            />
             <SwitchField
               id="require-wallet-attestation"
               label="Require Wallet Attestation"
@@ -395,6 +393,13 @@ export function IssueTab({
               </p>
             )}
           </WalletLinkPanel>
+          {offerError && (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTitle>Error creating offer</AlertTitle>
+              <AlertDescription className="mt-2">{offerError}</AlertDescription>
+            </Alert>
+          )}
           {(isIssued || presentationFailed || issuanceFailed) && (
             <Alert variant={isIssued ? 'success' : 'warning'}>
               {isIssued ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}

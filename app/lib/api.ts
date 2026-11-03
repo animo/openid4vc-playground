@@ -6,14 +6,12 @@ export async function createOffer({
   credentialSupportedId,
   authorization,
   deferBy,
-  requireDpop,
   requireWalletAttestation,
   requireKeyAttestation,
 }: {
   credentialSupportedId: string
   authorization: string
   deferBy: string
-  requireDpop: boolean
   requireWalletAttestation: boolean
   requireKeyAttestation: boolean
 }): Promise<CreateOfferReturn> {
@@ -26,14 +24,19 @@ export async function createOffer({
       credentialSupportedIds: [credentialSupportedId],
       authorization,
       deferBy,
-      requireDpop,
       requireWalletAttestation,
       requireKeyAttestation,
     }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to create offer')
+    throw new Error(
+      await response
+        .json()
+        // Validation errors are sent as `message`, unhandled errors as `error`
+        .then(({ message, error }) => message ?? error)
+        .catch(() => 'Failed to create offer')
+    )
   }
 
   return await response.json()
