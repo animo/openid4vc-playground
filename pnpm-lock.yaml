@@ -119,6 +119,9 @@ overrides:
   '@peculiar/asn1-x509': ~2.6.1
   '@peculiar/asn1-x509-attr': ~2.6.1
 
+patchedDependencies:
+  '@credo-ts/core@0.8.0-alpha-20261103114620': a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402
+
 importers:
 
   .:
@@ -134,7 +137,7 @@ importers:
         version: 0.8.0-alpha-20261103114620(@openwallet-foundation/askar-shared@0.6.0)(typescript@7.0.2)
       '@credo-ts/core':
         specifier: 0.8.0-alpha-20261103114620
-        version: 0.8.0-alpha-20261103114620(typescript@7.0.2)
+        version: 0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)
       '@credo-ts/node':
         specifier: 0.8.0-alpha-20261103114620
         version: 0.8.0-alpha-20261103114620(typescript@7.0.2)
@@ -2827,7 +2830,7 @@ snapshots:
 
   '@credo-ts/askar@0.8.0-alpha-20261103114620(@openwallet-foundation/askar-shared@0.6.0)(typescript@7.0.2)':
     dependencies:
-      '@credo-ts/core': 0.8.0-alpha-20261103114620(typescript@7.0.2)
+      '@credo-ts/core': 0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)
       '@noble/curves': 2.4.0
       '@openwallet-foundation/askar-shared': 0.6.0
       '@panva/hpke-noble': 1.1.8(hpke@1.1.8)
@@ -2840,7 +2843,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@credo-ts/core@0.8.0-alpha-20261103114620(typescript@7.0.2)':
+  '@credo-ts/core@0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)':
     dependencies:
       '@animo-id/pex': 6.1.1
       '@astronautlabs/jsonpath': 1.1.2
@@ -2889,7 +2892,7 @@ snapshots:
 
   '@credo-ts/didcomm@0.8.0-alpha-20261103114620(typescript@7.0.2)':
     dependencies:
-      '@credo-ts/core': 0.8.0-alpha-20261103114620(typescript@7.0.2)
+      '@credo-ts/core': 0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)
       class-transformer: 0.5.1
       class-validator: 0.14.4
       luxon: 3.7.2
@@ -2902,7 +2905,7 @@ snapshots:
 
   '@credo-ts/node@0.8.0-alpha-20261103114620(typescript@7.0.2)':
     dependencies:
-      '@credo-ts/core': 0.8.0-alpha-20261103114620(typescript@7.0.2)
+      '@credo-ts/core': 0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)
       '@credo-ts/didcomm': 0.8.0-alpha-20261103114620(typescript@7.0.2)
       '@types/express': 5.0.6
       '@types/node': 22.20.5
@@ -2919,7 +2922,7 @@ snapshots:
 
   '@credo-ts/openid4vc@0.8.0-alpha-20261103114620(typescript@7.0.2)':
     dependencies:
-      '@credo-ts/core': 0.8.0-alpha-20261103114620(typescript@7.0.2)
+      '@credo-ts/core': 0.8.0-alpha-20261103114620(patch_hash=a11a6e7c0f0174784f815ac43002d795f4564126681c704793d248a7b6259402)(typescript@7.0.2)
       '@openid4vc/oauth2': 0.9.1
       '@openid4vc/openid4vci': 0.9.1
       '@openid4vc/openid4vp': 0.9.1

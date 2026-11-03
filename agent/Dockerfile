@@ -4,6 +4,7 @@ COPY agent/package.json /app/agent/package.json
 COPY app/package.json /app/app/package.json
 COPY pnpm-workspace.yaml /app/pnpm-workspace.yaml
 COPY pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY patches /app/patches
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"

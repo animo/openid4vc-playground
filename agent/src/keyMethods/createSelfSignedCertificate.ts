@@ -20,11 +20,11 @@ import { tenDaysInMilliseconds } from '../utils/date.js'
  * @throws Will throw an error if the CRL creation process fails.
  */
 export async function createCertificateRevocationList({
-  entityName,
+  issuer,
   context,
   publicJwk,
 }: {
-  entityName: string
+  issuer: string
   context: AgentContext
   publicJwk: Kms.PublicJwk
 }) {
@@ -47,7 +47,7 @@ export async function createCertificateRevocationList({
     const crl = await x509.X509CrlGenerator.create(
       {
         signingKey: privateKey,
-        issuer: `CN=${entityName},C=NL`,
+        issuer,
         thisUpdate: new Date(),
         nextUpdate: new Date(Date.now() + 360 * 24 * 60 * 60 * 1000),
         extensions: [authorityKeyIdentifierExtension, crlNumberExtension],
@@ -78,7 +78,7 @@ export const createRootCertificate = async (publicJwk: Kms.PublicJwk) => {
 
   return X509Service.createCertificate(agent.context, {
     authorityKey: publicJwk,
-    issuer: { countryName: 'NL', commonName: 'Animo' },
+    issuer: { countryName: 'NL', organizationName: 'Animo Solutions B.V.', commonName: 'Animo Playground Root' },
     validity: {
       notBefore: lastYear,
       notAfter: nextYear,
@@ -120,7 +120,7 @@ export const createDocumentSignerCertificate = async (
     authorityKey: authorityPublicJwk,
     subjectPublicKey: subjectPublicJwk,
     issuer: rootCertificate.issuer,
-    subject: { commonName: 'credo dcs', countryName: 'NL' },
+    subject: { countryName: 'NL', organizationName: 'Animo Solutions B.V.', commonName: 'Animo Playground Leaf' },
     validity: {
       notBefore,
       notAfter: nextYear,
