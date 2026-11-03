@@ -10,12 +10,12 @@ export function X509Certificates() {
   }, [])
 
   return (
-    <div className="flex flex-col bg-gray-200 w-full rounded-md p-7">
+    <div className="flex w-full flex-col gap-2">
       <CollapsibleSection title="X509 Certificate Base64" titleSmall="click content to copy">
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
           onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-          className="p-5 text-gray-500 break-all cursor-pointer"
+          className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >
           {x509Certificate?.base64 ?? 'No X509 certificate found'}
@@ -25,7 +25,7 @@ export function X509Certificates() {
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
           onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-          className="p-5 text-gray-500 break-all cursor-pointer"
+          className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >
           {x509Certificate?.pem ?? 'No X509 certificate found'}
@@ -35,7 +35,7 @@ export function X509Certificates() {
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
           onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-          className="p-5 text-gray-500 break-all cursor-pointer"
+          className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >
           {x509Certificate?.decoded ?? 'No X509 certificate found'}

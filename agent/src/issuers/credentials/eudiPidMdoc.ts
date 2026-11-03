@@ -56,7 +56,7 @@ const eudiPidPayload = {
 
 const eudiPidMdocDisplay = {
   locale: 'en',
-  name: 'EUDI PID',
+  name: 'Person Identification Data',
   text_color: '#2F3544',
   background_color: '#F1F2F0',
   background_image: {

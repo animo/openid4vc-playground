@@ -339,11 +339,23 @@
   --color-blueGray-950: #020617;
 
   --color-background: white;
+  --color-foreground: #030712;
   --color-card: white;
+  --color-card-foreground: #030712;
   --color-primary-foreground: white;
   --color-primary: black;
   --color-popover: white;
+  --color-popover-foreground: #030712;
+  --color-secondary: #f3f4f6;
+  --color-secondary-foreground: #111827;
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: white;
+  --color-input: #e5e7eb;
+  --color-ring: #9ca3af;
   --color-accent: #eb6d6b;
+  --color-accent-foreground: white;
 
   --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
   --background-image-gradient-conic: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));

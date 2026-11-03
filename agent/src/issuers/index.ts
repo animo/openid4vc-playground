@@ -9,13 +9,13 @@ import { telOrgCredentialsData, telOrgIssuer } from './telOrg.js'
 import { utopiaGovernmentData, utopiaGovernmentIssuer } from './utopiaGovernment.js'
 
 export const issuers: PlaygroundIssuerOptions[] = [
+  utopiaGovernmentIssuer,
   bdrIssuer,
   kolnIssuer,
   steuernIssuer,
   krankenkasseIssuer,
   telOrgIssuer,
   mvrcIssuer,
-  utopiaGovernmentIssuer,
   openHorizonBankIssuer,
 ]
 

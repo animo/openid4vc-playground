@@ -1,27 +1,46 @@
-import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { RadioGroup } from '@radix-ui/react-radio-group'
-import Image from 'next/image'
-import Link from 'next/link'
+import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
-import QRCode from 'react-qr-code'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useInterval } from '@/lib/hooks'
 import { createOffer, getIssuers, getOfferStatus, type Issuers, type OfferStatus } from '../lib/api'
+import { Field, SwitchField } from './Field'
 import { PlaygroundAlert } from './PlaygroundAlert'
+import { TabHeader } from './TabHeader'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
-import { CardRadioItem, CredentialCardRadioItem, MiniRadioItem } from './ui/radio'
-import { Switch } from './ui/switch'
-import { TypographyH3 } from './ui/typography'
+import { CredentialCardRadioItem, MiniRadioItem, RadioGroup } from './ui/radio'
+import { WalletLinkPanel } from './WalletLinkPanel'
 import { X509Certificates } from './X509Certificates'
 
 const credentialFormatMap = {
   'dc+sd-jwt': 'SD-JWT VC (dc+sd-jwt)',
   mso_mdoc: 'mDOC',
 }
+
+const credentialFormatTags = {
+  'dc+sd-jwt': 'SD-JWT VC',
+  mso_mdoc: 'mDOC',
+}
+
+type Issuer = Issuers[number]
+
+/** The issuer's listed credentials, where credentials with the same name are variants of one card. */
+function getCredentialCards(issuer: Issuer) {
+  const cards: Array<{ name: string; indexes: number[] }> = []
+  issuer.credentials.forEach((credential, index) => {
+    if (credential.hidden) return
+    const card = cards.find((card) => card.name === credential.name)
+    if (card) card.indexes.push(index)
+    else cards.push({ name: credential.name, indexes: [index] })
+  })
+  return cards
+}
+
+const credentialCategories = [
+  { id: 'government', title: 'Government documents' },
+  { id: 'payments', title: 'Payments' },
+] as const
 
 function getOfferProgress({ state, presentation }: OfferStatus) {
   if (state === 'Completed') return 'Credential has been issued.'
@@ -67,11 +86,22 @@ export function IssueTab({
   const offerHasBeenRetrieved = offerStatus !== undefined && offerStatus.state !== 'OfferCreated'
 
   const selectedIssuer = issuers?.find((i) => i.id === selectedIssuerId)
+  const selectedVariants =
+    (selectedIssuer &&
+      getCredentialCards(selectedIssuer).find((card) => card.indexes.includes(credentialType))?.indexes) ??
+    []
   const router = useRouter()
   const issueButtonRef = useRef<HTMLButtonElement>(null)
   const hasScrolledToIssueRef = useRef(false)
-  const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
-  const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
+
+  const selectCredential = (issuerId: string, index: number) => {
+    const credential = issuers?.find((i) => i.id === issuerId)?.credentials[index]
+    setSelectedIssuerId(issuerId)
+    setCredentialType(index)
+    if (!selectedFormat || !credential?.formats[selectedFormat]) {
+      setSelectedFormat(Object.keys(credential?.formats ?? {})[0])
+    }
+  }
 
   useEffect(() => {
     if (issuers) return
@@ -81,8 +111,11 @@ export function IssueTab({
     getIssuers().then((i) => {
       setIssuers(i)
 
-      const issuerId = query.issuerId ?? i[0].id
-      const credentialType = query.issuerId && query.credentialType ? Number(query.credentialType) : 0
+      // A link can name a credential that is no longer listed
+      const linked = i.find((issuer) => issuer.id === query.issuerId)?.credentials[Number(query.credentialType ?? 0)]
+      const isListed = linked !== undefined && !linked.hidden
+      const issuerId = isListed ? query.issuerId : i[0].id
+      const credentialType = isListed ? Number(query.credentialType ?? 0) : 0
 
       setSelectedIssuerId(issuerId)
       setCredentialType(credentialType)
@@ -155,7 +188,6 @@ export function IssueTab({
 
   async function onSubmitIssueCredential(e: FormEvent) {
     e.preventDefault()
-    console.log(selectedIssuer, credentialType, selectedFormat, selectedAuthorization)
     const formats = selectedIssuer?.credentials[credentialType].formats ?? {}
     const credentialSupportedId = selectedFormat ? formats[selectedFormat] : Object.values(formats)[0]
     if (!credentialSupportedId) {
@@ -177,291 +209,212 @@ export function IssueTab({
     setIssuanceSessionId(offer.issuanceSession.id)
   }
 
-  const copyConfiguration = async () => {
-    if (isCopyingTimeout) {
-      clearTimeout(isCopyingTimeout)
-    }
-    const currentUrl = window.location.href
-    await navigator.clipboard.writeText(currentUrl)
-
-    const timeout = setTimeout(() => setIsCopyingTimeout(undefined), 3000)
-    setIsCopyingTimeout(timeout)
-  }
-
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <PlaygroundAlert />
-      <div className="flex justify-between items-center mb-4">
-        <TypographyH3>Issue</TypographyH3>
-        <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
-          {isCopyingTimeout ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
-          {copyConfigurationText}
-        </Button>
-      </div>
+      <TabHeader title="Issue" />
 
-      <form className="space-y-4" onSubmit={disabled ? undefined : onSubmitIssueCredential}>
-        <div className="flex flex-col">
-          <div className="flex flex-col items-start gap-2">
-            <span className="text-accent font-medium text-lg">Issuer</span>
-          </div>
-          <RadioGroup
-            className="grid grid-cols-2 gap-2 py-2 pb-4"
-            value={selectedIssuerId}
-            onValueChange={(issuerId) => {
-              const issuer = issuers?.find((i) => i.id === issuerId)
-              const credential = issuer?.credentials[0]
-
-              setSelectedIssuerId(issuerId)
-              setCredentialType(0)
-              if (!credential?.formats || !selectedFormat || !(selectedFormat in credential.formats)) {
-                setSelectedFormat(Object.keys(credential?.formats ?? {})[0])
-              }
-            }}
-          >
-            {issuers?.map((issuer) => (
-              <CardRadioItem
-                key={issuer.id}
-                value={issuer.id}
-                id={`radio-${issuer.id}`}
-                label={issuer.name}
-                tags={issuer.tags}
-                description={issuer.description}
-                icon={
-                  <Image
-                    unoptimized
-                    width={50}
-                    height={50}
-                    className="object-contain w-[50px] h-[50px]"
-                    src={issuer.logo}
-                    alt={`Logo of ${issuer.name}`}
-                  />
-                }
-              />
-            ))}
-          </RadioGroup>
-        </div>
-        <div className="flex flex-col">
-          <div className="flex flex-col items-start gap-2">
-            <span className="text-accent font-medium text-lg">Credential</span>
-          </div>
-          <RadioGroup
-            className="grid grid-cols-2 md:grid-cols-3 gap-2 py-2 pb-4"
-            value={String(credentialType)}
-            onValueChange={(credentialType) => {
-              if (credentialType !== '') {
-                setCredentialType(Number(credentialType))
-                const credential = selectedIssuer?.credentials[Number(credentialType)]
-                if (!selectedFormat || !credential?.formats?.[selectedFormat]) {
-                  setSelectedFormat(Object.keys(credential?.formats ?? {})[0])
-                }
-              }
-            }}
-          >
-            {selectedIssuer?.credentials.map((credential, index) => (
-              <CredentialCardRadioItem
-                key={String(index)}
-                value={String(index)}
-                id={`radio-${index}`}
-                credential={{
-                  name: credential.display.name,
-                  background_color: credential.display.background_color,
-                  background_image: credential.display.background_image?.uri,
-                  text_color: credential.display.text_color,
-                }}
-                issuer={selectedIssuer}
-              />
-            ))}
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="format">Credential Format</Label>
-            <p className="text-gray-500 text-sm">
-              Not all formats are defined by all rulebooks, consult the rulebook for supported formats specific to your
-              use case.
-            </p>
-          </div>
-
-          <RadioGroup
-            name="format"
-            required
-            value={selectedFormat}
-            className="flex flex-row gap-4"
-            onValueChange={(value) => value !== '' && setSelectedFormat(value as 'dc+sd-jwt')}
-          >
-            {Object.keys(selectedIssuer?.credentials[credentialType]?.formats ?? {}).map((format) => (
-              <MiniRadioItem
-                key={format}
-                className="my-2"
-                value={format}
-                label={credentialFormatMap[format as keyof typeof credentialFormatMap]}
-              />
-            ))}
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="format">Authentication</Label>
-            <p className="text-gray-500 text-sm">
-              Choose whether the user has to authenticate before receiving the credential.
-            </p>
-          </div>
-
-          <RadioGroup
-            name="authorization"
-            required
-            className="flex flex-col gap-2 md:gap-4 md:flex-row"
-            onValueChange={(v) => {
-              setSelectedAuthorization(v)
-            }}
-            value={selectedAuthorization}
-          >
-            <MiniRadioItem value="none" label="None" />
-            <MiniRadioItem value="presentation" label="Presentation during issuance" />
-            <MiniRadioItem value="browser" label="Sign in" />
-            <MiniRadioItem value="pin" label="Transaction code" />
-          </RadioGroup>
-          {selectedAuthorization === 'presentation' && (
-            <p className="text-gray-500 text-sm">
-              You first need to obtain the credential that will be presented during issuance. The configuration is
-              already selected for you.{' '}
-              <a
-                href="/?authorization=presentation&credentialType=1&deferBy=none&dpop=false&format=dc%2Bsd-jwt&issuerId=188e2459-6da8-4431-9062-2fcdac274f41&keyAttestation=false&tab=issue&walletAttestation=false&scrollToIssue=true"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent underline"
-              >
-                Issue that credential here.
-              </a>
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="format">Deferral</Label>
-            <p className="text-gray-500 text-sm">Choose whether to defer the credential issuance.</p>
-          </div>
-
-          <RadioGroup
-            name="authorization"
-            required
-            className="flex flex-col gap-2 md:gap-4 md:flex-row"
-            onValueChange={(v) => {
-              setDeferBy(v)
-            }}
-            value={selectedDeferBy}
-          >
-            <MiniRadioItem value="none" label="None" />
-            <MiniRadioItem value="1m" label="1 Minute" />
-            <MiniRadioItem value="1h" label="1 Hour" />
-            <MiniRadioItem value="1d" label="1 Day" />
-          </RadioGroup>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="require-dpop">Require DPoP</Label>
-          <Switch
-            id="require-dpop"
-            name="require-dpop"
-            required
-            checked={requireDpop}
-            onCheckedChange={setRequireDpop}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="require-wallet-attestation">Require Wallet Attestation</Label>
-          <Switch
-            id="require-wallet-attestation"
-            name="require-wallet-attestation"
-            required
-            checked={requireWalletAttestation}
-            onCheckedChange={setRequireWalletAttestation}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="require-key-attestation">Require Key Attestation</Label>
-          <Switch
-            id="require-key-attestation"
-            name="require-key-attestation"
-            required
-            checked={requireKeyAttestation}
-            onCheckedChange={setRequireKeyAttestation}
-          />
-        </div>
-        <div className="flex justify-center items-center bg-gray-200 min-h-64 w-full rounded-md">
-          {offerStatus && offerHasBeenRetrieved ? (
-            <p className="text-gray-500 break-all">{getOfferProgress(offerStatus)}</p>
-          ) : credentialOfferUri ? (
-            <TooltipProvider>
-              <Tooltip>
-                <div className="flex flex-col p-5 gap-2 justify-center items-center gap-6">
-                  <div className="bg-white p-5 rounded-md w-[296px]">
-                    <QRCode size={256} value={credentialOfferUri} />
-                  </div>
-                  <TooltipTrigger asChild>
-                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
-                    <p
-                      onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-                      className="text-gray-500 break-all cursor-pointer"
-                    >
-                      {credentialOfferUri}
-                    </p>
-                  </TooltipTrigger>
-                  <div className="gap-2 w-full justify-center flex flex-1">
-                    <div>
-                      <Link href={credentialOfferUri}>
-                        <Button type="button">Open in Wallet</Button>
-                      </Link>
-                    </div>
-                    <div>
-                      <Link href={credentialOfferUri.replace('openid-credential-offer://', 'id.animo.paradym:')}>
-                        <Button type="button">Open in Paradym Wallet</Button>
-                      </Link>
-                    </div>
-                  </div>
-                  {userPin && (
-                    <div>
-                      <strong>Transaction Code: </strong>
-                      {userPin}
-                    </div>
-                  )}
-                </div>
-
-                <TooltipContent>
-                  <p>Click to copy</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <p className="text-gray-500 break-all">Credential offer will be displayed here</p>
-          )}
-        </div>
-        <Button
-          ref={issueButtonRef}
-          onClick={onSubmitIssueCredential}
-          disabled={disabled}
-          className="w-full"
-          onSubmit={onSubmitIssueCredential}
+      <form className="space-y-8" onSubmit={disabled ? undefined : onSubmitIssueCredential}>
+        <RadioGroup
+          className="grid gap-6"
+          aria-label="Credential"
+          value={`${selectedIssuerId}/${selectedVariants[0] ?? credentialType}`}
+          onValueChange={(value) => {
+            const [issuerId, index] = value.split('/')
+            selectCredential(issuerId, Number(index))
+          }}
         >
-          Issue Credential
-        </Button>
-        {(isIssued || presentationFailed || issuanceFailed) && (
-          <Alert variant={isIssued ? 'success' : 'warning'}>
-            {isIssued ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
-            <AlertTitle className={isIssued ? 'mt-0.5' : ''}>
-              {isIssued
-                ? 'Credential Issued'
-                : presentationFailed
-                  ? 'Presentation Unsuccessful'
-                  : 'Issuance Unsuccessful'}
-            </AlertTitle>
-            {!isIssued && (
-              <AlertDescription className="mt-2">
-                {(presentationFailed ? offerStatus?.presentation?.error : offerStatus?.error) ??
-                  'Unknown error occurred'}
-              </AlertDescription>
+          {credentialCategories.map((category) => (
+            <section key={category.id} className="flex flex-col gap-3">
+              <h4 className="text-sm font-medium text-gray-900">{category.title}</h4>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+                {issuers
+                  ?.filter((issuer) => issuer.category === category.id)
+                  .flatMap((issuer) =>
+                    getCredentialCards(issuer).map(({ name, indexes }) => {
+                      // The card shows the selected variant
+                      const { display } =
+                        issuer.credentials[
+                          issuer.id === selectedIssuerId && indexes.includes(credentialType)
+                            ? credentialType
+                            : indexes[0]
+                        ]
+                      const formats = new Set(
+                        indexes.flatMap((index) => Object.keys(issuer.credentials[index].formats))
+                      )
+
+                      return (
+                        <CredentialCardRadioItem
+                          key={`${issuer.id}/${indexes[0]}`}
+                          value={`${issuer.id}/${indexes[0]}`}
+                          id={`radio-${issuer.id}-${indexes[0]}`}
+                          credential={{
+                            name,
+                            background_color: display.background_color,
+                            background_image: display.background_image?.uri,
+                            text_color: display.text_color,
+                          }}
+                          issuer={issuer}
+                          tags={[
+                            ...indexes.flatMap((index) => issuer.credentials[index].variant ?? []),
+                            ...[...formats].map(
+                              (format) => credentialFormatTags[format as keyof typeof credentialFormatTags]
+                            ),
+                          ]}
+                        />
+                      )
+                    })
+                  )}
+              </div>
+            </section>
+          ))}
+        </RadioGroup>
+
+        <div className="space-y-6 border-gray-200 border-t pt-8">
+          {selectedIssuerId && selectedVariants.length > 1 && (
+            <Field label="Specification" description="The specification the credential is issued under.">
+              <RadioGroup
+                name="specification"
+                className="gap-x-5 gap-y-2"
+                value={String(credentialType)}
+                onValueChange={(value) => selectCredential(selectedIssuerId, Number(value))}
+              >
+                {selectedVariants.map((index) => (
+                  <MiniRadioItem
+                    key={index}
+                    value={String(index)}
+                    label={selectedIssuer?.credentials[index].variant ?? ''}
+                  />
+                ))}
+              </RadioGroup>
+            </Field>
+          )}
+          <Field
+            label="Credential Format"
+            description="Not all formats are defined by all rulebooks, consult the rulebook for supported formats specific to your use case."
+          >
+            <RadioGroup
+              name="format"
+              required
+              value={selectedFormat}
+              className="gap-x-5 gap-y-2"
+              onValueChange={(value) => value !== '' && setSelectedFormat(value as 'dc+sd-jwt')}
+            >
+              {Object.keys(selectedIssuer?.credentials[credentialType]?.formats ?? {}).map((format) => (
+                <MiniRadioItem
+                  key={format}
+                  value={format}
+                  label={credentialFormatMap[format as keyof typeof credentialFormatMap]}
+                />
+              ))}
+            </RadioGroup>
+          </Field>
+
+          <Field
+            label="Authentication"
+            description="Choose whether the user has to authenticate before receiving the credential."
+          >
+            <RadioGroup
+              name="authorization"
+              required
+              className="gap-x-5 gap-y-2"
+              onValueChange={setSelectedAuthorization}
+              value={selectedAuthorization}
+            >
+              <MiniRadioItem value="none" label="None" />
+              <MiniRadioItem value="presentation" label="Presentation during issuance" />
+              <MiniRadioItem value="browser" label="Sign in" />
+              <MiniRadioItem value="pin" label="Transaction code" />
+            </RadioGroup>
+            {selectedAuthorization === 'presentation' && (
+              <p className="text-gray-500 text-sm">
+                You first need to obtain the credential that will be presented during issuance. The configuration is
+                already selected for you.{' '}
+                <a
+                  href="/?authorization=presentation&credentialType=1&deferBy=none&dpop=false&format=dc%2Bsd-jwt&issuerId=b39e71cf-9cf1-4723-a9cd-66f42a510b36&keyAttestation=false&tab=issue&walletAttestation=false&scrollToIssue=true"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-900 underline underline-offset-2"
+                >
+                  Issue that credential here.
+                </a>
+              </p>
             )}
-          </Alert>
-        )}
+          </Field>
+
+          <Field label="Deferral" description="Choose whether to defer the credential issuance.">
+            <RadioGroup
+              name="deferral"
+              required
+              className="gap-x-5 gap-y-2"
+              onValueChange={setDeferBy}
+              value={selectedDeferBy}
+            >
+              <MiniRadioItem value="none" label="None" />
+              <MiniRadioItem value="1m" label="1 Minute" />
+              <MiniRadioItem value="1h" label="1 Hour" />
+              <MiniRadioItem value="1d" label="1 Day" />
+            </RadioGroup>
+          </Field>
+
+          <div className="space-y-4">
+            <SwitchField
+              id="require-dpop"
+              label="Require DPoP"
+              checked={requireDpop}
+              onCheckedChange={setRequireDpop}
+            />
+            <SwitchField
+              id="require-wallet-attestation"
+              label="Require Wallet Attestation"
+              checked={requireWalletAttestation}
+              onCheckedChange={setRequireWalletAttestation}
+            />
+            <SwitchField
+              id="require-key-attestation"
+              label="Require Key Attestation"
+              checked={requireKeyAttestation}
+              onCheckedChange={setRequireKeyAttestation}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 border-gray-200 border-t pt-8">
+          <Button ref={issueButtonRef} type="submit" disabled={disabled} className="w-full">
+            Issue Credential
+          </Button>
+          <WalletLinkPanel
+            uri={credentialOfferUri}
+            paradymUri={credentialOfferUri?.replace('openid-credential-offer://', 'id.animo.paradym:')}
+            status={offerStatus && offerHasBeenRetrieved ? getOfferProgress(offerStatus) : undefined}
+            placeholder="The credential offer will appear here."
+          >
+            {userPin && (
+              <p className="text-gray-900">
+                Transaction code: <span className="font-medium font-mono">{userPin}</span>
+              </p>
+            )}
+          </WalletLinkPanel>
+          {(isIssued || presentationFailed || issuanceFailed) && (
+            <Alert variant={isIssued ? 'success' : 'warning'}>
+              {isIssued ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
+              <AlertTitle className={isIssued ? 'mt-0.5' : ''}>
+                {isIssued
+                  ? 'Credential Issued'
+                  : presentationFailed
+                    ? 'Presentation Unsuccessful'
+                    : 'Issuance Unsuccessful'}
+              </AlertTitle>
+              {!isIssued && (
+                <AlertDescription className="mt-2">
+                  {(presentationFailed ? offerStatus?.presentation?.error : offerStatus?.error) ??
+                    'Unknown error occurred'}
+                </AlertDescription>
+              )}
+            </Alert>
+          )}
+        </div>
+
         <X509Certificates />
       </form>
     </Card>

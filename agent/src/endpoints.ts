@@ -274,18 +274,24 @@ apiRouter.post('/x509', async (request: Request, response: Response) => {
 
 apiRouter.get('/issuers', async (_, response: Response) => {
   return response.json(
-    issuers.map((issuer) => {
+    issuers.flatMap((issuer) => {
+      if (!issuer.playgroundCategory) return []
       return {
         id: issuer.issuerId,
+        category: issuer.playgroundCategory,
         name: issuer.playgroundDisplayName ?? issuer.display[0].name,
         tags: issuer.tags,
         logo: issuer.display[0].logo.uri,
 
         credentials: Object.values(issuer.credentialConfigurationsSupported).map((values) => {
           const first = Object.values(values)[0]
+          const display = first.configuration.display[0]
 
           return {
-            display: first.configuration.display[0],
+            display,
+            name: first.playground?.name ?? display.name,
+            variant: first.playground?.variant,
+            hidden: first.playground?.hidden,
             formats: Object.fromEntries(
               Object.entries(values).map(([format, configuration]) => [
                 format,
@@ -304,6 +310,8 @@ apiRouter.get('/verifier', async (_, response: Response) => {
     credentials: presentationCredentials.map((credential) => ({
       id: credential.id,
       display: credential.display,
+      variant: credential.variant,
+      transactionAuthorization: credential.transactionAuthorization,
       formats: Object.keys(credential.formats),
       attributes: credential.attributes.map((attribute) => ({
         id: attribute.id,

@@ -30,6 +30,7 @@ const photoIdMdocDataUtopia = {
 export const utopiaGovernmentIssuer = {
   tags: ['mDL', 'EUDI PID', 'Photo ID', 'EUDI Age'],
   issuerId: 'b39e71cf-9cf1-4723-a9cd-66f42a510b36',
+  playgroundCategory: 'government',
   credentialConfigurationsSupported: [
     {
       mso_mdoc: {

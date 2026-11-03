@@ -64,6 +64,8 @@ export type PresentationCredentialFormat = 'dc+sd-jwt' | 'mso_mdoc'
 
 export type PresentationCredential = {
   id: string
+  variant?: string
+  transactionAuthorization?: 'payment' | 'paso-payment'
   display: {
     name: string
     background_image?: {
@@ -99,11 +101,15 @@ export async function getVerifier(): Promise<{ credentials: PresentationCredenti
 
 export type Issuers = Array<{
   id: string
+  category: 'government' | 'payments'
   name: string
   description: string
   logo: string
   tags: string[]
   credentials: Array<{
+    name: string
+    variant?: string
+    hidden?: boolean
     display: {
       name: string
       background_image: {

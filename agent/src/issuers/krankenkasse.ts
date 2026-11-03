@@ -106,6 +106,7 @@ export const healthIdSdJwtData = {
 export const krankenkasseIssuer = {
   tags: [healthIdDisplay.name],
   issuerId: 'a27a9f50-2b4d-4fac-99b6-9fd306641f9d',
+  playgroundCategory: 'government',
   credentialConfigurationsSupported: [
     {
       'dc+sd-jwt': {

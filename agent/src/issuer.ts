@@ -37,6 +37,7 @@ import {
 } from './issuers/openHorizonBank.js'
 import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
+import { utopiaGovernmentIssuer } from './issuers/utopiaGovernment.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
 import { credentialResponseMetadata } from './utils/credentialResponseMetadata.js'
@@ -87,21 +88,34 @@ export type SdJwtConfiguration = OpenId4VciCredentialConfigurationSupportedWithF
   }
 }
 
+/** How the playground's Issue tab lists a credential. */
+export interface PlaygroundCredentialOptions {
+  /** Instead of the credential's display name. */
+  name?: string
+  /** Credentials of an issuer with the same name are one card, and this labels the option between them. */
+  variant?: string
+  hidden?: boolean
+}
+
 export interface PlaygroundIssuerOptions
   extends Omit<OpenId4VciCreateIssuerOptions, 'credentialConfigurationsSupported'> {
   tags: string[]
   issuerId: string
   display: [IssuerDisplay, ...IssuerDisplay[]]
   playgroundDisplayName?: string
+  /** The group the playground's Issue tab lists this issuer's credentials in. Not listed without one. */
+  playgroundCategory?: 'government' | 'payments'
   credentialConfigurationsSupported: Array<{
     mso_mdoc?: {
       configuration: MdocConfiguration
       data: StaticMdocSignInput
+      playground?: PlaygroundCredentialOptions
     }
     'dc+sd-jwt'?: {
       configuration: SdJwtConfiguration
       data: StaticSdJwtSignInput
       credentialMetadataUri?: string
+      playground?: PlaygroundCredentialOptions
       /** Additions to the type metadata served for a `vct` made with `getVctUrl`. */
       typeMetadata?: {
         extends?: string
@@ -485,6 +499,13 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
 
           [bdrIssuer.credentialConfigurationsSupported[1]['dc+sd-jwt'].data.credentialConfigurationId]: eudiPidData,
           [bdrIssuer.credentialConfigurationsSupported[1].mso_mdoc.data.credentialConfigurationId]: eudiPidData,
+
+          [utopiaGovernmentIssuer.credentialConfigurationsSupported[0].mso_mdoc.data.credentialConfigurationId]:
+            driversLicenseClaims,
+          [utopiaGovernmentIssuer.credentialConfigurationsSupported[1]['dc+sd-jwt'].data.credentialConfigurationId]:
+            eudiPidData,
+          [utopiaGovernmentIssuer.credentialConfigurationsSupported[1].mso_mdoc.data.credentialConfigurationId]:
+            eudiPidData,
 
           [krankenkasseIssuer.credentialConfigurationsSupported[0]['dc+sd-jwt'].data.credentialConfigurationId]:
             healthIdClaims,

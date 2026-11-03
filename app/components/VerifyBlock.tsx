@@ -1,8 +1,6 @@
-import { CheckboxIcon, CheckIcon, CopyIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
+import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
-import QRCode from 'react-qr-code'
 import {
   type CreateIsoMdocRequestResponse,
   createIsoMdocRequest,
@@ -22,17 +20,17 @@ import {
   getDefaultCredentialSelection,
   selectionSupportsIsoMdoc,
 } from './CredentialRequestBuilder'
+import { Field, SwitchField } from './Field'
 import { HighLight } from './highLight'
 import { PlaygroundAlert } from './PlaygroundAlert'
+import { TabHeader } from './TabHeader'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Input } from './ui/input'
-import { Label } from './ui/label'
 import { MiniRadioItem, RadioGroup } from './ui/radio'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Switch } from './ui/switch'
-import { TypographyH3 } from './ui/typography'
+import { WalletLinkPanel } from './WalletLinkPanel'
 import { X509Certificates } from './X509Certificates'
 
 export type CreateRequestOptions = Parameters<typeof createRequest>[0]
@@ -106,12 +104,17 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   }>()
   const [credentials, setCredentials] = useState<PresentationCredential[]>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
-  const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<TransactionAuthorizationType>('none')
+  // A payment is authorized by requesting its payment attestation, so only the others are chosen here
+  const [transactionAuthorizationType, setTransactionAuthorizationType] = useState<'none' | 'qes'>('none')
   const [paymentAmount, setPaymentAmount] = useState('100')
   const [credentialSelection, setCredentialSelection] = useState<PresentationCredentialSelection>({
     credentials: [],
     combination: 'all',
   })
+  const paymentAuthorizationType = credentials?.find(
+    (credential) =>
+      credential.transactionAuthorization && credentialSelection.credentials.some((c) => c.id === credential.id)
+  )?.transactionAuthorization
   const credentialSelectionError = credentials
     ? getCredentialSelectionError(credentials, credentialSelection)
     : undefined
@@ -147,9 +150,6 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
   const router = useRouter()
-
-  const [isCopyingTimeout, setIsCopyingTimeout] = useState<ReturnType<typeof setTimeout>>()
-  const copyConfigurationText = isCopyingTimeout ? 'Configuration copied!' : 'Copy configuration'
 
   // Update URL when state changes
   useEffect(() => {
@@ -196,8 +196,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       setCredentials(verifier.credentials)
 
       if (query.responseMode) setResponseMode(query.responseMode as ResponseMode)
-      if (query.transactionAuthorizationType)
-        setTransactionAuthorizationType(query.transactionAuthorizationType as TransactionAuthorizationType)
+      if (query.transactionAuthorizationType === 'qes') setTransactionAuthorizationType('qes')
 
       setCredentialSelection(
         parseCredentialSelection(query.request, verifier.credentials) ?? {
@@ -348,7 +347,7 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           responseMode,
           purpose: purpose && purpose !== '' ? purpose : undefined,
           requestSignerType,
-          transactionAuthorizationType,
+          transactionAuthorizationType: paymentAuthorizationType ?? transactionAuthorizationType,
           paymentAmount,
         })
         if (responseMode.includes('direct_post')) {
@@ -386,157 +385,126 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     }
   }
 
-  const copyConfiguration = async () => {
-    if (isCopyingTimeout) {
-      clearTimeout(isCopyingTimeout)
-    }
-    const currentUrl = window.location.href
-    await navigator.clipboard.writeText(currentUrl)
-
-    const timeout = setTimeout(() => setIsCopyingTimeout(undefined), 3000)
-    setIsCopyingTimeout(timeout)
-  }
-
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <PlaygroundAlert />
-      <div className="flex justify-between items-center mb-4">
-        <TypographyH3>Verify</TypographyH3>
-        <Button variant="link" size="sm" onClick={copyConfiguration} className="flex items-center gap-2">
-          {isCopyingTimeout ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
-          {copyConfigurationText}
-        </Button>
-      </div>
-      <form className="space-y-8 mt-4" onSubmit={onSubmitCreateRequest}>
+      <TabHeader title="Verify" />
+      <form className="space-y-8" onSubmit={onSubmitCreateRequest}>
         {credentials && (
           <CredentialRequestBuilder
             credentials={credentials}
             selection={credentialSelection}
             onSelectionChange={setCredentialSelection}
+            paymentAmount={paymentAmount}
+            onPaymentAmountChange={setPaymentAmount}
           />
         )}
-        <div className="space-y-2">
-          <Label htmlFor="initiation-method">Initiation Method</Label>
-
-          <RadioGroup
-            name="initiation-method"
-            required
-            value={responseMode === 'dc_api' || responseMode === 'dc_api.jwt' ? 'dcApi' : 'qr'}
-            onValueChange={(value) => {
-              setResponseMode(
-                `${value === 'qr' ? 'direct_post' : 'dc_api'}${responseMode.endsWith('.jwt') ? '.jwt' : ''}`
-              )
-              if (value === 'qr') {
-                setRequestSignerType((s) => (s === 'none' ? 'x5c' : s))
-              }
-            }}
-          >
-            <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
-            <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
-          </RadioGroup>
-        </div>
-        {isDcApi && (
-          <div className="space-y-2">
-            <Label htmlFor="dc-api-protocol">Digital Credentials API Protocol</Label>
-            <span className="text-xs">
-              {supportsIsoMdoc
-                ? ' - ISO mdoc is only used for the mdoc credentials in this request'
-                : credentialSelection.combination === 'all' && credentialSelection.credentials.length > 1
-                  ? ' - ISO mdoc requires the mDOC format to be selected for all credentials'
-                  : ' - ISO mdoc requires the mDOC format to be selected'}
-            </span>
+        <div className="space-y-6 border-gray-200 border-t pt-8">
+          <Field label="Initiation Method">
             <RadioGroup
-              name="dc-api-protocol"
+              name="initiation-method"
+              className="gap-x-5 gap-y-2"
               required
-              value={dcApiProtocol}
-              onValueChange={(value) => setSelectedDcApiProtocol(value as DcApiProtocol)}
+              value={responseMode === 'dc_api' || responseMode === 'dc_api.jwt' ? 'dcApi' : 'qr'}
+              onValueChange={(value) => {
+                setResponseMode(
+                  `${value === 'qr' ? 'direct_post' : 'dc_api'}${responseMode.endsWith('.jwt') ? '.jwt' : ''}`
+                )
+                if (value === 'qr') {
+                  setRequestSignerType((s) => (s === 'none' ? 'x5c' : s))
+                }
+              }}
             >
-              <MiniRadioItem key="openid4vp" value="openid4vp" label="OpenID4VP" />
-              <MiniRadioItem key="mdoc" value="mdoc" label="ISO mdoc" disabled={!supportsIsoMdoc} />
-              <MiniRadioItem key="both" value="both" label="Both" disabled={!supportsIsoMdoc} />
+              <MiniRadioItem key="qr" value="qr" label="QR / Deeplink" />
+              <MiniRadioItem key="dcApi" value="dcApi" label="Digital Credentials API" />
             </RadioGroup>
-          </div>
-        )}
-        {usesIsoMdoc && (
-          <Alert variant="default">
-            <AlertTitle>ISO/IEC TS 18013-7 Annex C</AlertTitle>
-            <AlertDescription className="mt-2">
-              {dcApiProtocol === 'both'
-                ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with. '
-                : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol. '}
-              {credentialSelection.combination === 'any' &&
-                credentialSelection.credentials.filter((c) => c.formats.includes('mso_mdoc')).length > 1 &&
-                'An ISO mdoc DeviceRequest does not say whether multiple documents are all required or alternatives. They are requested as alternatives, which the wallet has to support as well.'}
-            </AlertDescription>
-          </Alert>
-        )}
-        {responseMode.includes('direct_post') && (
-          <div className="space-y-2">
-            <Label htmlFor="request-scheme">Scheme (QR / Deeplink)</Label>
-            <Input
-              disabled={responseMode.includes('dc_api')}
-              name="request-scheme"
-              required
-              value={requestScheme}
-              onChange={({ target }) => setRequestScheme(target.value)}
-            />
-          </div>
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="request-signer-type">Request Signer Type</Label>
-
-          <RadioGroup
-            name="request-signer-type"
-            required
-            value={requestSignerType}
-            onValueChange={(value) => setRequestSignerType(value as RequestSignerType)}
-            defaultValue="x5c"
-          >
-            <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
-            {/* <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" /> */}
-            {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
-          </RadioGroup>
-        </div>
-
-        {usesOpenId4Vp && (
-          <div className="space-y-2">
-            <Label htmlFor="presentation-type">Transaction Authorization</Label>
-            <Select
-              name="transaction-data"
-              required
-              value={transactionAuthorizationType}
-              onValueChange={(value) => setTransactionAuthorizationType(value as TransactionAuthorizationType)}
+          </Field>
+          {isDcApi && (
+            <Field
+              label="Digital Credentials API Protocol"
+              description={
+                supportsIsoMdoc
+                  ? 'ISO mdoc is only used for the mdoc credentials in this request.'
+                  : credentialSelection.combination === 'all' && credentialSelection.credentials.length > 1
+                    ? 'ISO mdoc requires the mDOC format to be selected for all credentials.'
+                    : 'ISO mdoc requires the mDOC format to be selected.'
+              }
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a transaction authorization type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
-                <SelectItem value="payment">Payment (EUDI ARF TS 12)</SelectItem>
-                <SelectItem value="paso-payment">Payment (PaSO)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {usesOpenId4Vp &&
-          (transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment') && (
-            <div>
-              <Label htmlFor="payment-amount">Payment amount (EUR)</Label>
-              <Input
-                name="payment-amount"
-                value={paymentAmount || ''}
-                onChange={({ target }) => setPaymentAmount(target.value)}
-              />
-            </div>
+              <RadioGroup
+                name="dc-api-protocol"
+                className="gap-x-5 gap-y-2"
+                required
+                value={dcApiProtocol}
+                onValueChange={(value) => setSelectedDcApiProtocol(value as DcApiProtocol)}
+              >
+                <MiniRadioItem key="openid4vp" value="openid4vp" label="OpenID4VP" />
+                <MiniRadioItem key="mdoc" value="mdoc" label="ISO mdoc" disabled={!supportsIsoMdoc} />
+                <MiniRadioItem key="both" value="both" label="Both" disabled={!supportsIsoMdoc} />
+              </RadioGroup>
+            </Field>
           )}
-        {usesOpenId4Vp && (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="response-mode">Use Response Encryption</Label>
-            <Switch
-              id="response-mode"
-              name="response-mode"
+          {usesIsoMdoc && (
+            <Alert variant="default">
+              <AlertTitle>ISO/IEC TS 18013-7 Annex C</AlertTitle>
+              <AlertDescription className="mt-2">
+                {dcApiProtocol === 'both'
+                  ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with. '
+                  : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol. '}
+                {credentialSelection.combination === 'any' &&
+                  credentialSelection.credentials.filter((c) => c.formats.includes('mso_mdoc')).length > 1 &&
+                  'An ISO mdoc DeviceRequest does not say whether multiple documents are all required or alternatives. They are requested as alternatives, which the wallet has to support as well.'}
+              </AlertDescription>
+            </Alert>
+          )}
+          {responseMode.includes('direct_post') && (
+            <Field label="Scheme (QR / Deeplink)" htmlFor="request-scheme">
+              <Input
+                disabled={responseMode.includes('dc_api')}
+                id="request-scheme"
+                name="request-scheme"
+                required
+                value={requestScheme}
+                onChange={({ target }) => setRequestScheme(target.value)}
+              />
+            </Field>
+          )}
+          <Field label="Request Signer Type">
+            <RadioGroup
+              name="request-signer-type"
+              className="gap-x-5 gap-y-2"
               required
+              value={requestSignerType}
+              onValueChange={(value) => setRequestSignerType(value as RequestSignerType)}
+              defaultValue="x5c"
+            >
+              <MiniRadioItem key="x5c" value="x5c" label="x509 Certificate" />
+              {/* <MiniRadioItem key="openid-federation" value="openid-federation" label="OpenID Federation" /> */}
+              {responseMode.includes('dc_api') && <MiniRadioItem key="none" value="none" label="None" />}
+            </RadioGroup>
+          </Field>
+
+          {usesOpenId4Vp && !paymentAuthorizationType && (
+            <Field label="Transaction Authorization" htmlFor="transaction-data">
+              <Select
+                name="transaction-data"
+                required
+                value={transactionAuthorizationType}
+                onValueChange={(value) => setTransactionAuthorizationType(value as 'none' | 'qes')}
+              >
+                <SelectTrigger id="transaction-data" className="w-full">
+                  <SelectValue placeholder="Select a transaction authorization type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="qes">Qualified Electronic Signature</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+          {usesOpenId4Vp && (
+            <SwitchField
+              id="response-mode"
+              label="Use Response Encryption"
               checked={responseMode === 'direct_post.jwt' || responseMode === 'dc_api.jwt'}
               onCheckedChange={(checked) =>
                 setResponseMode(
@@ -548,94 +516,62 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                 )
               }
             />
-          </div>
-        )}
-        {usesOpenId4Vp && (
-          <div className="space-y-2">
-            <Label htmlFor="request-purpose">Purpose</Label>
-            <span className="text-xs"> - Optional. Each request has an associated default purpose</span>
-            <Input name="request-purpose" value={purpose || ''} onChange={({ target }) => setPurpose(target.value)} />
-          </div>
-        )}
-        {usesOpenId4Vp && !hasResponse && (
-          <div className="flex justify-center flex-col items-center bg-gray-200 min-h-64 w-full rounded-md">
-            {authorizationRequestUriHasBeenFetched ? (
-              <p className="text-gray-500 break-all">
-                Authorization request has been retrieved. Waiting for response...
-              </p>
-            ) : authorizationRequestUri ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <div className="flex flex-col p-5 gap-2 justify-center items-center">
-                    <div className="bg-white p-5 rounded-md w-[296px]">
-                      <QRCode size={256} value={authorizationRequestUri} />
-                    </div>
-                    <TooltipTrigger asChild>
-                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
-                      <p
-                        onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
-                        className="text-gray-500 break-all cursor-pointer"
-                      >
-                        {authorizationRequestUri}
-                      </p>
-                    </TooltipTrigger>
-                    <div className="gap-2 w-full justify-center flex flex-1">
-                      <div>
-                        <a href={authorizationRequestUri}>
-                          <Button type="button">Open in Wallet</Button>
-                        </a>
-                      </div>
-                    </div>
-                    <div>
-                      <a href={authorizationRequestUri.replace('openid4vp://', 'id.animo.paradym:')}>
-                        <Button type="button">Open in Paradym Wallet</Button>
-                      </a>
-                    </div>
-                  </div>
-
-                  <TooltipContent>
-                    <p>Click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <p className="text-gray-500 break-all">Authorization request will be displayed here</p>
-            )}
-          </div>
-        )}
-        <div className="space-y-2">
-          <Button
-            onClick={onSubmitCreateRequest}
-            className="w-full"
-            onSubmit={onSubmitCreateRequest}
-            disabled={!credentials || credentialSelectionError !== undefined}
-          >
+          )}
+          {usesOpenId4Vp && (
+            <Field
+              label="Purpose"
+              description="Optional. Each request has an associated default purpose."
+              htmlFor="request-purpose"
+            >
+              <Input
+                id="request-purpose"
+                name="request-purpose"
+                value={purpose || ''}
+                onChange={({ target }) => setPurpose(target.value)}
+              />
+            </Field>
+          )}
+        </div>
+        <div className="space-y-4 border-gray-200 border-t pt-8">
+          <Button type="submit" className="w-full" disabled={!credentials || credentialSelectionError !== undefined}>
             Verify Credential
           </Button>
-          {credentialSelectionError && <p className="text-sm text-gray-500 text-center">{credentialSelectionError}</p>}
+          {credentialSelectionError && <p className="text-center text-gray-500 text-sm">{credentialSelectionError}</p>}
+          {usesOpenId4Vp && !hasResponse && (
+            <WalletLinkPanel
+              uri={authorizationRequestUri}
+              paradymUri={authorizationRequestUri?.replace('openid4vp://', 'id.animo.paradym:')}
+              status={
+                authorizationRequestUriHasBeenFetched
+                  ? 'Authorization request has been retrieved. Waiting for response...'
+                  : undefined
+              }
+              placeholder="The authorization request will appear here."
+            />
+          )}
+          {(hasResponse || requestError) && (
+            <Alert variant={isSuccess ? 'success' : requestError ? 'destructive' : 'warning'}>
+              {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
+              <AlertTitle className={isSuccess ? 'mt-0.5' : ''}>
+                {isSuccess
+                  ? 'Verification Successful'
+                  : requestError
+                    ? 'Error creating request'
+                    : 'Verification Unsuccessful'}
+              </AlertTitle>
+              {!isSuccess && (
+                <AlertDescription className="mt-2">
+                  {requestError ?? requestStatus?.error ?? 'Unknown error occurred'}
+                </AlertDescription>
+              )}
+              {isSuccess && isoMdocResponse && (
+                <AlertDescription className="mt-2">
+                  ISO mdoc response verified for origin {isoMdocResponse.origin}
+                </AlertDescription>
+              )}
+            </Alert>
+          )}
         </div>
-        {(hasResponse || requestError) && (
-          <Alert variant={isSuccess ? 'success' : requestError ? 'destructive' : 'warning'}>
-            {isSuccess ? <CheckboxIcon className="h-5 w-5" /> : <ExclamationTriangleIcon className="h-4 w-4" />}
-            <AlertTitle className={isSuccess ? 'mt-0.5' : ''}>
-              {isSuccess
-                ? 'Verification Successful'
-                : requestError
-                  ? 'Error creating request'
-                  : 'Verification Unsuccessful'}
-            </AlertTitle>
-            {!isSuccess && (
-              <AlertDescription className="mt-2">
-                {requestError ?? requestStatus?.error ?? 'Unknown error occurred'}
-              </AlertDescription>
-            )}
-            {isSuccess && isoMdocResponse && (
-              <AlertDescription className="mt-2">
-                ISO mdoc response verified for origin {isoMdocResponse.origin}
-              </AlertDescription>
-            )}
-          </Alert>
-        )}
 
         {(isoMdocResponse || isoMdocRequest) && (
           <div className="flex flex-col w-full gap-4">
@@ -691,9 +627,9 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                 title={`PaSO Authorizing Party Verification — ${requestStatus.pasoVerification.accepted ? 'accepted' : 'rejected'}`}
                 initial="open"
               >
-                <div className="flex flex-col gap-1 py-2">
+                <div className="flex flex-col gap-2 p-4">
                   {requestStatus.pasoVerification.checks.map((check) => (
-                    <div key={check.check} className="flex gap-2 text-sm">
+                    <div key={check.check} className="flex flex-wrap gap-x-2 gap-y-0.5 text-sm">
                       <span className={check.passed ? 'text-green-600' : 'text-red-600'}>
                         {check.passed ? '\u2713' : '\u2717'}
                       </span>

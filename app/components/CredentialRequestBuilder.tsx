@@ -2,9 +2,10 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { useState } from 'react'
 import type { PresentationCredential, PresentationCredentialFormat, PresentationCredentialSelection } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { Field } from './Field'
 import { Button } from './ui/button'
 import { CredentialCardCheckboxItem, MiniCheckboxItem } from './ui/checkbox'
-import { Label } from './ui/label'
+import { Input } from './ui/input'
 import { MiniRadioItem, RadioGroup } from './ui/radio'
 
 type SelectedCredential = PresentationCredentialSelection['credentials'][number]
@@ -71,14 +72,29 @@ export function getCredentialSelectionError(
   return undefined
 }
 
+/** The credentials as cards, where credentials with the same name are variants of one card. */
+function getCredentialCards(credentials: PresentationCredential[]) {
+  const cards: PresentationCredential[][] = []
+  for (const credential of credentials) {
+    const card = cards.find(([first]) => first.display.name === credential.display.name)
+    if (card) card.push(credential)
+    else cards.push([credential])
+  }
+  return cards
+}
+
 export function CredentialRequestBuilder({
   credentials,
   selection,
   onSelectionChange,
+  paymentAmount,
+  onPaymentAmountChange,
 }: {
   credentials: PresentationCredential[]
   selection: PresentationCredentialSelection
   onSelectionChange: (selection: PresentationCredentialSelection) => void
+  paymentAmount: string
+  onPaymentAmountChange: (paymentAmount: string) => void
 }) {
   const toggleCredential = (credential: PresentationCredential, checked: boolean) =>
     onSelectionChange({
@@ -88,6 +104,14 @@ export function CredentialRequestBuilder({
         : selection.credentials.filter((c) => c.id !== credential.id),
     })
 
+  const replaceCredential = (id: string, credential: PresentationCredential) =>
+    onSelectionChange({
+      ...selection,
+      credentials: selection.credentials.map((c) => (c.id === id ? getDefaultCredentialSelection(credential) : c)),
+    })
+
+  const cards = getCredentialCards(credentials)
+
   const updateCredential = (updated: SelectedCredential) =>
     onSelectionChange({
       ...selection,
@@ -96,38 +120,47 @@ export function CredentialRequestBuilder({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col">
-        <span className="text-accent font-medium text-lg">Credentials</span>
-        <p className="text-gray-500 text-sm">Select one or more credentials to request from the wallet.</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 py-3">
-          {credentials.map((credential) => (
-            <CredentialCardCheckboxItem
-              key={credential.id}
-              checked={selection.credentials.some((c) => c.id === credential.id)}
-              onCheckedChange={(checked) => toggleCredential(credential, checked)}
-              credential={{
-                name: credential.display.name,
-                background_color: credential.display.background_color,
-                background_image: credential.display.background_image?.uri,
-                text_color: credential.display.text_color,
-              }}
-              tags={credential.formats.map((format) => formatLabels[format])}
-            />
-          ))}
+      <div className="flex flex-col gap-3">
+        <div className="space-y-1">
+          <h4 className="font-medium text-gray-900 text-sm">Credentials</h4>
+          <p className="text-gray-500 text-sm">Select one or more credentials to request from the wallet.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {cards.map((variants) => {
+            // The card shows the selected variant
+            const selected = variants.find((variant) => selection.credentials.some((c) => c.id === variant.id))
+            const { display } = selected ?? variants[0]
+            const formats = new Set(variants.flatMap((variant) => variant.formats))
+
+            return (
+              <CredentialCardCheckboxItem
+                key={variants[0].id}
+                checked={selected !== undefined}
+                onCheckedChange={(checked) => toggleCredential(selected ?? variants[0], checked)}
+                credential={{
+                  name: display.name,
+                  background_color: display.background_color,
+                  background_image: display.background_image?.uri,
+                  text_color: display.text_color,
+                }}
+                tags={[
+                  ...variants.flatMap((variant) => variant.variant ?? []),
+                  ...[...formats].map((format) => formatLabels[format]),
+                ]}
+              />
+            )
+          })}
         </div>
       </div>
 
       {selection.credentials.length > 1 && (
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="combination">Combination</Label>
-            <p className="text-gray-500 text-sm">
-              Whether the wallet has to present all selected credentials, or only one of them.
-            </p>
-          </div>
+        <Field
+          label="Combination"
+          description="Whether the wallet has to present all selected credentials, or only one of them."
+        >
           <RadioGroup
             name="combination"
-            className="flex flex-col gap-2 md:gap-4 md:flex-row"
+            className="gap-x-5 gap-y-2"
             value={selection.combination}
             onValueChange={(combination) =>
               onSelectionChange({
@@ -139,7 +172,7 @@ export function CredentialRequestBuilder({
             <MiniRadioItem value="all" label="All credentials (AND)" />
             <MiniRadioItem value="any" label="One of the credentials (OR)" />
           </RadioGroup>
-        </div>
+        </Field>
       )}
 
       {selection.credentials.map((selectedCredential) => {
@@ -150,7 +183,11 @@ export function CredentialRequestBuilder({
           <SelectedCredentialConfiguration
             key={credential.id}
             credential={credential}
+            variants={cards.find((card) => card.includes(credential)) ?? [credential]}
             selectedCredential={selectedCredential}
+            onVariantChange={(variant) => replaceCredential(credential.id, variant)}
+            paymentAmount={paymentAmount}
+            onPaymentAmountChange={onPaymentAmountChange}
             onChange={updateCredential}
             onRemove={() => toggleCredential(credential, false)}
           />
@@ -162,12 +199,20 @@ export function CredentialRequestBuilder({
 
 function SelectedCredentialConfiguration({
   credential,
+  variants,
   selectedCredential,
+  onVariantChange,
+  paymentAmount,
+  onPaymentAmountChange,
   onChange,
   onRemove,
 }: {
   credential: PresentationCredential
+  variants: PresentationCredential[]
   selectedCredential: SelectedCredential
+  onVariantChange: (variant: PresentationCredential) => void
+  paymentAmount: string
+  onPaymentAmountChange: (paymentAmount: string) => void
   onChange: (selectedCredential: SelectedCredential) => void
   onRemove: () => void
 }) {
@@ -198,7 +243,7 @@ function SelectedCredentialConfiguration({
   }
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+    <div className="space-y-5 rounded-lg border border-gray-200 p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <div
@@ -225,15 +270,45 @@ function SelectedCredentialConfiguration({
         </Button>
       </div>
 
+      {variants.length > 1 && (
+        <Field label="Specification" description="The specification the credential is requested under.">
+          <RadioGroup
+            className="gap-x-5 gap-y-2"
+            value={credential.id}
+            onValueChange={(id) => {
+              const variant = variants.find((v) => v.id === id)
+              if (variant) onVariantChange(variant)
+            }}
+          >
+            {variants.map((variant) => (
+              <MiniRadioItem key={variant.id} value={variant.id} label={variant.variant ?? variant.display.name} />
+            ))}
+          </RadioGroup>
+        </Field>
+      )}
+
+      {credential.transactionAuthorization && (
+        <Field
+          label="Amount (EUR)"
+          description="The payment the wallet asks to authorize with this credential."
+          htmlFor={`${credential.id}-amount`}
+        >
+          <Input
+            id={`${credential.id}-amount`}
+            inputMode="decimal"
+            className="max-w-48"
+            value={paymentAmount}
+            onChange={({ target }) => onPaymentAmountChange(target.value)}
+          />
+        </Field>
+      )}
+
       {credential.formats.length > 1 && (
-        <div className="space-y-2">
-          <div>
-            <Label>Format</Label>
-            <p className="text-gray-500 text-sm">
-              When multiple formats are selected, the wallet can present the credential in either format.
-            </p>
-          </div>
-          <div className="flex flex-row gap-4">
+        <Field
+          label="Format"
+          description="When multiple formats are selected, the wallet can present the credential in either format."
+        >
+          <div className="flex flex-row gap-x-5">
             {credential.formats.map((format) => {
               const checked = selectedCredential.formats.includes(format)
               return (
@@ -248,13 +323,12 @@ function SelectedCredentialConfiguration({
               )
             })}
           </div>
-        </div>
+        </Field>
       )}
 
-      <div className="space-y-2">
-        <Label>Attributes</Label>
+      <Field label="Attributes">
         <RadioGroup
-          className="flex flex-wrap gap-x-4 gap-y-2"
+          className="gap-x-5 gap-y-2"
           value={selectedPresetId}
           onValueChange={(presetId) => {
             if (presetId === 'custom') {
@@ -278,7 +352,7 @@ function SelectedCredentialConfiguration({
           type="button"
           variant="link"
           size="sm"
-          className="px-0 h-auto text-accent"
+          className="h-auto self-start px-0 text-gray-600 hover:text-gray-900"
           onClick={() => setIsEditingAttributes((isEditing) => !isEditing)}
         >
           {isEditingAttributes
@@ -322,7 +396,7 @@ function SelectedCredentialConfiguration({
             })}
           </div>
         )}
-      </div>
+      </Field>
     </div>
   )
 }
