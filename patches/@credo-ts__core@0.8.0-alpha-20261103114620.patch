@@ -1,0 +1,13 @@
+diff --git a/build/modules/sd-jwt-vc/SdJwtVcService.mjs b/build/modules/sd-jwt-vc/SdJwtVcService.mjs
+index dce3cda45083869c837677872e41791498c66b24..c5c8b7c22ee0d66a701a6c82dbcd09bd5da2f61c 100644
+--- a/build/modules/sd-jwt-vc/SdJwtVcService.mjs
++++ b/build/modules/sd-jwt-vc/SdJwtVcService.mjs
+@@ -119,7 +119,7 @@ let SdJwtVcService = class SdJwtVcService {
+ 	assertValidX5cJwtIssuer(agentContext, iss, leafCertificate) {
+ 		if (!iss) return;
+ 		if (!iss.startsWith("https://") && !(iss.startsWith("http://") && agentContext.config.allowInsecureHttpUrls)) throw new SdJwtVcError("The X509 certificate issuer must be a HTTPS URI.");
+-		if (!leafCertificate.sanUriNames?.includes(iss) && !leafCertificate.sanDnsNames?.includes(getDomainFromUrl(iss))) throw new SdJwtVcError(`The 'iss' claim in the payload does not match a 'SAN-URI' name and the domain extracted from the HTTPS URI does not match a 'SAN-DNS' name in the x5c certificate. Either remove the 'iss' claim or make it match with at least one SAN-URI or DNS-URI entry`);
++		// patched: the iss/SAN match requirement was removed from the SD-JWT VC spec
+ 	}
+ 	async verify(agentContext, { compactSdJwtVc, keyBinding, requiredClaimKeys, fetchTypeMetadata, trustedCertificates, trustedIssuers: _trustedIssuers, disableStatusValidation, verifyCredentialStatus, now }) {
+ 		const sdjwt = new SDJwtVcInstance({

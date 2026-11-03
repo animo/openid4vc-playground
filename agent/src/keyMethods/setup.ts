@@ -100,7 +100,7 @@ export async function setupX509Certificate() {
 
   const crlInstance = await createCertificateRevocationList({
     context: agent.context,
-    entityName: 'Animo',
+    issuer: x509RootCertificate.subject,
     publicJwk: x509RootCertificate.publicJwk,
   })
 
