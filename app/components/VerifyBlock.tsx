@@ -448,11 +448,8 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               <AlertTitle>ISO/IEC TS 18013-7 Annex C</AlertTitle>
               <AlertDescription className="mt-2">
                 {dcApiProtocol === 'both'
-                  ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with. '
-                  : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol. '}
-                {credentialSelection.combination === 'any' &&
-                  credentialSelection.credentials.filter((c) => c.formats.includes('mso_mdoc')).length > 1 &&
-                  'An ISO mdoc DeviceRequest does not say whether multiple documents are all required or alternatives. They are requested as alternatives, which the wallet has to support as well.'}
+                  ? 'Both the openid4vp and org-iso-mdoc protocols are offered to the wallet, which picks one to respond with.'
+                  : 'Requests the mdoc credentials of this request over the org-iso-mdoc protocol.'}
               </AlertDescription>
             </Alert>
           )}
@@ -587,10 +584,15 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             )}
             {isoMdocRequest && (
               <>
-                <CollapsibleSection
-                  title={isoMdocRequest.docRequestsAsAlternatives ? 'Device Request (alternatives)' : 'Device Request'}
-                >
-                  <HighLight code={JSON.stringify(isoMdocRequest.docRequests, null, 2)} language="json" />
+                <CollapsibleSection title="Device Request">
+                  <HighLight
+                    code={JSON.stringify(
+                      { docRequests: isoMdocRequest.docRequests, deviceRequestInfo: isoMdocRequest.deviceRequestInfo },
+                      null,
+                      2
+                    )}
+                    language="json"
+                  />
                 </CollapsibleSection>
                 <CollapsibleSection title="DC API Request (ISO mdoc)">
                   <HighLight code={JSON.stringify(isoMdocRequest.request, null, 2)} language="json" />

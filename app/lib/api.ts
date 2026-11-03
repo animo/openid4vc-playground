@@ -238,7 +238,7 @@ export type CreateIsoMdocRequestResponse = {
   responseStatus: string
   request: IsoMdocRequest
   docRequests: Array<{ docType: string; nameSpaces: Record<string, Record<string, boolean>> }>
-  docRequestsAsAlternatives: boolean
+  deviceRequestInfo?: { useCases?: Array<{ mandatory: boolean; documentSets: number[][] }> }
 }
 
 export async function createIsoMdocRequest(data: {
