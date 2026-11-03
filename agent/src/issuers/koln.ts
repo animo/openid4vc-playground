@@ -120,6 +120,7 @@ export const certificateOfResidenceSdJwtData = {
 export const kolnIssuer = {
   tags: [certificateOfResidenceDisplay.name],
   issuerId: '832f1c72-817d-4a54-b0fc-9994ecaba291',
+  playgroundCategory: 'government',
   credentialConfigurationsSupported: [
     {
       'dc+sd-jwt': {

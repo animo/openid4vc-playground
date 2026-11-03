@@ -119,6 +119,7 @@ export const mvrcMdocData = {
 export const mvrcIssuer = {
   tags: [mvrcDisplay.name],
   issuerId: '2943c018-8eac-4ddc-a234-da35857fa3e9',
+  playgroundCategory: 'government',
   credentialConfigurationsSupported: [
     {
       mso_mdoc: {

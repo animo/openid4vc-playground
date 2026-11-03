@@ -354,29 +354,35 @@ const openHorizonDebitCardData = {
 export const openHorizonBankIssuer = {
   tags: [weroCardDisplay.name, 'TS12 Payment', 'PaSO Payment'],
   issuerId: openHorizonIssuerId,
+  playgroundCategory: 'payments',
   credentialConfigurationsSupported: [
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroScaConfiguration,
         data: weroScaData,
+        playground: { name: 'Payment Attestation', variant: 'TS12' },
       },
     },
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroScaThirdPartyConfiguration,
         data: weroScaThirdPartyData,
+        playground: { hidden: true },
       },
     },
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: weroPasoConfiguration,
         data: weroPasoData,
+        // The debit card is the PaSO option
+        playground: { hidden: true },
       },
     },
     {
       [OpenId4VciCredentialFormatProfile.SdJwtDc]: {
         configuration: openHorizonDebitCardConfiguration,
         data: openHorizonDebitCardData,
+        playground: { name: 'Payment Attestation', variant: 'PaSO' },
         typeMetadata: {
           extends: weroPasoConfiguration.vct,
           svgTemplate: 'open_horizon_debit_card.svg',

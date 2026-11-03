@@ -44,6 +44,10 @@ export interface PresentationCredentialPreset {
 export interface PresentationCredential {
   id: string
   display: CredentialConfigurationDisplay
+  /** Credentials with the same display name are one card in the playground, and this labels the option between them. */
+  variant?: string
+  /** The payment the playground requests this credential to authorize, which is then the only way to request it. */
+  transactionAuthorization?: 'payment' | 'paso-payment'
   formats: {
     'dc+sd-jwt'?: { vcts: string[] }
     mso_mdoc?: { doctype: string; namespace: string }
@@ -403,7 +407,9 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
   },
   {
     id: 'wero-card',
-    display: weroScaConfiguration.display[0],
+    display: { ...weroScaConfiguration.display[0], name: 'Payment Attestation' },
+    variant: 'TS12',
+    transactionAuthorization: 'payment',
     formats: {
       'dc+sd-jwt': { vcts: [weroScaConfiguration.vct] },
     },
@@ -422,7 +428,9 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
    */
   {
     id: 'wero-card-paso',
-    display: weroPasoConfiguration.display[0],
+    display: { ...weroPasoConfiguration.display[0], name: 'Payment Attestation' },
+    variant: 'PaSO',
+    transactionAuthorization: 'paso-payment',
     formats: {
       'dc+sd-jwt': { vcts: [weroPasoConfiguration.vct] },
     },

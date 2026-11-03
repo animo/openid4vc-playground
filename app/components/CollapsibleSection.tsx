@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import React, { type PropsWithChildren } from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { TypographyH4 } from '@/components/ui/typography'
+import { cn } from '@/lib/utils'
 
 export const CollapsibleSection = ({
   title,
@@ -12,19 +12,18 @@ export const CollapsibleSection = ({
   const [isOpen, setIsOpen] = React.useState(initial === 'open')
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className="flex items-center w-full gap-2">
-          {isOpen ? <ChevronDown className="h-8 w-8" /> : <ChevronRight className="h-8 w-8" />}
-          <TypographyH4>{title}</TypographyH4>
-          {titleSmall && isOpen && (
-            <>
-              - <p>{titleSmall}</p>
-            </>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="rounded-lg border border-gray-200 bg-white">
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-gray-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <ChevronRight
+          className={cn(
+            'size-4 shrink-0 text-gray-400 transition-transform motion-reduce:transition-none',
+            isOpen && 'rotate-90'
           )}
-        </div>
+        />
+        <span className="flex-1">{title}</span>
+        {titleSmall && isOpen && <span className="text-xs font-normal text-gray-500">{titleSmall}</span>}
       </CollapsibleTrigger>
-      <CollapsibleContent>{children}</CollapsibleContent>
+      <CollapsibleContent className="border-t border-gray-200">{children}</CollapsibleContent>
     </Collapsible>
   )
 }

@@ -130,6 +130,7 @@ export const taxIdSdJwtData = {
 export const steuernIssuer = {
   tags: [taxIdDisplay.name],
   issuerId: '197625a0-b797-4559-80cc-bf5463b90dc3',
+  playgroundCategory: 'government',
   credentialConfigurationsSupported: [
     {
       'dc+sd-jwt': {
