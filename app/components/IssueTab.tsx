@@ -1,5 +1,5 @@
 import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
+import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -60,9 +60,11 @@ function getOfferProgress({ state, presentation }: OfferStatus) {
 export function IssueTab({
   disabled = false,
   searchParams,
+  active,
 }: {
   disabled?: boolean
   searchParams: ReadonlyURLSearchParams
+  active: boolean
 }) {
   const [credentialType, setCredentialType] = useState<number>(0)
   const [selectedIssuerId, setSelectedIssuerId] = useState<string>()
@@ -90,7 +92,6 @@ export function IssueTab({
     (selectedIssuer &&
       getCredentialCards(selectedIssuer).find((card) => card.indexes.includes(credentialType))?.indexes) ??
     []
-  const router = useRouter()
   const issueButtonRef = useRef<HTMLButtonElement>(null)
   const hasScrolledToIssueRef = useRef(false)
 
@@ -149,7 +150,7 @@ export function IssueTab({
 
   // Update URL when state changes
   useEffect(() => {
-    if (!issuers) return
+    if (!issuers || !active) return
     const params = new URLSearchParams()
 
     params.set('tab', 'issue')
@@ -169,7 +170,8 @@ export function IssueTab({
 
     if (existingSearchParams.toString() === params.toString()) return
 
-    router.replace(`?${params.toString()}`, { scroll: false })
+    // Unlike router.replace, this doesn't trigger a server round-trip
+    window.history.replaceState(null, '', `?${params.toString()}`)
   }, [
     issuers,
     selectedIssuerId,
@@ -177,8 +179,8 @@ export function IssueTab({
     selectedAuthorization,
     selectedDeferBy,
     credentialType,
-    router,
     searchParams,
+    active,
     requireKeyAttestation,
     requireWalletAttestation,
   ])

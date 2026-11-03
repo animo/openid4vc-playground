@@ -1,5 +1,5 @@
 import { CheckboxIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { type ReadonlyURLSearchParams, useRouter } from 'next/navigation'
+import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
 import {
   type CreateIsoMdocRequestResponse,
@@ -81,7 +81,7 @@ function parseCredentialSelection(
   }
 }
 
-export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchParams }) => {
+export const VerifyBlock = ({ searchParams, active }: { searchParams: ReadonlyURLSearchParams; active: boolean }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
   const [verificationSessionId, setVerificationSessionId] = useState<string>()
   const [requestStatus, setRequestStatus] = useState<{
@@ -149,11 +149,10 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [purpose, setPurpose] = useState<string>()
   const [requestSignerType, setRequestSignerType] = useState<RequestSignerType>('x5c')
   const [requestError, setRequestError] = useState<string>()
-  const router = useRouter()
 
   // Update URL when state changes
   useEffect(() => {
-    if (!credentials) return
+    if (!credentials || !active) return
     const params = new URLSearchParams()
 
     params.set('tab', 'verify')
@@ -173,7 +172,8 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
     if (existingSearchParams.toString() === params.toString()) return
 
-    router.replace(`?${params.toString()}`, { scroll: false })
+    // Unlike router.replace, this doesn't trigger a server round-trip
+    window.history.replaceState(null, '', `?${params.toString()}`)
   }, [
     credentials,
     responseMode,
@@ -184,8 +184,8 @@ export const VerifyBlock = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     requestSignerType,
     isDcApi,
     dcApiProtocol,
-    router,
     searchParams,
+    active,
   ])
 
   useEffect(() => {
