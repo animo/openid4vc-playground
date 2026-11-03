@@ -3,6 +3,7 @@
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { IssueTab } from './IssueTab'
 import { VerifyBlock } from './VerifyBlock'
@@ -10,6 +11,7 @@ import { X509Tab } from './X509Tab'
 
 export function Main() {
   const searchParams = useSearchParams()
+  const [tab, setTab] = useState(searchParams.get('tab') ?? 'verify')
   return (
     <main key="1" className="flex min-h-screen flex-col bg-gray-100">
       <div className="flex w-full items-center justify-center px-4 pt-10 pb-8">
@@ -25,7 +27,7 @@ export function Main() {
         </div>
       </div>
       <div className="flex w-full items-center justify-center">
-        <Tabs className="w-full max-w-5xl px-3 sm:px-6" defaultValue={searchParams.get('tab') ?? 'verify'}>
+        <Tabs className="w-full max-w-5xl px-3 sm:px-6" value={tab} onValueChange={setTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="verify">Verify</TabsTrigger>
             <TabsTrigger value="issue">Issue</TabsTrigger>
@@ -34,13 +36,14 @@ export function Main() {
               <span className="hidden sm:inline">Manage Certificates</span>
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="verify">
-            <VerifyBlock searchParams={searchParams} />
+          {/* Tabs stay mounted so switching keeps their state */}
+          <TabsContent value="verify" forceMount className="data-[state=inactive]:hidden">
+            <VerifyBlock searchParams={searchParams} active={tab === 'verify'} />
           </TabsContent>
-          <TabsContent value="issue">
-            <IssueTab searchParams={searchParams} />
+          <TabsContent value="issue" forceMount className="data-[state=inactive]:hidden">
+            <IssueTab searchParams={searchParams} active={tab === 'issue'} />
           </TabsContent>
-          <TabsContent value="x509">
+          <TabsContent value="x509" forceMount className="data-[state=inactive]:hidden">
             <X509Tab />
           </TabsContent>
         </Tabs>
