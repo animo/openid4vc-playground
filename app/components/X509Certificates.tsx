@@ -14,7 +14,7 @@ export function X509Certificates() {
       <CollapsibleSection title="X509 Certificate Base64" titleSmall="click content to copy">
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
-          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
+          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.textContent)}
           className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >
@@ -24,7 +24,7 @@ export function X509Certificates() {
       <CollapsibleSection title="X509 Certificate PEM" titleSmall="click content to copy">
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
-          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
+          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.textContent)}
           className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >
@@ -34,7 +34,7 @@ export function X509Certificates() {
       <CollapsibleSection title="X509 Certificate Decoded" titleSmall="click content to copy">
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: no explanation */}
         <p
-          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}
+          onClick={(e) => navigator.clipboard.writeText(e.currentTarget.textContent)}
           className="cursor-pointer break-all p-4 font-mono text-xs text-gray-600"
           style={{ whiteSpace: 'pre-wrap' }}
         >

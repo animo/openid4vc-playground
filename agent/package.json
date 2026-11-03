@@ -6,27 +6,27 @@
     "@credo-ts/core": "0.8.0-alpha-20261103114620",
     "@credo-ts/node": "0.8.0-alpha-20261103114620",
     "@credo-ts/openid4vc": "0.8.0-alpha-20261103114620",
-    "@openwallet-foundation/askar-nodejs": "^0.6.0",
-    "@openwallet-foundation/askar-shared": "^0.6.0",
+    "@openwallet-foundation/askar-nodejs": "^0.6.1",
+    "@openwallet-foundation/askar-shared": "^0.6.1",
     "@owf/mdoc": "^0.9.3",
     "@peculiar/x509": "^2.0.0",
     "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "oidc-provider": "^9.12.2",
-    "zod": "^4.6.1"
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "oidc-provider": "^9.13.3",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.13.4",
-    "@types/oidc-provider": "^9.12.1",
-    "tsx": "^4.23.13",
+    "@types/oidc-provider": "^9.13.1",
+    "tsx": "^4.23.15",
     "typescript": "~7.0.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "dev": "tsx watch -r dotenv/config src/server.ts dotenv_config_path=.env.development"
+    "dev": "DOTENV_PATH=.env.development tsx watch -r dotenv/config src/server.ts"
   }
 }
