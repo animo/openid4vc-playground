@@ -23,6 +23,7 @@ import { randomUUID } from 'crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import z from 'zod'
 import { agent } from './agent.js'
+import { AGENT_HOST } from './constants.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
 import { issuers } from './issuers/index.js'
 import {
@@ -542,7 +543,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
                 name: verifier.clientMetadata?.client_name ?? 'TODO: NAME',
                 id: verifier.verifierId,
                 logo: verifier.clientMetadata?.logo_uri ?? 'TODO: logo',
-                website: 'https://eudi-payments.animo.id',
+                website: AGENT_HOST,
               },
             },
           }
