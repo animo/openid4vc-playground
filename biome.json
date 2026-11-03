@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
   "files": {
     "maxSize": 10000000
   },
@@ -27,6 +27,16 @@
   "json": {
     "parser": {
       "allowComments": true
+    }
+  },
+  "yaml": {
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "enabled": false
     }
   },
   "vcs": {
