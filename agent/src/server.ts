@@ -105,7 +105,7 @@ async function run() {
           type: 'chained',
           scopesMapping: Object.fromEntries(
             credentialConfigurationsSupported.flatMap((c) =>
-              Object.values(c).map((cc) => [cc.configuration.scope, cc.configuration.scope])
+              Object.values(c).map((cc) => [cc.configuration.scope, [cc.configuration.scope]])
             )
           ),
           issuer: oidcUrl,

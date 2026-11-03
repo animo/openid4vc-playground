@@ -1,4 +1,4 @@
-import type { DcqlQuery, MdocDcApiDocRequest } from '@credo-ts/core'
+import type { DcqlQuery, MdocDcApiDocRequest, MdocDeviceRequestInfo } from '@credo-ts/core'
 import { type PresentationCredentialFormat, presentationCredentials } from './credentials.js'
 
 export interface SdJwtCredential {
@@ -242,11 +242,11 @@ function mdocField(credential: MdocCredential, field: MdocCredential['fields'][n
 }
 
 /**
- * The ISO 18013-7 Annex C `DeviceRequest` only carries mdoc doc types and name spaces. When it has
- * more than one `DocRequest` it does not say whether all of them, or any one of them, is requested.
- * Both the verifier and the wallet have to opt in to treating them as alternatives
- * (`treatAmbiguousMultipleDocRequestsAsAlternatives`), which we do for a request with a single
- * credential set (the `any` combination). Otherwise every `DocRequest` is requested.
+ * Without use cases, a `DeviceRequest` with more than one `DocRequest` does not say whether all of
+ * them, or any one of them, is requested (iOS reads them as alternatives). So a request with more
+ * than one `DocRequest` always states it in a use case: one document set per doc request for a
+ * single credential set (the `any` combination), or one document set with every doc request
+ * otherwise.
  *
  * A request can therefore only be expressed as a `DeviceRequest` if every credential set has at least
  * one mdoc option (or, when no credential sets are defined, if all credentials are mdoc).
@@ -255,9 +255,13 @@ function mdocField(credential: MdocCredential, field: MdocCredential['fields'][n
  */
 export function isoMdocDocRequestsFromRequest(
   request: PresentationRequest
-): { docRequests: MdocDcApiDocRequest[]; docRequestsAsAlternatives: boolean } | undefined {
+): { docRequests: MdocDcApiDocRequest[]; deviceRequestInfo?: MdocDeviceRequestInfo } | undefined {
   const mdocCredentials = (indexes: number[]) =>
     indexes.map((index) => request.credentials[index]).filter((c): c is MdocCredential => c?.format === 'mso_mdoc')
+  const withUseCase = (docRequests: MdocDcApiDocRequest[], documentSets: number[][]) =>
+    docRequests.length > 1
+      ? { docRequests, deviceRequestInfo: { useCases: [{ mandatory: true, documentSets }] } }
+      : { docRequests }
 
   // A single credential set is a list of alternatives, which maps to doc requests as alternatives.
   // Every mdoc option becomes its own doc request, as merging options of the same doc type would
@@ -269,7 +273,10 @@ export function isoMdocDocRequestsFromRequest(
     }))
     if (docRequests.length === 0) return undefined
 
-    return { docRequests, docRequestsAsAlternatives: docRequests.length > 1 }
+    return withUseCase(
+      docRequests,
+      docRequests.map((_, index) => [index])
+    )
   }
 
   // With multiple credential sets, all sets are required but each set is a list of alternatives. A
@@ -296,7 +303,7 @@ export function isoMdocDocRequestsFromRequest(
     }
   }
 
-  return { docRequests, docRequestsAsAlternatives: false }
+  return withUseCase(docRequests, [docRequests.map((_, index) => index)])
 }
 
 export function dcqlQueryFromRequest(request: PresentationRequest, purpose?: string): DcqlQuery {

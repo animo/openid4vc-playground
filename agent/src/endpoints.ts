@@ -1015,9 +1015,7 @@ apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: R
 
     const { verificationSession, request: dcApiRequest } = await agent.mdoc.createDcApiVerificationSession({
       docRequests: isoMdocRequest.docRequests,
-      // Nothing in the DeviceRequest marks the doc requests as alternatives, this only changes how the
-      // response is matched. The wallet has to apply the same interpretation.
-      treatAmbiguousMultipleDocRequestsAsAlternatives: isoMdocRequest.docRequestsAsAlternatives,
+      deviceRequestInfo: isoMdocRequest.deviceRequestInfo,
       // Reader authentication signs over the session transcript, which binds this single origin.
       readerAuth: useReaderAuth ? { certificate: getX509DcsCertificate(), origin } : undefined,
     })
@@ -1027,7 +1025,7 @@ apiRouter.post('/iso-mdoc/requests/create', async (request: Request, response: R
       responseStatus: verificationSession.state,
       request: dcApiRequest,
       docRequests: isoMdocRequest.docRequests,
-      docRequestsAsAlternatives: isoMdocRequest.docRequestsAsAlternatives,
+      deviceRequestInfo: isoMdocRequest.deviceRequestInfo,
     })
   } catch (error) {
     return response.status(400).json({

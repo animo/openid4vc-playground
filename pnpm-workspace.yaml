@@ -15,12 +15,16 @@ ignoredBuiltDependencies:
   - sharp
 
 minimumReleaseAgeExclude:
-  - '@owf/mdoc@0.8.0-alpha-20260915061504'
-  - '@credo-ts/askar@0.7.1-pr-2922-20260915114247'
-  - '@credo-ts/core@0.7.1-pr-2922-20260915114247'
-  - '@credo-ts/didcomm@0.7.1-pr-2922-20260915114247'
-  - '@credo-ts/node@0.7.1-pr-2922-20260915114247'
-  - '@credo-ts/openid4vc@0.7.1-pr-2922-20260915114247'
+  - '@credo-ts/askar@0.8.0-alpha-20261103114620'
+  - '@credo-ts/core@0.8.0-alpha-20261103114620'
+  - '@credo-ts/didcomm@0.8.0-alpha-20261103114620'
+  - '@credo-ts/node@0.8.0-alpha-20261103114620'
+  - '@credo-ts/openid4vc@0.8.0-alpha-20261103114620'
+  - '@owf/cose@0.7.0'
+  - '@owf/identity-common@0.7.0'
+  - '@owf/mdoc@0.9.3'
+  - '@owf/token-status-list@0.7.0'
+  - '@owf/x509@0.7.0'
 
 # @peculiar/asn1-* >= 2.7.0 ship separate ESM and CJS builds, each with its own schema storage. @peculiar/x509
 # always loads as CJS, so ASN.1 classes created from ESM code (e.g. Credo) fail with "Cannot get schema for '<Type>'
@@ -31,7 +35,7 @@ minimumReleaseAgeExclude:
 # older @owf/cose (via @owf/token-status-list) whose registration overrides the one of the version used by @owf/mdoc,
 # which then fails to decode mdoc responses with "Expected DataItem". Keep a single version installed.
 overrides:
-  '@owf/cose': 0.4.0-alpha-20260910093038
+  '@owf/cose': 0.7.0
   '@peculiar/x509': 2.0.0
   '@peculiar/asn1-cms': ~2.6.1
   '@peculiar/asn1-csr': ~2.6.1
