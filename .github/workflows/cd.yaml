@@ -8,10 +8,12 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   APP: app
   AGENT: agent
+  STACK_NAME: openid4vc-playground
 
 jobs:
   build-and-push-image-agent:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -44,6 +46,7 @@ jobs:
 
   build-and-push-image-app:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -65,7 +68,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - run: NEXT_PUBLIC_API_URL=https://eudi-payments.animo.id pnpm build
+      - run: NEXT_PUBLIC_API_URL=https://playground.animo.id pnpm build
 
       - name: Log in to the Container registry
         uses: docker/login-action@v4
@@ -87,3 +90,36 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # Deploys docker-compose.yml to the Swarm, as the services in animo/cloud-setup do
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-push-image-agent, build-and-push-image-app]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Copy stack file to remote
+        uses: garygrossgarten/github-action-scp@0.10.0
+        with:
+          local: docker-compose.yml
+          remote: dev/${{ env.STACK_NAME }}/docker-compose.yml
+          host: dashboard.dev.animo.id
+          username: root
+          privateKey: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Docker Swarm
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          AGENT_WALLET_KEY: ${{ secrets.AGENT_WALLET_KEY }}
+          ROOT_P256_SEED: ${{ secrets.ROOT_P256_SEED }}
+          DCS_P256_SEED: ${{ secrets.DCS_P256_SEED }}
+          X509_ROOT_CERTIFICATE: ${{ secrets.X509_ROOT_CERTIFICATE }}
+          X509_DCS_CERTIFICATE: ${{ secrets.X509_DCS_CERTIFICATE }}
+        with:
+          host: dashboard.dev.animo.id
+          username: root
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          envs: AGENT_WALLET_KEY,ROOT_P256_SEED,DCS_P256_SEED,X509_ROOT_CERTIFICATE,X509_DCS_CERTIFICATE
+          script: |
+            docker stack deploy --compose-file dev/${{ env.STACK_NAME }}/docker-compose.yml ${{ env.STACK_NAME }} --with-registry-auth

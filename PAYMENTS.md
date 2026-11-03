@@ -7,12 +7,12 @@ It is issuer, Relying Party and Authorizing Party at once, which is a first-part
 it verifies the proof against its own issued metadata, and it holds the key that decrypts the risk
 signals.
 
-Base URL: `https://eudi-payments.animo.id`.
+Base URL: `https://playground.animo.id`.
 
 ## 1. Get a card
 
-**Issue** tab → issuer **Open Horizon Bank** → **Wero Payment Attestation**. Leave the rest as is,
-submit, and scan the QR with Paradym Wallet.
+**Issue** tab → **Payment Attestation** → Specification **PaSO**. Leave the rest as is, submit, and
+scan the QR with Paradym Wallet.
 
 The PaSO card is a Wero Payment Attestation (WPA) as defined by the WPA Attestation Rulebook v1.0:
 `vct` `https://wero.epicompany.eu/payment_attestation/v1`, the claims `category`, `sub`, `masked_iban`
@@ -20,8 +20,9 @@ and `psu_id`, none of them selectively disclosable, bound to a P-256 key. At iss
 wallet also fetches and verifies the issuer's signed credential metadata, which is what later lets it
 display the payment and encrypt the risk signals.
 
-**Personal Debit Card** is the same WPA with the bank's own design. Its `vct`,
-`https://eudi-payments.animo.id/api/vct/7cc028a3-8ce2-432a-bf19-5621068586df/open-horizon-debit-card-paso-sd-jwt`, extends the WPA `vct` and
+The Issue tab issues it as Open Horizon Bank's **Personal Debit Card**, the same WPA with the bank's
+own design. Its `vct`,
+`https://playground.animo.id/api/vct/7cc028a3-8ce2-432a-bf19-5621068586df/open-horizon-debit-card-paso-sd-jwt`, extends the WPA `vct` and
 carries an SVG template of the card with the masked IBAN, one per locale. The WPA publisher doesn't serve the WPA type
 metadata yet, so this deployment serves it at `/api/vct/wero/payment_attestation/v1`, and wallets map
 the WPA `vct` there for now. Checks for a WPA follow the `extends` chain.
@@ -30,13 +31,11 @@ the WPA `vct` there for now. Checks for a WPA follow the `extends` chain.
 
 **Verify** tab:
 
-1. Select the **Wero Payment Attestation** card and its attributes. (Any selection works — the payment
-   card is added to the request automatically if you leave it out.) Without `Payment (PaSO)` the
-   request is refused: the rulebook allows the WPA only to authorize a Wero payment.
-2. **Transaction Authorization** → `Payment (PaSO)`.
-3. **Payment amount (EUR)** → e.g. `42.50`.
-4. **Request Signer Type** → `x509 Certificate`. PaSO rejects unsigned requests, so this is mandatory.
-5. Create the request and scan the QR.
+1. Select the **Payment Attestation** card and choose Specification **PaSO**. That makes the request a
+   PaSO payment, the only thing the rulebook allows the WPA to authorize.
+2. **Amount (EUR)** → e.g. `42.50`.
+3. **Request Signer Type** → `x509 Certificate`. PaSO rejects unsigned requests, so this is mandatory.
+4. Create the request and scan the QR.
 
 The wallet shows a dedicated payment screen: amount, payee, payee logo, and the issuer's own labels
 and security hint from the signed credential metadata. Approving it signs a Key Binding JWT carrying
@@ -60,12 +59,12 @@ Once the wallet responds, the page shows:
 
 ## API
 
-Everything the UI does is available over HTTP. Base path `https://eudi-payments.animo.id/api`.
+Everything the UI does is available over HTTP. Base path `https://playground.animo.id/api`.
 
 ### Issue a card
 
 ```bash
-curl -X POST https://eudi-payments.animo.id/api/offers/create \
+curl -X POST https://playground.animo.id/api/offers/create \
   -H 'Content-Type: application/json' \
   -d '{ "credentialSupportedIds": ["wero-card-paso-sd-jwt"], "authorization": "none" }'
 ```
@@ -77,7 +76,7 @@ curl -X POST https://eudi-payments.animo.id/api/offers/create \
 ### Create a payment request
 
 ```bash
-curl -X POST https://eudi-payments.animo.id/api/requests/create \
+curl -X POST https://playground.animo.id/api/requests/create \
   -H 'Content-Type: application/json' \
   -d '{
     "requestSignerType": "x5c",
@@ -115,7 +114,7 @@ other credentials — `eudi-pid`, `mdl`, … — using `"combination": "all"`.
 ### Poll the result
 
 ```bash
-curl https://eudi-payments.animo.id/api/requests/9ac2c53a-2c29-4db7-a304-ca3cff44eed1
+curl https://playground.animo.id/api/requests/9ac2c53a-2c29-4db7-a304-ca3cff44eed1
 ```
 
 Before the wallet responds you get `responseStatus: "RequestCreated"`. Afterwards the body grows the
@@ -147,10 +146,10 @@ verification output:
 # The signed credential metadata JWT: transaction data types, labels, risk signal
 # declarations, and the risk_signals_encryption_keys JWK set. Both headers are required.
 curl -H 'Accept: application/jwt' -H 'Accept-Language: en' \
-  https://eudi-payments.animo.id/api/paso-credential-metadata
+  https://playground.animo.id/api/paso-credential-metadata
 
 # The root certificate the request signature chains to
-curl https://eudi-payments.animo.id/api/x509
+curl https://playground.animo.id/api/x509
 ```
 
 Ask for `Accept: application/json` to get the same document unsigned, for reading. A wallet may not
