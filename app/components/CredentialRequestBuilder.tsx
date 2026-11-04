@@ -125,7 +125,7 @@ export function CredentialRequestBuilder({
           <h4 className="font-medium text-gray-900 text-sm">Credentials</h4>
           <p className="text-gray-500 text-sm">Select one or more credentials to request from the wallet.</p>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {cards.map((variants) => {
             // The card shows the selected variant
             const selected = variants.find((variant) => selection.credentials.some((c) => c.id === variant.id))
