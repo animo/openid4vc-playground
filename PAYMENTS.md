@@ -27,6 +27,9 @@ carries an SVG template of the card with the masked IBAN, one per locale. The WP
 metadata yet, so this deployment serves it at `/api/vct/wero/payment_attestation/v1`, and wallets map
 the WPA `vct` there for now. Checks for a WPA follow the `extends` chain.
 
+To issue the card with your own values, such as a different masked IBAN, pass `claims` when you
+create the offer over the API. See [Issue a card](#issue-a-card).
+
 ## 2. Request a payment
 
 **Verify** tab:
@@ -34,8 +37,17 @@ the WPA `vct` there for now. Checks for a WPA follow the `extends` chain.
 1. Select the **Payment Attestation** card and choose Specification **PaSO**. That makes the request a
    PaSO payment, the only thing the rulebook allows the WPA to authorize.
 2. **Amount (EUR)** → e.g. `42.50`.
-3. **Request Signer Type** → `x509 Certificate`. PaSO rejects unsigned requests, so this is mandatory.
-4. Create the request and scan the QR.
+3. **Initiation Method** → **QR / Deeplink**, or **Digital Credentials API** to ask the wallet through
+   the browser. The card is an SD-JWT, so the protocol is OpenID4VP.
+4. **Request Signer Type** → `x509 Certificate`. PaSO rejects unsigned requests, so this is mandatory.
+5. Create the request. Scan the QR, or pick the wallet in the browser's prompt.
+
+The TurboKeys merchant always requests the payment, so the wallet shows TurboKeys and its logo as
+the payee.
+
+Over the Digital Credentials API the signed request carries `expected_origins` with the page's origin.
+The wallet's response comes back to the page, which posts it to the API for verification and shows
+the same result as with a QR.
 
 The wallet shows a dedicated payment screen: amount, payee, payee logo, and the issuer's own labels
 and security hint from the signed credential metadata. Approving it signs a Key Binding JWT carrying
@@ -73,6 +85,29 @@ curl -X POST https://playground.animo.id/api/offers/create \
 { "credentialOffer": "openid-credential-offer://?credential_offer_uri=…", "issuanceSession": { … } }
 ```
 
+`claims` replaces or adds claims of the issued credentials, one entry per `credentialSupportedIds`
+entry in the same order. Use `{}` to keep a credential's defaults. Here it sets the card's masked IBAN
+and PSU id:
+
+```bash
+curl -X POST https://playground.animo.id/api/offers/create \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "credentialSupportedIds": ["wero-card-paso-sd-jwt"],
+    "authorization": "none",
+    "claims": [{ "masked_iban": "DE89**********3000", "psu_id": "my-psu" }]
+  }'
+```
+
+It works for every credential the playground issues. For an SD-JWT an entry holds top-level claims.
+For an mdoc it maps each namespace to its elements, e.g. `{ "org.iso.18013.5.1": { "given_name": "Erika" } }`.
+An mdoc value takes the type of the default element it replaces, so `"1990-02-03"` for `birth_date`
+is issued as a full-date, and a portrait is passed as base64. New elements keep their JSON type.
+Claims that don't fit the credential, such as an invalid date, come back as a 400.
+
+The card always gets a fresh `sub`, whatever you pass, because the Authorizing Party looks the card up
+by it. To test a rejected payment, pass a different `category`: it fails the WPA check.
+
 ### Create a payment request
 
 ```bash
@@ -98,7 +133,7 @@ curl -X POST https://playground.animo.id/api/requests/create \
   "authorizationRequestUri": "openid4vp://?client_id=x509_hash%3A…&request_uri=…",
   "verificationSessionId": "9ac2c53a-2c29-4db7-a304-ca3cff44eed1",
   "responseStatus": "RequestCreated",
-  "authorizationRequest": { "header": { … }, "payload": { … } },
+  "authorizationRequest": { "header": { … }, "payload": { … }, "jwt": "eyJhbGciOi…" },
   "dcqlQuery": { … }
 }
 ```
@@ -109,7 +144,44 @@ as a 400 with a `message`, because no conforming wallet would accept the request
 payment. Turn `authorizationRequestUri` into a QR or a deeplink.
 
 `request.credentials[].id` takes any id from `GET /api/verifier`, so a payment can be combined with
-other credentials — `eudi-pid`, `mdl`, … — using `"combination": "all"`.
+other credentials — `eudi-pid`, `mdl`, … — using `"combination": "all"`. `verifierId` can't be set
+for a payment, as TurboKeys always requests it.
+
+`authorizationRequest` is the request as the wallet gets it: the decoded header and payload, and
+`jwt`, the signed request itself.
+
+### Request a payment over the Digital Credentials API
+
+Use `"responseMode": "dc_api.jwt"`, and set `origin` to the origin of the page that calls the Digital
+Credentials API. The signed request carries it as `expected_origins`. Without `origin` the API uses
+the `Origin` header, and with neither it returns a 400. The API sends no CORS headers, so make both
+calls from your backend.
+
+```bash
+curl -X POST https://playground.animo.id/api/requests/create \
+  -H 'Content-Type: application/json' \
+  -d '{ …the body above…, "responseMode": "dc_api.jwt", "origin": "https://shop.example" }'
+```
+
+The page passes `authorizationRequestObject` from the response to the browser:
+
+```js
+const credential = await navigator.credentials.get({
+  digital: { requests: [{ protocol: 'openid4vp-v1-signed', data: authorizationRequestObject }] },
+  mediation: 'required',
+})
+```
+
+Post `credential.data` back with the same `origin`. The presentations are bound to the page's origin,
+and the verifier checks them against it:
+
+```bash
+curl -X POST https://playground.animo.id/api/requests/verify-dc \
+  -H 'Content-Type: application/json' \
+  -d '{ "verificationSessionId": "9ac2c53a-…", "data": { "response": "eyJhbGciOi…" }, "origin": "https://shop.example" }'
+```
+
+The response has the same body as the poll result below.
 
 ### Poll the result
 
