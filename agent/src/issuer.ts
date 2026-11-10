@@ -1,5 +1,6 @@
 import {
   ClaimFormat,
+  DateOnly,
   Kms,
   type MdocDeviceResponse,
   type MdocSignOptions,
@@ -171,6 +172,11 @@ export interface IssuanceMetadata extends Record<string, unknown> {
     verifierId?: string
     request?: PresentationCredentialSelection
   }
+
+  /**
+   * Claims that replace or add to the defaults, per credential configuration id. See `withCustomClaims`.
+   */
+  claims?: Record<string, Record<string, unknown>>
 }
 
 export function serializableSignOptionsToSignOptions({
@@ -362,6 +368,74 @@ function pidMdocNamespaceClaims(presentation: MdocDeviceResponse) {
   return Object.values(presentation.issuerClaims)[0]?.['eu.europa.ec.eudi.pid.1'] ?? {}
 }
 
+// Not a class instance such as a DateOnly, Date or Uint8Array
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype
+
+// An mdoc value takes the type of the default element it replaces: JSON has no full-date, tdate or
+// byte string, and a presented PID can hold a date as text or as the other date type. Elements
+// without a default keep their type.
+function toDefaultType(defaultValue: unknown, value: unknown): unknown {
+  if (
+    (defaultValue instanceof DateOnly || defaultValue instanceof Date) &&
+    (typeof value === 'string' || value instanceof Date || value instanceof DateOnly)
+  ) {
+    const date = new Date(value instanceof DateOnly ? value.toISOString() : value)
+    if (Number.isNaN(date.getTime())) throw new Error(`'${value}' is not a valid date`)
+    return defaultValue instanceof DateOnly ? new DateOnly(date.toISOString()) : date
+  }
+  if (typeof value === 'string' && defaultValue instanceof Uint8Array) {
+    return new Uint8Array(Buffer.from(value, 'base64'))
+  }
+  if (Array.isArray(value) && Array.isArray(defaultValue)) {
+    return value.map((item) => toDefaultType(defaultValue[0], item))
+  }
+  if (isPlainObject(value) && isPlainObject(defaultValue)) {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, toDefaultType(defaultValue[key], item)]))
+  }
+  return value
+}
+
+/**
+ * Merges claims passed with the offer over the defaults: top-level claims for SD-JWT, and elements per
+ * namespace for mdoc. Throws when the claims don't fit the credential.
+ */
+export function withCustomClaims(
+  credentialData: StaticSdJwtSignInput | StaticMdocSignInput | undefined,
+  claims: Record<string, unknown> | undefined
+): StaticSdJwtSignInput | StaticMdocSignInput | undefined {
+  if (!credentialData || !claims) return credentialData
+
+  if (credentialData.format === ClaimFormat.SdJwtDc) {
+    const { credential } = credentialData
+    return { ...credentialData, credential: { ...credential, payload: { ...credential.payload, ...claims } } }
+  }
+
+  const { namespaces } = credentialData.credential
+  return {
+    ...credentialData,
+    credential: {
+      ...credentialData.credential,
+      namespaces: {
+        ...namespaces,
+        ...Object.fromEntries(
+          Object.entries(claims).map(([namespace, elements]) => {
+            if (!isPlainObject(elements)) {
+              throw new Error(
+                `An mdoc credential takes its claims per namespace, e.g. { "org.iso.18013.5.1": { "given_name": "Erika" } }. '${namespace}' is not an object.`
+              )
+            }
+            return [
+              namespace,
+              { ...namespaces[namespace], ...(toDefaultType(namespaces[namespace], elements) as object) },
+            ]
+          })
+        ),
+      },
+    },
+  }
+}
+
 export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToCredentialMapper = async ({
   holderBinding,
   credentialConfigurationId,
@@ -369,13 +443,16 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
   issuanceSession,
 }): Promise<OpenId4VciSignCredentials | OpenId4VciDeferredCredentials> => {
   const normalizedCredentialConfigurationId = credentialConfigurationId.replace('-key-attestations', '')
-  const credentialData = issuersCredentialsData[normalizedCredentialConfigurationId]
+  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
+  const credentialData = withCustomClaims(
+    issuersCredentialsData[normalizedCredentialConfigurationId],
+    issuanceMetadata.claims?.[normalizedCredentialConfigurationId]
+  )
   if (!credentialData) {
     throw new Error(`Unsupported credential configuration id ${credentialConfigurationId}`)
   }
 
   let signOptions: SerializableSignCredentialOptions | undefined
-  const issuanceMetadata: IssuanceMetadata = issuanceSession.issuanceMetadata ?? {}
 
   // The claims below are taken from the PID of the default presentation during issuance. A request
   // passed in with the offer may not include those claims, so then the credential is issued as is.
@@ -566,7 +643,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
                 {
                   [namespace]: {
                     ...values,
-                    ...formatSpecificClaims[credentialConfigurationId],
+                    ...(toDefaultType(values, formatSpecificClaims[credentialConfigurationId]) as object),
                   },
                 },
                 { mapsAsObjects: true }

@@ -24,8 +24,8 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import z from 'zod'
 import { agent } from './agent.js'
 import { AGENT_HOST } from './constants.js'
-import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata } from './issuer.js'
-import { issuers } from './issuers/index.js'
+import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata, withCustomClaims } from './issuer.js'
+import { issuers, issuersCredentialsData } from './issuers/index.js'
 import {
   type OpenHorizonBankPasoCard,
   updatePaymentStatusForWeroCredential,
@@ -90,6 +90,8 @@ const zCreateOfferRequest = z.object({
       request: zPresentationCredentialSelection.optional(),
     })
     .optional(),
+  // Claims that replace or add to the defaults, one entry per `credentialSupportedIds` entry
+  claims: z.array(z.record(z.string(), z.unknown())).optional(),
 })
 
 const zAddX509CertificateRequest = z.object({
@@ -154,6 +156,22 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
     }
   }
 
+  const { claims, credentialSupportedIds } = createOfferRequest
+  if (claims && claims.length !== credentialSupportedIds.length) {
+    return response.status(400).json({
+      message:
+        "'claims' needs one entry per 'credentialSupportedIds' entry, in the same order. Use {} to keep the defaults.",
+    })
+  }
+  try {
+    // Merged again at issuance, but claims that don't fit the credential should fail here
+    for (const [index, entry] of (claims ?? []).entries()) {
+      withCustomClaims(issuersCredentialsData[credentialSupportedIds[index]], entry)
+    }
+  } catch (error) {
+    return response.status(400).json({ message: error instanceof Error ? error.message : 'Invalid claims' })
+  }
+
   // TODO: support multiple credential isuance
   const configurationId = createOfferRequest.requireKeyAttestation
     ? `${createOfferRequest.credentialSupportedIds[0]}-key-attestations`
@@ -199,6 +217,7 @@ apiRouter.post('/offers/create', async (request: Request, response: Response) =>
     issuanceMetadata: {
       deferInterval,
       presentation,
+      claims: claims && Object.fromEntries(credentialSupportedIds.map((id, index) => [id, claims[index]])),
     } satisfies IssuanceMetadata,
   })
 
@@ -396,12 +415,19 @@ const zCreatePresentationRequestBody = z.object({
   // Signs the request instead of the Utopia Government verifier. Payments are always requested by
   // the TurboKeys merchant, so it can't be combined with a payment.
   verifierId: z.string().optional(),
+  // The origin of the page that calls the Digital Credentials API. Defaults to the Origin header.
+  origin: z.url().optional(),
 })
 
 const zReceiveDcResponseBody = z.object({
   verificationSessionId: z.string(),
   data: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  // The origin of the page that called the Digital Credentials API. Defaults to the Origin header.
+  origin: z.url().optional(),
 })
+
+const missingOriginMessage =
+  "A Digital Credentials API request is bound to the origin of the page that calls the API. Send an Origin header, or set 'origin'."
 
 apiRouter.post('/requests/create', async (request: Request, response: Response) => {
   try {
@@ -415,7 +441,14 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       purpose,
       redirectUriBase,
       verifierId,
+      origin = request.headers.origin,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
+
+    // Only a signed request carries `expected_origins`
+    const isSignedDcApiRequest = requestSignerType !== 'none' && responseMode.includes('dc_api')
+    if (isSignedDcApiRequest && !origin) {
+      return response.status(400).json({ message: missingOriginMessage })
+    }
 
     const x509DcsCertificate = getX509DcsCertificate()
     // A payment is requested by the merchant being paid, so the wallet shows it as the payee.
@@ -587,10 +620,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         },
         responseMode,
         version: 'v1',
-        expectedOrigins:
-          requestSignerType !== 'none' && responseMode.includes('dc_api')
-            ? [request.headers.origin as string]
-            : undefined,
+        expectedOrigins: isSignedDcApiRequest && origin ? [origin] : undefined,
       })
 
     if (redirectUri) {
@@ -625,6 +655,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         ? {
             payload: authorizationRequestJwt.payload.toJson(),
             header: authorizationRequestJwt.header,
+            jwt: verificationSession.authorizationRequestJwt,
           }
         : authorizationRequestPayload,
     })
@@ -725,6 +756,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
   const authorizationRequest = {
     payload: verificationSession.requestPayload,
     header: authorizationRequestJwt?.header,
+    jwt: verificationSession.authorizationRequestJwt,
   }
   const dcqlQuery = authorizationRequestPayload.dcql_query
 
@@ -951,13 +983,20 @@ apiRouter.get('/vct/:issuerId/:configurationId/svg/:locale', (request, response)
 })
 
 apiRouter.post('/requests/verify-dc', async (request: Request, response: Response) => {
-  const { verificationSessionId, data } = await zReceiveDcResponseBody.parseAsync(request.body)
+  const {
+    verificationSessionId,
+    data,
+    origin = request.headers.origin,
+  } = await zReceiveDcResponseBody.parseAsync(request.body)
+  if (!origin) {
+    return response.status(400).json({ message: missingOriginMessage })
+  }
 
   try {
     const { verificationSession } = await agent.openid4vc.verifier.verifyAuthorizationResponse({
       verificationSessionId,
       authorizationResponse: typeof data === 'string' ? JSON.parse(data) : data,
-      origin: request.headers.origin,
+      origin,
     })
 
     return response.json(await getVerificationStatus(verificationSession))
