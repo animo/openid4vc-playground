@@ -120,7 +120,7 @@ export const createDocumentSignerCertificate = async (
     authorityKey: authorityPublicJwk,
     subjectPublicKey: subjectPublicJwk,
     issuer: rootCertificate.issuer,
-    subject: { countryName: 'NL', organizationName: 'Animo Solutions B.V.', commonName: 'Animo Playground Leaf' },
+    subject: { countryName: 'NL', organizationName: 'Animo Solutions B.V.', commonName: 'Animo Playground' },
     validity: {
       notBefore,
       notAfter: nextYear,
