@@ -2,14 +2,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { JwsService, JwtPayload, Kms } from '@credo-ts/core'
 import { agent } from '../agent.js'
-import {
-  type OpenHorizonBankPasoCard,
-  openHorizonBankPasoCards,
-  openHorizonBankPasoCredentialMetadata,
-  openHorizonIssuerId,
-} from '../issuers/openHorizonBank.js'
 import { dcsId, getX509DcsCertificate } from '../keyMethods/index.js'
 import { dateToSeconds } from '../utils/date.js'
+import { getPasoCardCredentialMetadata, type PasoCardId, pasoCards } from './cards.js'
 import { computeSriIntegrity, restrictPasoMetadataToLocales } from './metadata.js'
 import { getPasoRiskSignalsEncryptionJwk } from './riskSignalsEncryption.js'
 
@@ -27,7 +22,14 @@ import { getPasoRiskSignalsEncryptionJwk } from './riskSignalsEncryption.js'
  * perfectly correct. ECDSA signatures are randomised, so re-signing the same payload would not
  * reproduce the bytes — the issued JWT itself has to be kept.
  */
-const issuedMetadataJwts = new Map<string, { jwt: string; expiresAt: number }>()
+const issuedMetadataJwts = new Map<string, IssuedMetadataJwt>()
+
+/** `vct` is the JWT's `sub`, so the Authorizing Party can tell which card a JWT was served for. */
+interface IssuedMetadataJwt {
+  jwt: string
+  expiresAt: number
+  vct?: string
+}
 
 /** Short enough that a wallet exercises renewal, long enough to survive a demo session. */
 const metadataValiditySeconds = 24 * 60 * 60
@@ -44,7 +46,7 @@ const issuedMetadataJwtsPath = join(process.cwd(), '.paso', 'issued-credential-m
  * `credential_metadata_uri`, which [PaSO Proof Metadata] Section 8 has the wallet compare against the
  * URI it fetched from — a mismatch fails verification outright.
  */
-const metadataDocumentVersion = 'v5-x5c-base64-der-with-claims'
+const metadataDocumentVersion = 'v6-wero-rulebook-1.1'
 
 /**
  * The credential metadata document as served, for the locales of this JWT.
@@ -54,25 +56,16 @@ const metadataDocumentVersion = 'v5-x5c-base64-der-with-claims'
  * a wallet picked up anywhere else "SHALL be treated as absent". The keys are added here rather than
  * declared alongside the rest of the metadata because they only exist once the agent has started.
  */
-export function getPasoCredentialMetadataDocument(
-  servedLocales: string[],
-  card: OpenHorizonBankPasoCard = 'wero-payment-attestation'
-) {
+export function getPasoCredentialMetadataDocument(servedLocales: string[], card: PasoCardId) {
   return {
-    ...restrictPasoMetadataToLocales(
-      { ...openHorizonBankPasoCredentialMetadata, display: openHorizonBankPasoCards[card].display },
-      servedLocales
-    ),
+    ...restrictPasoMetadataToLocales(getPasoCardCredentialMetadata(card), servedLocales),
     risk_signals_encryption_keys: { keys: [getPasoRiskSignalsEncryptionJwk()] },
   }
 }
 
 function loadIssuedMetadataJwts() {
   try {
-    const stored = JSON.parse(readFileSync(issuedMetadataJwtsPath, 'utf8')) as Record<
-      string,
-      { jwt: string; expiresAt: number }
-    >
+    const stored = JSON.parse(readFileSync(issuedMetadataJwtsPath, 'utf8')) as Record<string, IssuedMetadataJwt>
     const now = Date.now()
     for (const [cacheKey, entry] of Object.entries(stored)) {
       if (entry.expiresAt > now) issuedMetadataJwts.set(cacheKey, entry)
@@ -93,19 +86,15 @@ function persistIssuedMetadataJwts() {
 
 loadIssuedMetadataJwts()
 
-export async function getPasoCredentialMetadataJwt(
-  servedLocales: string[],
-  card: OpenHorizonBankPasoCard = 'wero-payment-attestation'
-): Promise<string> {
+export async function getPasoCredentialMetadataJwt(servedLocales: string[], card: PasoCardId): Promise<string> {
   if (!dcsId) throw new Error('The DCS signing key is not available')
 
-  // The Wero Payment Attestation keeps the key it had before there was more than one card, so the
-  // JWTs already issued for it are served again rather than replaced. The other cards' keys carry
-  // their `vct`, which is the JWT's `sub`, so a card that gets its own type gets new JWTs.
-  const cacheKey =
-    card === 'wero-payment-attestation'
-      ? `${metadataDocumentVersion}:${servedLocales.join(',')}`
-      : `${metadataDocumentVersion}:${card}:${openHorizonBankPasoCards[card].vct}:${servedLocales.join(',')}`
+  const { configuration, issuerId } = pasoCards[card]
+  const credentialIssuer = (await agent.openid4vc.issuer.getIssuerMetadata(issuerId)).credentialIssuer.credential_issuer
+  // The key carries the JWT's `iss`, `sub` and signing certificate, so a new host, card type or
+  // certificate gets new JWTs. Without `X509_DCS_CERTIFICATE` the certificate is new on every start.
+  const certificate = computeSriIntegrity(getX509DcsCertificate().toString('base64'))
+  const cacheKey = `${metadataDocumentVersion}:${card}:${credentialIssuer}:${configuration.vct}:${certificate}:${servedLocales.join(',')}`
   const cached = issuedMetadataJwts.get(cacheKey)
   if (cached && cached.expiresAt > Date.now() + 60_000) return cached.jwt
 
@@ -118,15 +107,15 @@ export async function getPasoCredentialMetadataJwt(
     payload: new JwtPayload({
       // The Credential Issuer Identifier, which is what the credential's own `iss` claim carries and
       // what [PaSO Proof Metadata] Section 6 step 4 compares against. Not the internal issuer UUID.
-      iss: (await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)).credentialIssuer.credential_issuer,
+      iss: credentialIssuer,
       // [PaSO Proof Metadata] Section 6 step 6 binds the JWT to the credential by comparing `sub`
       // with the credential's `vct`, so each card's JWT names that card's own type.
-      sub: openHorizonBankPasoCards[card].vct,
+      sub: configuration.vct,
       iat: dateToSeconds(now),
       exp: dateToSeconds(expiry),
       additionalClaims: {
         format: 'dc+sd-jwt',
-        credential_metadata_uri: openHorizonBankPasoCards[card].credentialMetadataUri,
+        credential_metadata_uri: configuration.credential_metadata_uri,
         credential_metadata: getPasoCredentialMetadataDocument(servedLocales, card),
       },
     }),
@@ -144,34 +133,37 @@ export async function getPasoCredentialMetadataJwt(
     },
   })
 
-  issuedMetadataJwts.set(cacheKey, { jwt, expiresAt: expiry.getTime() })
+  issuedMetadataJwts.set(cacheKey, { jwt, expiresAt: expiry.getTime(), vct: configuration.vct })
   persistIssuedMetadataJwts()
   return jwt
 }
 
 /**
- * The [W3C.SRI] values of every metadata JWT still in circulation.
+ * The [W3C.SRI] values of every metadata JWT still in circulation for a card.
  *
  * A wallet holds the JWT it was served, which covers whichever locales it asked for, so the
  * Authorizing Party has to accept the integrity value of any of them — not just the most recent.
  */
-export function getIssuedPasoMetadataIntegrityValues(): string[] {
+export function getIssuedPasoMetadataIntegrityValues(card: PasoCardId): string[] {
   const now = Date.now()
   return [...issuedMetadataJwts.values()]
-    .filter((entry) => entry.expiresAt > now)
+    .filter((entry) => entry.expiresAt > now && entry.vct === pasoCards[card].configuration.vct)
     .map((entry) => computeSriIntegrity(entry.jwt))
 }
 
+/** A `transaction_data_types` entry, or ad-hoc metadata in a `transaction_data` entry. */
+export interface PasoTransactionDataTypeMetadata {
+  claims: Array<{ path: Array<string | number | null>; display?: Array<{ locale?: string }>; value_type?: string }>
+  ui_labels?: Record<string, Array<{ locale?: string }>>
+  risk_signal_profiles?: string[]
+  risk_signals?: Array<{ type: string; required?: boolean; max_age?: number }>
+  /** [PaSO Risk Signals] Section 7.2 item 2 — the metadata's own encryption trigger. */
+  encrypted?: boolean
+}
+
 /** The metadata as served, for the Authorizing Party's `display_locale` and risk-signal checks. */
-export function getPasoTransactionDataTypeMetadata(type: string) {
-  return (openHorizonBankPasoCredentialMetadata.transaction_data_types as Record<string, unknown>)[type] as
-    | {
-        claims: Array<{ path: string[]; display?: Array<{ locale?: string }> }>
-        ui_labels?: Record<string, Array<{ locale?: string }>>
-        risk_signal_profiles?: string[]
-        risk_signals?: Array<{ type: string; required?: boolean; max_age?: number }>
-        /** [PaSO Risk Signals] Section 7.2 item 2 — the metadata's own encryption trigger. */
-        encrypted?: boolean
-      }
+export function getPasoTransactionDataTypeMetadata(card: PasoCardId, type: string) {
+  return (pasoCards[card].transactionDataTypes as Record<string, unknown>)[type] as
+    | PasoTransactionDataTypeMetadata
     | undefined
 }

@@ -27,7 +27,6 @@ import { AGENT_HOST } from './constants.js'
 import { getIssuerIdForCredentialConfigurationId, type IssuanceMetadata, withCustomClaims } from './issuer.js'
 import { issuers, issuersCredentialsData } from './issuers/index.js'
 import {
-  type OpenHorizonBankPasoCard,
   updatePaymentStatusForWeroCredential,
   weroPasoConfiguration,
   weroScaConfiguration,
@@ -35,9 +34,11 @@ import {
 } from './issuers/openHorizonBank.js'
 import { getX509DcsCertificate, getX509RootCertificate } from './keyMethods/index.js'
 import { oidcUrl } from './oidcProvider/provider.js'
+import { type PasoCardId, pasoCardIds, pasoCards } from './paso/cards.js'
 import { getPasoCredentialMetadataDocument, getPasoCredentialMetadataJwt } from './paso/credentialMetadata.js'
 import { pasoSupportedLocales, resolvePasoServedLocales } from './paso/metadata.js'
-import { createPasoPaymentTransactionDataEntry } from './paso/request.js'
+import { pasoPaymentTransactionDataType } from './paso/paymentRulebook.js'
+import { createWeroPaymentPayload } from './paso/request.js'
 import { getPasoTransactionDataEntry, type PasoVerificationResult, verifyPasoProofPackage } from './paso/verify.js'
 import {
   getIssuerTypeMetadata,
@@ -405,16 +406,29 @@ apiRouter.post('/transaction-status', async (request: Request, response: Respons
 
 const zCreatePresentationRequestBody = z.object({
   requestSignerType: z.enum(['none', 'x5c' /* 'openid-federation' */]),
-  request: zPresentationCredentialSelection,
+  // Only optional with `paso`, which adds the card to it
+  request: zPresentationCredentialSelection.optional(),
   requestScheme: z.string(),
   responseMode: z.enum(['direct_post.jwt', 'direct_post', 'dc_api', 'dc_api.jwt']),
   purpose: z.string().optional(),
   transactionAuthorizationType: z.enum(['none', 'qes', 'payment', 'paso-payment']),
   paymentAmount: z.string().optional(),
   redirectUriBase: z.url().optional(),
-  // Signs the request instead of the Utopia Government verifier. Payments are always requested by
-  // the TurboKeys merchant, so it can't be combined with a payment.
+  // Signs the request instead of the Utopia Government verifier. A payment is requested by the
+  // TurboKeys merchant, so it can only be combined with one with `paso`, as the acceptor PSP.
   verifierId: z.string().optional(),
+  // A PaSO request beyond the Verify tab's payment, for the PaSO edge cases page.
+  paso: z
+    .object({
+      // The card query's `vct` values. A card id of `paso/cards.ts` stands for that card's `vct`.
+      vcts: z.array(z.string()).min(1),
+      type: z.string().startsWith('urn:paso:sca:').default(pasoPaymentTransactionDataType),
+      // Replaces the generated Wero payment payload
+      payload: z.record(z.string(), z.unknown()).optional(),
+      // Ad-hoc metadata, [PaSO Proof Metadata] Section 5
+      metadata: z.record(z.string(), z.unknown()).optional(),
+    })
+    .optional(),
   // The origin of the page that calls the Digital Credentials API. Defaults to the Origin header.
   origin: z.url().optional(),
 })
@@ -441,8 +455,19 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
       purpose,
       redirectUriBase,
       verifierId,
+      paso,
       origin = request.headers.origin,
     } = await zCreatePresentationRequestBody.parseAsync(request.body)
+
+    if (!credentialSelection && !paso) {
+      return response.status(400).json({ message: "'request' is required" })
+    }
+    if (paso && transactionAuthorizationType !== 'paso-payment') {
+      return response.status(400).json({ message: "'paso' needs the 'paso-payment' transaction authorization." })
+    }
+    if (paso && paso.type !== pasoPaymentTransactionDataType && !paso.payload) {
+      return response.status(400).json({ message: `'paso.payload' is required for ${paso.type}.` })
+    }
 
     // Only a signed request carries `expected_origins`
     const isSignedDcApiRequest = requestSignerType !== 'none' && responseMode.includes('dc_api')
@@ -454,7 +479,7 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     // A payment is requested by the merchant being paid, so the wallet shows it as the payee.
     const isPaymentRequest =
       transactionAuthorizationType === 'payment' || transactionAuthorizationType === 'paso-payment'
-    if (verifierId && isPaymentRequest) {
+    if (verifierId && isPaymentRequest && !paso) {
       return response
         .status(400)
         .json({ message: "A payment is always requested by TurboKeys, so 'verifierId' can't be set for a payment." })
@@ -464,14 +489,16 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     }
 
     const verifier = await getVerifier(
-      isPaymentRequest ? turboKeysVerifier.verifierId : (verifierId ?? utopiaGovernmentVerifier.verifierId)
+      verifierId ?? (isPaymentRequest ? turboKeysVerifier.verifierId : utopiaGovernmentVerifier.verifierId)
     )
 
-    let definition: PresentationRequest = presentationRequestFromSelection(credentialSelection)
+    let definition: PresentationRequest = credentialSelection
+      ? presentationRequestFromSelection(credentialSelection)
+      : { name: 'Payment card', purpose: 'Please share your payment card', credentials: [] }
 
-    // WPA Rulebook Section 4.3: the Wero Payment Attestation "SHALL be used solely to perform SCA for
-    // authorising a Wero payment", and Section 4.4 has the Acceptor PSP request it with a PaSO
-    // payment entry. Any other request for it is refused here rather than sent for a wallet to refuse.
+    // WPA Rulebook v1.1 Section 4.6: the WPA supports exactly one transaction data type, the PaSO
+    // payment, and Section 4.4 has the Acceptor PSP request it with that entry. Any other request for
+    // it is refused here rather than sent for a wallet to refuse.
     const requestsPaymentAttestation = definition.credentials.some(
       (credential) => credential.format === 'dc+sd-jwt' && credential.vcts.includes(weroPasoConfiguration.vct)
     )
@@ -493,7 +520,9 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
         transactionAuthorizationType === 'paso-payment'
           ? {
               format: 'dc+sd-jwt',
-              vcts: [weroPasoConfiguration.vct],
+              vcts: paso?.vcts.map((vct) =>
+                pasoCardIds.includes(vct as PasoCardId) ? pasoCards[vct as PasoCardId].configuration.vct : vct
+              ) ?? [weroPasoConfiguration.vct],
               // What the Authorizing Party checks or routes on (WPA Rulebook Section 4.5). None of the
               // WPA's claims is selectively disclosable, so the wallet discloses them all regardless.
               fields: ['category', 'sub', 'masked_iban'],
@@ -524,20 +553,18 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     // The Basic Payments rulebook makes `amount` mandatory, and [PaSO View] Section 3 fixes its
     // shape. Without a value the entry would carry the string "undefined EUR", which a conforming
     // wallet refuses with a payload error that says nothing about the empty form field behind it.
-    if (transactionAuthorizationType === 'paso-payment' && !paymentAmount?.trim()) {
+    const needsPasoAmount = transactionAuthorizationType === 'paso-payment' && !paso?.payload
+    if (needsPasoAmount && !paymentAmount?.trim()) {
       return response.status(400).json({ message: 'A PaSO payment request needs a payment amount.' })
     }
 
-    // [PaSO View] Section 3 `iso_currency_amount`: exactly the [ISO4217] number of fractional digits,
-    // which is 2 for EUR. `100` becomes `100.00`; anything that is not a plain amount is refused
-    // rather than passed on for the wallet to reject.
-    const pasoAmountMatch = /^(\d+)(?:\.(\d{1,2}))?$/.exec(paymentAmount?.trim() ?? '')
-    if (transactionAuthorizationType === 'paso-payment' && !pasoAmountMatch) {
+    // WPA Rulebook v1.1 Section 4.6.2: a EUR amount in major units with two decimals. Anything that
+    // is not a plain amount is refused rather than passed on for the wallet to reject.
+    if (needsPasoAmount && !/^\d+(?:\.\d{1,2})?$/.test(paymentAmount?.trim() ?? '')) {
       return response.status(400).json({
         message: `'${paymentAmount}' is not a valid EUR amount. Use digits and at most two decimals, e.g. 42.50.`,
       })
     }
-    const pasoAmount = pasoAmountMatch ? `${pasoAmountMatch[1]}.${(pasoAmountMatch[2] ?? '').padEnd(2, '0')} EUR` : ''
 
     agent.config.logger.debug(`Requesting definition ${JSON.stringify(definition, null, 2)}`)
 
@@ -548,17 +575,25 @@ apiRouter.post('/requests/create', async (request: Request, response: Response) 
     const redirectUri = redirectUriBase ? `${redirectUriBase}?response_code=${responseCode}` : undefined
     const pasoTransactionEntry =
       transactionAuthorizationType === 'paso-payment' && paymentCredentialIndex !== undefined
-        ? await createPasoPaymentTransactionDataEntry({
-            credentialQueryId: credentialIds[paymentCredentialIndex],
-            amount: pasoAmount,
-            payeeName: verifier.clientMetadata?.client_name ?? 'TurboKeys',
-            // The rulebook changed this from a payment-network identifier to the Payee's national tax
-            // identifier or business registry number, which the Authorizing Party verifies against the
-            // registry. A made-up but well-formed Dutch RSIN stands in for one here.
-            payeeId: 'NL857098159B01',
-            // [PaSO View] Section 3 caps a payee logo at 512 KiB; the TurboKeys logo is 85 KB.
-            payeeLogoUrl: turboKeysVerifier.clientMetadata.logo_uri,
-          })
+        ? {
+            type: paso?.type ?? pasoPaymentTransactionDataType,
+            credential_ids: [credentialIds[paymentCredentialIndex]] as [string, ...string[]],
+            transaction_data_hashes_alg: ['sha-256'] as [string, ...string[]],
+            payload:
+              paso?.payload ??
+              (await createWeroPaymentPayload({
+                amount: Number(paymentAmount),
+                // TurboKeys is paid, also when an acceptor PSP requests the payment for it.
+                payeeName: turboKeysVerifier.clientMetadata.client_name,
+                // The rulebook changed this from a payment-network identifier to the Payee's national
+                // tax identifier or business registry number, which the Authorizing Party verifies
+                // against the registry. A made-up but well-formed Dutch RSIN stands in for one here.
+                payeeId: 'NL857098159B01',
+                // [PaSO View] Section 3 caps a payee logo at 512 KiB; the TurboKeys logo is 85 KB.
+                payeeLogoUrl: turboKeysVerifier.clientMetadata.logo_uri,
+              })),
+            ...(paso?.metadata && { metadata: paso.metadata }),
+          }
         : undefined
 
     const paymentTransactionEntry =
@@ -928,7 +963,7 @@ async function getVerificationStatus(verificationSession: OpenId4VcVerificationS
  * instead, and a wallet fetching the `credential_metadata_uri` of a PaSO Credential gets the app's
  * HTML — which it can only read as "this is not a PaSO Credential".
  */
-const servePasoCredentialMetadata = (card: OpenHorizonBankPasoCard) => async (request: Request, response: Response) => {
+const servePasoCredentialMetadata = (card: PasoCardId) => async (request: Request, response: Response) => {
   // The body depends on both, so a shared cache must not hand one client's answer to another.
   response.vary('Accept').vary('Accept-Language')
 
@@ -959,11 +994,10 @@ const servePasoCredentialMetadata = (card: OpenHorizonBankPasoCard) => async (re
   return response.json(getPasoCredentialMetadataDocument(servedLocales, card))
 }
 
-// Each card has its own signed metadata. `use` matches by prefix, so the longer path goes first.
-apiRouter.use(
-  '/paso-credential-metadata/open-horizon-debit-card',
-  servePasoCredentialMetadata('open-horizon-debit-card')
-)
+// Each card has its own signed metadata. `use` matches by prefix, so the longer paths go first.
+for (const card of pasoCardIds.filter((card) => card !== 'wero-payment-attestation')) {
+  apiRouter.use(`/paso-credential-metadata/${card}`, servePasoCredentialMetadata(card))
+}
 apiRouter.use('/paso-credential-metadata', servePasoCredentialMetadata('wero-payment-attestation'))
 
 // The SD-JWT VC type metadata this agent publishes. Each issuer's document has its own URL as `vct`.

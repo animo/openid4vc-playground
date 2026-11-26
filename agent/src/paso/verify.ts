@@ -6,11 +6,16 @@ import {
   weroPaymentAttestationCategory,
 } from '../issuers/openHorizonBank.js'
 import { dateToSeconds } from '../utils/date.js'
-import { getIssuedPasoMetadataIntegrityValues, getPasoTransactionDataTypeMetadata } from './credentialMetadata.js'
+import { findPasoCardIdByVct, getPasoCardCredentialMetadata, pasoCards } from './cards.js'
+import {
+  getIssuedPasoMetadataIntegrityValues,
+  getPasoTransactionDataTypeMetadata,
+  type PasoTransactionDataTypeMetadata,
+} from './credentialMetadata.js'
 import { computeSriIntegrity, lookupLanguageTag } from './metadata.js'
-import { pasoPaymentTransactionDataType, validatePasoPaymentPayload } from './paymentRulebook.js'
 import { resolveEffectiveRiskSignalSet } from './riskSignals.js'
 import { decryptPasoRiskSignals } from './riskSignalsEncryption.js'
+import { validatePasoPayload } from './rulebooks.js'
 
 /**
  * The Authorizing Party side of PaSO, per [PaSO Proof Verify].
@@ -99,6 +104,8 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
         type: string
         credential_ids: string[]
         payload: Record<string, unknown>
+        /** Ad-hoc metadata, [PaSO Proof Metadata] Section 5. */
+        metadata?: PasoTransactionDataTypeMetadata
       },
     }))
     .find(({ decoded }) => decoded.type.startsWith('urn:paso:sca:'))
@@ -127,10 +134,22 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   }
   const proofClaims = decodeJwtPayload(keyBindingJwt)
 
-  // The Wero Payment Attestation checks of WPA Rulebook Section 4.5, steps 4, 5, 7 and 8. Steps 2
-  // and 3 (issuer signature, key binding) are Credo's. Step 6, the Wallet Unit Attestation status
-  // check, is not implemented: the WPA is not issued against a WUA yet.
-  checks.push(...(await verifyWeroPaymentAttestation(presentation, proofPackage.receivedAt ?? new Date())))
+  // Which of this Attestation Provider's cards was presented: its metadata is what the wallet showed.
+  const credentialVct = decodeJwtPayload(presentation.split('~')[0]).vct
+  const cardId = findPasoCardIdByVct(credentialVct)
+  if (!cardId) {
+    record('paso_card', false, `'${String(credentialVct)}' is not a PaSO card this Attestation Provider issues`)
+    return { accepted: false, checks }
+  }
+  record('paso_card', true, `The ${cardId} card`)
+
+  // The Wero Payment Attestation checks of WPA Rulebook Section 4.5, steps 4, 5, 7 and 8, and the
+  // same checks bar the WPA type for the other cards. Steps 2 and 3 (issuer signature, key binding)
+  // are Credo's. Step 6, the Wallet Unit Attestation status check, is not implemented: the cards are
+  // not issued against a WUA yet.
+  checks.push(
+    ...(await verifyPaymentCard(presentation, proofPackage.receivedAt ?? new Date(), pasoCards[cardId].isWpa))
+  )
 
   const responseMode = String(requestPayload.response_mode ?? 'fragment')
 
@@ -165,7 +184,7 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
 
   // Conditional: checked only when the Wallet says it used a signed metadata JWT.
   if (proofClaims.metadata_integrity !== undefined) {
-    const issued = getIssuedPasoMetadataIntegrityValues()
+    const issued = getIssuedPasoMetadataIntegrityValues(cardId)
     record(
       'metadata_integrity',
       issued.includes(String(proofClaims.metadata_integrity)),
@@ -175,7 +194,23 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
     )
   }
 
-  const typeMetadata = getPasoTransactionDataTypeMetadata(pasoEntry.decoded.type)
+  // [PaSO Proof Metadata] Section 5: ad-hoc metadata is authoritative for its entry, but only from a
+  // client the card's signed metadata authorises. `metadata_integrity` above still refers to that JWT.
+  const adhocMetadata = pasoEntry.decoded.metadata
+  if (adhocMetadata !== undefined) {
+    const clientId = String(requestPayload.client_id)
+    const isAuthorised = getPasoCardCredentialMetadata(cardId).adhoc_metadata_clients?.includes(clientId) ?? false
+    record(
+      'adhoc_metadata_client',
+      isAuthorised,
+      `'${clientId}' is ${isAuthorised ? '' : 'not '}listed in the card's adhoc_metadata_clients`
+    )
+  }
+
+  const typeMetadata = adhocMetadata ?? getPasoTransactionDataTypeMetadata(cardId, pasoEntry.decoded.type)
+  if (!typeMetadata) {
+    record('transaction_data_type', false, `The ${cardId} card's metadata does not declare ${pasoEntry.decoded.type}`)
+  }
   const displayLocale = String(proofClaims.display_locale ?? '')
   const localeCovered =
     typeMetadata !== undefined &&
@@ -210,12 +245,12 @@ export async function verifyPasoProofPackage(proofPackage: PasoProofPackage): Pr
   )
 
   // 5. Payload verification, delegated to the Transaction Data Type Rulebook.
-  if (pasoEntry.decoded.type === pasoPaymentTransactionDataType) {
-    const payloadIssue = validatePasoPaymentPayload(pasoEntry.decoded.payload)
-    record('payload_conformance', payloadIssue === undefined, payloadIssue ?? 'Conforms to the Basic Payments rulebook')
-  } else {
-    record('payload_conformance', false, `No rulebook implementation for ${pasoEntry.decoded.type}`)
-  }
+  const payloadConformance = validatePasoPayload(pasoEntry.decoded.type, pasoEntry.decoded.payload, typeMetadata)
+  record(
+    'payload_conformance',
+    payloadConformance.issue === undefined,
+    payloadConformance.issue ?? `Conforms to ${payloadConformance.rulebook}`
+  )
 
   // 6. Risk signals, per [PaSO Risk Signals] Section 6.
   const riskSignalResolution = resolveEffectiveRiskSignalSet(typeMetadata)
@@ -264,30 +299,41 @@ async function resolveVctValues(presentation: string): Promise<string[]> {
   return [sdJwtVc.payload.vct as string]
 }
 
-/** WPA Rulebook Section 4.5 steps 4, 5, 7 and 8, against the issuer-signed JWT of the presentation. */
-async function verifyWeroPaymentAttestation(presentation: string, receivedAt: Date): Promise<PasoVerificationCheck[]> {
+/**
+ * WPA Rulebook Section 4.5 steps 4, 5, 7 and 8, against the issuer-signed JWT of the presentation.
+ * Step 4, the WPA type, only for a WPA.
+ */
+async function verifyPaymentCard(
+  presentation: string,
+  receivedAt: Date,
+  isWpa: boolean
+): Promise<PasoVerificationCheck[]> {
   const checks: PasoVerificationCheck[] = []
   const credential = decodeJwtPayload(presentation.split('~')[0])
   const now = dateToSeconds(receivedAt)
+  const prefix = isWpa ? 'wpa' : 'card'
 
   // 4. WPA type. A bank's own type that extends the WPA type is a WPA too, so the `extends` chain is
   // checked rather than the `vct` itself.
-  const vctValues = await resolveVctValues(presentation)
-  const isWpa = vctValues.includes(weroPasoConfiguration.vct) && credential.category === weroPaymentAttestationCategory
-  checks.push({
-    check: 'wpa_type',
-    passed: isWpa,
-    detail: isWpa
-      ? 'vct and category are those of a Wero Payment Attestation'
-      : `Expected a vct that is or extends '${weroPasoConfiguration.vct}' and category '${weroPaymentAttestationCategory}', received '${vctValues.join("' extending '")}' and '${String(credential.category)}'`,
-  })
+  if (isWpa) {
+    const vctValues = await resolveVctValues(presentation)
+    const isWpaType =
+      vctValues.includes(weroPasoConfiguration.vct) && credential.category === weroPaymentAttestationCategory
+    checks.push({
+      check: 'wpa_type',
+      passed: isWpaType,
+      detail: isWpaType
+        ? 'vct and category are those of a Wero Payment Attestation'
+        : `Expected a vct that is or extends '${weroPasoConfiguration.vct}' and category '${weroPaymentAttestationCategory}', received '${vctValues.join("' extending '")}' and '${String(credential.category)}'`,
+    })
+  }
 
   // 5. Validity window, with the same minute of clock skew the risk signal checks allow.
   const iat = credential.iat
   const exp = credential.exp
   const isWithinValidity = typeof iat === 'number' && typeof exp === 'number' && iat <= now + 60 && now < exp
   checks.push({
-    check: 'wpa_validity',
+    check: `${prefix}_validity`,
     passed: isWithinValidity,
     detail:
       typeof iat === 'number' && typeof exp === 'number'
@@ -299,7 +345,7 @@ async function verifyWeroPaymentAttestation(presentation: string, receivedAt: Da
   // presentation, and fails it when the entry is revoked or suspended, so reaching this point means
   // it passed.
   checks.push({
-    check: 'wpa_status',
+    check: `${prefix}_status`,
     passed: true,
     detail:
       credential.status !== undefined
@@ -316,7 +362,7 @@ async function verifyWeroPaymentAttestation(presentation: string, receivedAt: Da
     (record?.holderKeys.some((key) => ['kty', 'crv', 'x', 'y'].every((member) => key[member] === cnfJwk[member])) ??
       false)
   checks.push({
-    check: 'wpa_lifecycle',
+    check: `${prefix}_lifecycle`,
     passed: record?.status === 'active' && isIssuedKey,
     detail: !record
       ? `No issuance record for sub '${String(credential.sub)}'`

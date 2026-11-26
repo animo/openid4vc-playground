@@ -423,7 +423,7 @@ const presentationCredentialDefinitions: PresentationCredential[] = [
    * different credential types with their own `vct` and their own — mutually incompatible —
    * `credential_metadata_uri`.
    *
-   * Only requestable together with a PaSO payment: WPA Rulebook Section 4.3 allows the WPA solely to
+   * Only requestable together with a PaSO payment: WPA Rulebook v1.1 Section 4.6 allows the WPA only to
    * authorize a Wero payment, so `/requests/create` refuses any other request for it.
    */
   {

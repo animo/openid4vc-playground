@@ -7,7 +7,15 @@ import { Hasher, TypedArrayEncoder } from '@credo-ts/core'
  */
 
 /** The locales the Attestation Provider serves for its PaSO transaction data types. */
-export const pasoSupportedLocales = ['en', 'de', 'nl']
+export const pasoSupportedLocales = ['en', 'de', 'fr', 'nl']
+
+/** Claim display entries, one per supported locale, given in the order of `pasoSupportedLocales`. */
+export const localisedNames = (...names: [string, string, string, string]) =>
+  pasoSupportedLocales.map((locale, index) => ({ locale, name: names[index] }))
+
+/** `ui_labels` entries, one per supported locale, given in the order of `pasoSupportedLocales`. */
+export const localisedValues = (...values: [string, string, string, string]) =>
+  pasoSupportedLocales.map((locale, index) => ({ locale, value: values[index] }))
 
 /** [W3C.SRI] integrity value — standard base64, not base64url. */
 export function computeSriIntegrity(data: Uint8Array | string): string {

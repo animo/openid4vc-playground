@@ -1,5 +1,6 @@
 import type { PlaygroundIssuerOptions } from '../issuer.js'
 import { bdrCredentialsData, bdrIssuer } from './bdr.js'
+import { kanaalBankCredentialsData, kanaalBankIssuer } from './kanaalBank.js'
 import { kolnCredentialsData, kolnIssuer } from './koln.js'
 import { krankenkasseCredentialsData, krankenkasseIssuer } from './krankenkasse.js'
 import { mvrcCredentialsData, mvrcIssuer } from './mvrc.js'
@@ -17,6 +18,7 @@ export const issuers: PlaygroundIssuerOptions[] = [
   telOrgIssuer,
   mvrcIssuer,
   openHorizonBankIssuer,
+  kanaalBankIssuer,
 ]
 
 export const issuersCredentialsData = {
@@ -28,4 +30,5 @@ export const issuersCredentialsData = {
   ...mvrcCredentialsData,
   ...utopiaGovernmentData,
   ...openHorizonBankCredentialsData,
+  ...kanaalBankCredentialsData,
 }

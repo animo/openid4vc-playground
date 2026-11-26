@@ -19,20 +19,33 @@ export const weroPaymentAttestationTypeMetadataPath = '/vct/wero/payment_attesta
  * `svg_id` those segments joined by `_`, which is what a template uses as its placeholder.
  */
 const toTypeMetadataClaims = (claims: SdJwtConfiguration['credential_metadata']['claims'], withSvgIds = false) =>
-  (claims ?? []).map(({ path, display }) => {
+  (claims ?? []).map(({ path, display, mandatory }) => {
     const svgId = path.join('_')
     return {
       path,
       display: display?.map(({ name, locale }) => ({ locale: locale ?? 'en', label: name })),
+      mandatory,
       svg_id: withSvgIds && /^[A-Za-z_][A-Za-z0-9_]*$/.test(svgId) ? svgId : undefined,
     }
   })
 
+/** WPA Rulebook v1.1 Section 2.8. Its card template and issuer logo are still "TBD" there. */
 export const weroPaymentAttestationTypeMetadata = {
   vct: weroPasoConfiguration.vct,
-  name: 'Wero Payment Attestation',
-  description: 'Proof of a payment account, used as the possession factor of Strong Customer Authentication.',
-  claims: toTypeMetadataClaims(weroPasoConfiguration.credential_metadata.claims),
+  name: 'Wero Payment Attestation (WPA)',
+  description: 'SD-JWT VC Type Metadata of the Wero Payment Attestation. See the WPA Rulebook.',
+  display: weroPasoConfiguration.credential_metadata.display.map(
+    ({ locale, name, description, background_color, text_color, background_image }) => ({
+      locale,
+      name,
+      description,
+      rendering: { simple: { background_image: { uri: background_image.uri }, background_color, text_color } },
+    })
+  ),
+  claims: toTypeMetadataClaims(weroPasoConfiguration.credential_metadata.claims).map((claim) => ({
+    ...claim,
+    sd: 'never',
+  })),
 }
 
 /**

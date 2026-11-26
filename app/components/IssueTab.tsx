@@ -42,7 +42,7 @@ const credentialCategories = [
   { id: 'payments', title: 'Payments' },
 ] as const
 
-function getOfferProgress({ state, presentation }: OfferStatus) {
+export function getOfferProgress({ state, presentation }: OfferStatus) {
   if (state === 'Completed') return 'Credential has been issued.'
   if (state === 'Error' || presentation?.state === 'Error') return 'Credential has not been issued.'
   if (state === 'CredentialRequestReceived' || state === 'CredentialsPartiallyIssued') {

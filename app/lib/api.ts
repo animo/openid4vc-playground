@@ -176,14 +176,24 @@ export async function receiveOffer(offerUri: string) {
   return response.json()
 }
 
+/** A PaSO request beyond the Verify tab's payment. `vcts` takes a PaSO card id for that card's `vct`. */
+export type PasoRequestOptions = {
+  vcts: string[]
+  type?: string
+  payload?: Record<string, unknown>
+  metadata?: Record<string, unknown>
+}
+
 export async function createRequest(data: {
   requestSignerType: 'x5c' | 'openid-federation' | 'none'
-  request: PresentationCredentialSelection
+  request?: PresentationCredentialSelection
   requestScheme: string
   responseMode: ResponseMode
   purpose?: string
   transactionAuthorizationType: TransactionAuthorizationType
   paymentAmount?: string
+  verifierId?: string
+  paso?: PasoRequestOptions
 }) {
   if (data.transactionAuthorizationType !== 'payment' && data.transactionAuthorizationType !== 'paso-payment') {
     delete data.paymentAmount
@@ -203,6 +213,19 @@ export async function createRequest(data: {
         .then(({ message }) => message)
         .catch(() => 'Failed to create request')
     )
+  }
+
+  return response.json()
+}
+
+/** A PaSO card's credential metadata, unsigned and for all locales, for building ad-hoc metadata from. */
+export async function getPasoCredentialMetadata(card: string) {
+  const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/paso-credential-metadata/${card}`, {
+    headers: { Accept: 'application/json', 'Accept-Language': 'en, de, fr, nl' },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to get the PaSO credential metadata')
   }
 
   return response.json()

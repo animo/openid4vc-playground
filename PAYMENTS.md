@@ -14,9 +14,10 @@ Base URL: `https://playground.animo.id`.
 **Issue** tab → **Payment Attestation** → Specification **PaSO**. Leave the rest as is, submit, and
 scan the QR with Paradym Wallet.
 
-The PaSO card is a Wero Payment Attestation (WPA) as defined by the WPA Attestation Rulebook v1.0:
+The PaSO card is a Wero Payment Attestation (WPA) as defined by the WPA Attestation Rulebook v1.1:
 `vct` `https://wero.epicompany.eu/payment_attestation/v1`, the claims `category`, `sub`, `masked_iban`
-and `psu_id`, none of them selectively disclosable, bound to a P-256 key. At issuance the
+and `psu_id`, none of them selectively disclosable, bound to a P-256 key. Only `masked_iban` has a
+label. The card is "Pay with Wero" in English, German, French and Dutch. At issuance the
 wallet also fetches and verifies the issuer's signed credential metadata, which is what later lets it
 display the payment and encrypt the risk signals.
 
@@ -49,9 +50,14 @@ Over the Digital Credentials API the signed request carries `expected_origins` w
 The wallet's response comes back to the page, which posts it to the API for verification and shows
 the same result as with a QR.
 
-The wallet shows a dedicated payment screen: amount, payee, payee logo, and the issuer's own labels
-and security hint from the signed credential metadata. Approving it signs a Key Binding JWT carrying
-the PaSO SCA response claims.
+The payment uses the Wero form of WPA Rulebook v1.1 Section 4.6.3: `amount` is a JSON number in
+euros, with `currency` `EUR` beside it, and `transaction_id` is a UUID. The rulebook marks this as
+open, because the PaSO Basic Payments rulebook has `amount` as a string such as `"49.00 EUR"`. The
+Authorizing Party accepts both forms.
+
+The wallet shows a dedicated payment screen: amount, payee, payee logo, and the harmonised Wero labels
+and security hint of WPA Rulebook Table 4.7-B from the signed credential metadata. Approving it signs
+a Key Binding JWT carrying the PaSO SCA response claims.
 
 ## 3. Read the result
 
@@ -226,6 +232,46 @@ curl https://playground.animo.id/api/x509
 
 Ask for `Accept: application/json` to get the same document unsigned, for reading. A wallet may not
 rely on that form — the unsigned key is not integrity-verified, so PaSO treats it as absent.
+
+### PaSO edge cases
+
+`/?tab=paso-edge-cases` is a page without a tab of its own. It issues the PaSO cards and creates one
+request per edge case of the wallet's consent screens, each with a line on what the wallet should do.
+
+It adds a second bank, **Kanaal Bank**, with its own PaSO card (`kanaal-everyday-account-paso-sd-jwt`,
+metadata at `/api/paso-credential-metadata/kanaal-bank`). Its signed metadata declares the Wero
+payment type with Kanaal's own labels, the Mandate and Generic rulebooks, and `adhoc_metadata_clients`
+with the playground's `client_id`, so requests from the playground can carry ad-hoc metadata
+([PaSO Proof Metadata] Section 5).
+
+The page uses `paso` on `POST /api/requests/create`, which needs `"transactionAuthorizationType":
+"paso-payment"`:
+
+```json
+{
+  "requestSignerType": "x5c",
+  "requestScheme": "openid4vp://",
+  "responseMode": "direct_post.jwt",
+  "transactionAuthorizationType": "paso-payment",
+  "paymentAmount": "49.00",
+  "paso": { "vcts": ["wero-payment-attestation", "kanaal-bank"] }
+}
+```
+
+- `paso.vcts`: the `vct` values of the card query. `wero-payment-attestation`,
+  `open-horizon-debit-card` and `kanaal-bank` stand for those cards' `vct`.
+- `paso.type`: the transaction data type, `urn:paso:sca:global:payment:1` by default.
+- `paso.payload`: replaces the generated Wero payment, which `paymentAmount` is then not needed for.
+  Required for any other type.
+- `paso.metadata`: ad-hoc metadata for the entry.
+- `request` becomes optional, and adds credentials such as the PID to share with the payment.
+- `verifierId` can be set to Tillwise's, `e4b7c2a9-1f3d-4a6e-8b5c-9d0f2e7a3c41`, which then requests
+  the payment for TurboKeys as an acceptor PSP.
+
+The Authorizing Party checks the proof against the metadata of the card that was presented, or the
+ad-hoc metadata when the entry carries it, provided the request's `client_id` is listed in that card's
+`adhoc_metadata_clients`. Mandate and Generic payloads get the structural checks of their rulebooks.
+A type without a rulebook only has to stay within its metadata.
 
 ## Worth knowing
 

@@ -5,6 +5,7 @@ import { kvkVerifier } from './kvk.js'
 import { openHorizonBankVerifier } from './openHorizonBank.js'
 import { pgeuVerifier } from './pgeu.js'
 import { redcarePharmacyVerifier } from './redcarePharmacy.js'
+import { tillwiseVerifier } from './tillwise.js'
 import type { TrustChain } from './trustChains.js'
 import { trustPilotVerifier } from './trustPilot.js'
 import { turboKeysVerifier } from './turboKeys.js'
@@ -21,6 +22,7 @@ export const verifiers = [
   pgeuVerifier,
   europeanUnionVerifier,
   huVerifier,
+  tillwiseVerifier,
 ]
 
 export function isPlaygroundVerifierId(verifierId: string) {

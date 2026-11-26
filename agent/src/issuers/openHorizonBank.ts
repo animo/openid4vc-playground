@@ -3,6 +3,7 @@ import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
 import { agent } from '../agent.js'
 import { AGENT_HOST } from '../constants.js'
 import type { CredentialConfigurationDisplay, PlaygroundIssuerOptions, SdJwtConfiguration } from '../issuer.js'
+import { localisedNames, localisedValues } from '../paso/metadata.js'
 import type { StaticSdJwtSignInput } from '../types.js'
 import { dateToSeconds } from '../utils/date.js'
 import { getVctUrl } from '../utils/getVctUrl.js'
@@ -137,64 +138,59 @@ export const weroScaThirdPartyConfiguration = {
   credential_metadata_uri: `${AGENT_HOST}/payments-credential-metadata`,
 } satisfies SdJwtConfiguration
 
+/** WPA Rulebook v1.1 Section 2.8: the display the EPI Scheme Operator publishes for the WPA. */
 const weroPasoCardDisplay = {
   locale: 'en',
-  name: 'Wero Payment Attestation',
+  name: 'Pay with Wero',
+  description: 'Allows you to pay with Wero using your bank account',
   text_color: '#1D1C1C',
-  background_color: '#fff48d',
+  background_color: '#FFF48D',
   background_image: {
     uri: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
     url: `${AGENT_HOST}/assets/credentials/wero_background.jpeg`,
   },
 } as const satisfies CredentialConfigurationDisplay
 
+export const weroPasoCardDisplays = [
+  weroPasoCardDisplay,
+  {
+    ...weroPasoCardDisplay,
+    locale: 'de',
+    name: 'Mit Wero bezahlen',
+    description: 'Ermöglicht Ihnen, mit Wero über Ihr Bankkonto zu bezahlen',
+  },
+  {
+    ...weroPasoCardDisplay,
+    locale: 'fr',
+    name: 'Payer avec Wero',
+    description: 'Vous permet de payer avec Wero depuis votre compte bancaire',
+  },
+  {
+    ...weroPasoCardDisplay,
+    locale: 'nl',
+    name: 'Betalen met Wero',
+    description: 'Hiermee betaalt u met Wero vanaf uw bankrekening',
+  },
+] satisfies [CredentialConfigurationDisplay, ...CredentialConfigurationDisplay[]]
+
 /**
- * Claim metadata for the Wero Payment Attestation, so a wallet can label its attributes.
- *
- * Same locale conventions as {@link weroClaimsMetadata}. `masked_iban` and `sub` carry a single
- * untagged entry: "IBAN" is the same in every language, and the Wero ID is a scheme identifier.
+ * Claim metadata for the Wero Payment Attestation, per WPA Rulebook v1.1 Section 2.8: `masked_iban`
+ * labelled in every supported locale, and `sub`, `psu_id` and `category` without a display entry
+ * because they are not intended for the Payer.
  */
-const weroPaymentAttestationClaimsMetadata: NonNullable<SdJwtConfiguration['credential_metadata']>['claims'] = [
-  { path: ['masked_iban'], display: [{ name: 'IBAN' }] },
-  { path: ['sub'], display: [{ name: 'Wero ID' }] },
-  {
-    path: ['psu_id'],
-    display: [
-      { locale: 'en', name: 'Customer number' },
-      { locale: 'nl', name: 'Klantnummer' },
-      { locale: 'de', name: 'Kundennummer' },
-      { locale: 'fr', name: 'Numéro client' },
-      { locale: 'pt', name: 'Número de cliente' },
-      { locale: 'fi', name: 'Asiakasnumero' },
-      { locale: 'sv', name: 'Kundnummer' },
-      { locale: 'sw', name: 'Kundnummer' },
-      { locale: 'sq', name: 'Numri i klientit' },
-      { locale: 'al', name: 'Numri i klientit' },
-    ],
-  },
-  {
-    path: ['category'],
-    display: [
-      { locale: 'en', name: 'Attestation category' },
-      { locale: 'nl', name: 'Attestatiecategorie' },
-      { locale: 'de', name: 'Attestierungskategorie' },
-      { locale: 'fr', name: "Catégorie d'attestation" },
-      { locale: 'pt', name: 'Categoria do atestado' },
-      { locale: 'fi', name: 'Todistuksen luokka' },
-      { locale: 'sv', name: 'Intygskategori' },
-      { locale: 'sw', name: 'Intygskategori' },
-      { locale: 'sq', name: 'Kategoria e vërtetimit' },
-      { locale: 'al', name: 'Kategoria e vërtetimit' },
-    ],
-  },
-]
+const weroPaymentAttestationClaimsMetadata = [
+  { path: ['masked_iban'], mandatory: true, display: localisedNames('IBAN', 'IBAN', 'IBAN', 'IBAN') },
+  { path: ['sub'], mandatory: true },
+  { path: ['psu_id'], mandatory: false },
+  { path: ['category'], mandatory: true },
+] satisfies NonNullable<SdJwtConfiguration['credential_metadata']>['claims']
 
 /**
  * The Wero Payment Attestation (WPA), a PaSO Credential, as opposed to the TS 12 SCA Attestations
  * above.
  *
- * Follows the WPA Attestation Rulebook v1.0: the rulebook's `vct`, SD-JWT VC only (Section 3), and a
- * device-bound P-256 key (Section 4.7) — hence `ES256` as the only proof algorithm, and `jwk` as the
+ * Follows the WPA Attestation Rulebook v1.1: the rulebook's `vct`, SD-JWT VC only (Section 3), and a
+ * device-bound P-256 key (`cnf`, Section 2.5) — hence `ES256` as the only proof algorithm, and `jwk` as the
  * only binding method so the key lands in `cnf.jwk`. Key attestations are not required yet.
  *
  * Separate `credential_metadata_uri` on purpose: PaSO moved the payload's structural authority from
@@ -213,7 +209,7 @@ export const weroPasoConfiguration = {
     },
   },
   display: [weroPasoCardDisplay],
-  credential_metadata: { display: [weroPasoCardDisplay], claims: weroPaymentAttestationClaimsMetadata },
+  credential_metadata: { display: weroPasoCardDisplays, claims: weroPaymentAttestationClaimsMetadata },
   credential_metadata_uri: `${AGENT_HOST}/api/paso-credential-metadata`,
 } satisfies SdJwtConfiguration
 
@@ -239,7 +235,7 @@ const openHorizonDebitCardScope = 'open-horizon-debit-card-paso-sd-jwt'
  * for a WPA follows the `extends` chain rather than comparing `vct` values, so this is still a WPA
  * everywhere. The display of a PaSO Credential also has to be in its signed credential metadata, and
  * that is one document per `credential_metadata_uri`, so this card gets its own (see
- * `openHorizonBankPasoCards`).
+ * `paso/cards.ts`).
  */
 export const openHorizonDebitCardConfiguration = {
   ...weroPasoConfiguration,
@@ -250,6 +246,7 @@ export const openHorizonDebitCardConfiguration = {
     display: [
       openHorizonDebitCardDisplay,
       { ...openHorizonDebitCardDisplay, name: 'Persönliche Debitkarte', locale: 'de' },
+      { ...openHorizonDebitCardDisplay, name: 'Carte de débit personnelle', locale: 'fr' },
       { ...openHorizonDebitCardDisplay, name: 'Persoonlijke betaalpas', locale: 'nl' },
     ],
     claims: weroPaymentAttestationClaimsMetadata,
@@ -520,131 +517,87 @@ export const openHorizonBankCredentialsData = {
 }
 
 /**
- * The PaSO `transaction_data_types` entry for the Basic Payments rulebook.
+ * The claims of `urn:paso:sca:global:payment:1` for a WPA, per WPA Rulebook v1.1 Tables 4.6-A and
+ * 4.7-A, in their normative order.
  *
- * https://aptitude-consortium.github.io/payments-and-sca-for-openid/draft-2/rulebooks/transaction_data/Payment/
+ * This is the Wero form of the payload, which deviates from the Basic Payments rulebook: `amount` is a
+ * JSON number in major units without a `value_type`, and `currency` is a separate claim. The rulebook
+ * marks that as open, and `paso/paymentRulebook.ts` accepts both forms.
+ */
+export const weroPaymentTransactionDataClaims = [
+  { path: ['transaction_id'], mandatory: true },
+  { path: ['amount'], mandatory: true, display: localisedNames('Amount', 'Betrag', 'Montant', 'Bedrag') },
+  {
+    path: ['currency'],
+    mandatory: true,
+    value_type: 'iso_currency',
+    display: localisedNames('Currency', 'Währung', 'Devise', 'Valuta'),
+  },
+  {
+    path: ['payee', 'name'],
+    mandatory: true,
+    display: localisedNames('Payee', 'Empfänger', 'Bénéficiaire', 'Begunstigde'),
+  },
+  { path: ['payee', 'id'], mandatory: true },
+  {
+    path: ['payee', 'logo'],
+    mandatory: false,
+    value_type: 'image',
+    display: localisedNames('Payee logo', 'Logo des Empfängers', 'Logo du bénéficiaire', 'Logo begunstigde'),
+  },
+  { path: ['payee', 'logo#integrity'], mandatory: false },
+]
+
+/**
+ * The risk signals of every PaSO transaction data type this playground publishes.
  *
- * The rulebook fixes both the claim set and its order — "the table order is the normative claim
- * order" — so this is a transcription of it, not a design choice. Six claims, against TS 12's
- * nineteen, and `payee.id` now means the Payee's tax or business registry number.
+ * Enumerated directly rather than by referencing a profile, which [PaSO Risk Signals] Section 4.1
+ * step 3 provides for. The published Default profile omits `amr`, the one signal a Strong Customer
+ * Authentication policy turns on, and adds six measured signals a wallet can only report as
+ * `unavailable` here.
+ *
+ * `encrypted` is trigger 2 of [PaSO Risk Signals] Section 7.2: the wallet encrypts the whole
+ * `risk_signals` array to the key the issuer publishes under `risk_signals_encryption_keys` (see
+ * `paso/riskSignalsEncryption.ts`). Section 7.8 cautions against combining encryption with `amr` in a
+ * third-party flow, because an Authorizing Party that is not the issuer could then no longer see how
+ * the user authenticated. This deployment is both, so the caution does not apply.
+ */
+export const pasoRiskSignals = {
+  risk_signals: [
+    { type: 'urn:paso:risk:global:response_mode:1', required: true, max_age: 600 },
+    { type: 'urn:paso:risk:global:amr:1', required: true, max_age: 600 },
+  ],
+  encrypted: true,
+}
+
+/**
+ * The PaSO `transaction_data_types` of Open Horizon Bank's cards: the one type a WPA supports, with
+ * the harmonised labels of WPA Rulebook v1.1 Table 4.7-B.
  *
  * `ui_labels` is served even though a wallet with a dedicated payment UI may ignore most of it
  * ([PaSO Proof Metadata] Section 3.2), because `security_hint` is the exception that no wallet may
  * replace, and because a wallet without a dedicated UI needs the rest.
- *
- * The risk signals are enumerated directly rather than by referencing a profile, which
- * [PaSO Risk Signals] Section 4.1 step 3 provides for. The published Default profile would be the
- * more idiomatic declaration, but it deliberately omits `amr` — the one signal a Strong Customer
- * Authentication policy turns on — and adds six measured signals a wallet can only report as
- * `unavailable` here. Enumerating what a first-party SCA deployment actually needs keeps the
- * declaration honest.
- *
- * `encrypted` is trigger 2 of [PaSO Risk Signals] Section 7.2: the wallet encrypts the whole
- * `risk_signals` array to the key this issuer publishes under `risk_signals_encryption_keys` (see
- * `paso/riskSignalsEncryption.ts`) and the Authorizing Party decrypts it to run the per-signal
- * checks. Section 7.8 cautions against combining encryption with `amr` *in a third-party flow*,
- * because an Authorizing Party that is not the issuer could then no longer see how the user
- * authenticated. This deployment is both, so the caution does not apply — and the combination is
- * exactly what makes the split verification of Section 6.1 visible in the playground.
  */
-/**
- * The PaSO Credentials this issuer offers, each with the signed credential metadata it is served
- * under. They share the transaction data types and differ in their branding. The debit card has its
- * own `vct`, which extends the Wero Payment Attestation's.
- */
-export const openHorizonBankPasoCards = {
-  'wero-payment-attestation': {
-    vct: weroPasoConfiguration.vct,
-    credentialMetadataUri: weroPasoConfiguration.credential_metadata_uri,
-    display: [
-      weroPasoCardDisplay,
-      { ...weroPasoCardDisplay, name: 'Wero-Zahlungsattestierung', locale: 'de' },
-      { ...weroPasoCardDisplay, name: 'Wero-betaalattestatie', locale: 'nl' },
-    ],
-  },
-  'open-horizon-debit-card': {
-    vct: openHorizonDebitCardConfiguration.vct,
-    credentialMetadataUri: openHorizonDebitCardConfiguration.credential_metadata_uri,
-    display: openHorizonDebitCardConfiguration.credential_metadata.display,
-  },
-}
-
-export type OpenHorizonBankPasoCard = keyof typeof openHorizonBankPasoCards
-
-export const openHorizonBankPasoCredentialMetadata = {
-  // [PaSO Proof Metadata] Section 4: this is the full [OID4VCI] `credential_metadata` object, and
-  // Section 3 has the wallet use nothing unsigned for a PaSO Credential — so the card branding and
-  // claim labels have to be in here, or a conforming wallet shows the card without them.
-  display: openHorizonBankPasoCards['wero-payment-attestation'].display,
-  claims: weroPaymentAttestationClaimsMetadata,
-  transaction_data_types: {
-    'urn:paso:sca:global:payment:1': {
-      claims: [
-        { path: ['transaction_id'] },
-        {
-          path: ['amount'],
-          mandatory: true,
-          value_type: 'iso_currency_amount',
-          display: [
-            { locale: 'en', name: 'Amount' },
-            { locale: 'de', name: 'Betrag' },
-            { locale: 'nl', name: 'Bedrag' },
-          ],
-        },
-        {
-          path: ['payee', 'name'],
-          mandatory: true,
-          display: [
-            { locale: 'en', name: 'Payee' },
-            { locale: 'de', name: 'Empfänger' },
-            { locale: 'nl', name: 'Begunstigde' },
-          ],
-        },
-        { path: ['payee', 'id'], mandatory: true },
-        {
-          path: ['payee', 'logo'],
-          value_type: 'image',
-          display: [
-            { locale: 'en', name: 'Payee logo' },
-            { locale: 'de', name: 'Logo des Empfängers' },
-            { locale: 'nl', name: 'Logo van de begunstigde' },
-          ],
-        },
-        { path: ['payee', 'logo#integrity'] },
-      ],
-      ui_labels: {
-        transaction_title: [
-          { locale: 'en', value: 'Confirm Payment' },
-          { locale: 'de', value: 'Zahlung bestätigen' },
-          { locale: 'nl', value: 'Betaling bevestigen' },
-        ],
-        affirmative_action_label: [
-          { locale: 'en', value: 'Pay' },
-          { locale: 'de', value: 'Bezahlen' },
-          { locale: 'nl', value: 'Betalen' },
-        ],
-        denial_action_label: [
-          { locale: 'en', value: 'Cancel' },
-          { locale: 'de', value: 'Abbrechen' },
-          { locale: 'nl', value: 'Annuleren' },
-        ],
-        security_hint: [
-          { locale: 'en', value: 'Open Horizon Bank will never ask you to authorize a payment over the phone.' },
-          {
-            locale: 'de',
-            value: 'Die Open Horizon Bank wird Sie niemals telefonisch um eine Zahlungsfreigabe bitten.',
-          },
-          {
-            locale: 'nl',
-            value: 'Open Horizon Bank vraagt u nooit telefonisch om een betaling goed te keuren.',
-          },
-        ],
-      },
-      risk_signals: [
-        { type: 'urn:paso:risk:global:response_mode:1', required: true, max_age: 600 },
-        { type: 'urn:paso:risk:global:amr:1', required: true, max_age: 600 },
-      ],
-      encrypted: true,
+export const openHorizonBankTransactionDataTypes = {
+  'urn:paso:sca:global:payment:1': {
+    claims: weroPaymentTransactionDataClaims,
+    ui_labels: {
+      transaction_title: localisedValues(
+        'Confirm Wero payment',
+        'Wero-Zahlung bestätigen',
+        'Confirmer le paiement Wero',
+        'Wero-betaling bevestigen'
+      ),
+      affirmative_action_label: localisedValues('Pay', 'Bezahlen', 'Payer', 'Betalen'),
+      payment_account_label: localisedValues('Paying account', 'Zahlungskonto', 'Compte de paiement', 'Betaalrekening'),
+      denial_action_label: localisedValues('Cancel', 'Abbrechen', 'Annuler', 'Annuleren'),
+      security_hint: localisedValues(
+        'Only confirm if you started this payment yourself. Your bank will never ask you to confirm a payment in order to receive money.',
+        'Bestätigen Sie nur, wenn Sie diese Zahlung selbst veranlasst haben. Ihre Bank fordert Sie nie auf, eine Zahlung zu bestätigen, um Geld zu erhalten.',
+        "Ne confirmez que si vous avez initié ce paiement vous-même. Votre banque ne vous demandera jamais de confirmer un paiement pour recevoir de l'argent.",
+        'Bevestig alleen als u deze betaling zelf hebt gestart. Uw bank vraagt u nooit een betaling te bevestigen om geld te ontvangen.'
+      ),
     },
+    ...pasoRiskSignals,
   },
 }
