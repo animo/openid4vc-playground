@@ -29,10 +29,7 @@ import { issuers, issuersCredentialsData } from './issuers/index.js'
 import { kolnIssuer } from './issuers/koln.js'
 import { krankenkasseIssuer } from './issuers/krankenkasse.js'
 import {
-  openHorizonDebitCardConfiguration,
-  openHorizonIssuerId,
   saveWeroPaymentAttestationRecord,
-  weroPasoConfiguration,
   weroScaConfiguration,
   weroScaThirdPartyConfiguration,
 } from './issuers/openHorizonBank.js'
@@ -40,6 +37,7 @@ import { steuernIssuer } from './issuers/steuern.js'
 import { telOrgIssuer } from './issuers/telOrg.js'
 import { utopiaGovernmentIssuer } from './issuers/utopiaGovernment.js'
 import { getX509DcsCertificate } from './keyMethods/index.js'
+import { findPasoCardByScope } from './paso/cards.js'
 import type { StaticMdocSignInput, StaticSdJwtSignInput } from './types.js'
 import { credentialResponseMetadata } from './utils/credentialResponseMetadata.js'
 import { oneYearInMilliseconds, serverStartupTimeInMilliseconds, tenDaysInMilliseconds } from './utils/date.js'
@@ -731,22 +729,18 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     })
   }
 
-  // The Wero Payment Attestation: a fresh `sub` per issuance, `iss` set to the Credential Issuer
-  // Identifier (WPA Rulebook Section 2.5), and a record of the holder keys so the Authorizing Party
-  // can check presentations against its own issuance records (Section 4.5 step 8).
-  if (
-    signOptions &&
-    credentialData.format === ClaimFormat.SdJwtDc &&
-    (normalizedCredentialConfigurationId === weroPasoConfiguration.scope ||
-      normalizedCredentialConfigurationId === openHorizonDebitCardConfiguration.scope)
-  ) {
+  // A PaSO card, modelled on the Wero Payment Attestation: a fresh `sub` per issuance, `iss` set to the
+  // Credential Issuer Identifier (WPA Rulebook Section 2.5), and a record of the holder keys so the
+  // Authorizing Party can check presentations against its own issuance records (Section 4.5 step 8).
+  const pasoCard = findPasoCardByScope(normalizedCredentialConfigurationId)
+  if (signOptions && credentialData.format === ClaimFormat.SdJwtDc && pasoCard) {
     const sub = randomUUID() as string
-    const iss = (await agent.openid4vc.issuer.getIssuerMetadata(openHorizonIssuerId)).credentialIssuer.credential_issuer
+    const iss = (await agent.openid4vc.issuer.getIssuerMetadata(pasoCard.issuerId)).credentialIssuer.credential_issuer
     const sdJwtSignOptions = signOptions as SerializableSdJwtVcSignOptions
 
     const holderKeys = sdJwtSignOptions.credentials.map((credential) => {
       if (credential.holder.method !== 'jwk') {
-        throw new Error('The Wero Payment Attestation is bound to a jwk, not a did')
+        throw new Error('A PaSO card is bound to a jwk, not a did')
       }
       return credential.holder.jwk
     })
@@ -761,7 +755,7 @@ export const credentialRequestToCredentialMapper: OpenId4VciCredentialRequestToC
     } satisfies SerializableSdJwtVcSignOptions
 
     await saveWeroPaymentAttestationRecord(sub, holderKeys)
-    agent.config.logger.info(`issuer: saved Wero Payment Attestation record for sub ${sub}`)
+    agent.config.logger.info(`issuer: saved PaSO card record for sub ${sub}`)
   }
 
   if (issuanceMetadata.deferInterval) {

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { IssueTab } from './IssueTab'
+import { PasoEdgeCasesTab } from './PasoEdgeCasesTab'
 import { VerifyBlock } from './VerifyBlock'
 import { X509Tab } from './X509Tab'
 
@@ -45,6 +46,10 @@ export function Main() {
           </TabsContent>
           <TabsContent value="x509" forceMount className="data-[state=inactive]:hidden">
             <X509Tab />
+          </TabsContent>
+          {/* No trigger: only reachable with ?tab=paso-edge-cases, to keep the playground uncrowded */}
+          <TabsContent value="paso-edge-cases">
+            <PasoEdgeCasesTab />
           </TabsContent>
         </Tabs>
       </div>

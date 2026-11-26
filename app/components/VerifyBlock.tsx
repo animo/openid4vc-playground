@@ -81,6 +81,44 @@ function parseCredentialSelection(
   }
 }
 
+export type PasoVerification = {
+  accepted: boolean
+  checks: Array<{ check: string; passed: boolean; detail: string }>
+  decryptedRiskSignals?: unknown
+}
+
+/** The Authorizing Party's PaSO checks, and the risk signals only it could decrypt. */
+export function PasoVerificationResult({ verification }: { verification: PasoVerification }) {
+  return (
+    <>
+      <CollapsibleSection
+        title={`PaSO Authorizing Party Verification — ${verification.accepted ? 'accepted' : 'rejected'}`}
+        initial="open"
+      >
+        <div className="flex flex-col gap-2 p-4">
+          {verification.checks.map((check) => (
+            <div key={check.check} className="flex flex-wrap gap-x-2 gap-y-0.5 text-sm">
+              <span className={check.passed ? 'text-green-600' : 'text-red-600'}>
+                {check.passed ? '\u2713' : '\u2717'}
+              </span>
+              <span className="font-mono shrink-0">{check.check}</span>
+              <span className="text-gray-600 break-all">{check.detail}</span>
+            </div>
+          ))}
+        </div>
+      </CollapsibleSection>
+      {verification.decryptedRiskSignals !== undefined && (
+        // Only this deployment can show this: the presentation carries a JWE compact string, and
+        // [PaSO Risk Signals] Section 6.1 leaves the plaintext to the holder of the issuer
+        // decryption key — which here is the same process that verifies the proof.
+        <CollapsibleSection title="Issuer Decrypted Risk Signals" initial="open">
+          <HighLight code={JSON.stringify(verification.decryptedRiskSignals, null, 2)} language="json" />
+        </CollapsibleSection>
+      )}
+    </>
+  )
+}
+
 export const VerifyBlock = ({ searchParams, active }: { searchParams: ReadonlyURLSearchParams; active: boolean }) => {
   const [authorizationRequestUri, setAuthorizationRequestUri] = useState<string>()
   const [verificationSessionId, setVerificationSessionId] = useState<string>()
@@ -96,11 +134,7 @@ export const VerifyBlock = ({ searchParams, active }: { searchParams: ReadonlyUR
     transactionDataSubmission?: Record<string, unknown>
     dcqlSubmission?: Record<string, unknown>
     presentations?: Array<string | Record<string, unknown>>
-    pasoVerification?: {
-      accepted: boolean
-      checks: Array<{ check: string; passed: boolean; detail: string }>
-      decryptedRiskSignals?: unknown
-    }
+    pasoVerification?: PasoVerification
   }>()
   const [credentials, setCredentials] = useState<PresentationCredential[]>()
   const [responseMode, setResponseMode] = useState<ResponseMode>('direct_post.jwt')
@@ -624,35 +658,7 @@ export const VerifyBlock = ({ searchParams, active }: { searchParams: ReadonlyUR
                 <HighLight code={JSON.stringify(requestStatus.transactionDataSubmission, null, 2)} language="json" />
               </CollapsibleSection>
             )}
-            {requestStatus.pasoVerification && (
-              <CollapsibleSection
-                title={`PaSO Authorizing Party Verification — ${requestStatus.pasoVerification.accepted ? 'accepted' : 'rejected'}`}
-                initial="open"
-              >
-                <div className="flex flex-col gap-2 p-4">
-                  {requestStatus.pasoVerification.checks.map((check) => (
-                    <div key={check.check} className="flex flex-wrap gap-x-2 gap-y-0.5 text-sm">
-                      <span className={check.passed ? 'text-green-600' : 'text-red-600'}>
-                        {check.passed ? '\u2713' : '\u2717'}
-                      </span>
-                      <span className="font-mono shrink-0">{check.check}</span>
-                      <span className="text-gray-600 break-all">{check.detail}</span>
-                    </div>
-                  ))}
-                </div>
-              </CollapsibleSection>
-            )}
-            {requestStatus.pasoVerification?.decryptedRiskSignals !== undefined && (
-              // Only this deployment can show this: the presentation carries a JWE compact string, and
-              // [PaSO Risk Signals] Section 6.1 leaves the plaintext to the holder of the issuer
-              // decryption key — which here is the same process that verifies the proof.
-              <CollapsibleSection title="Issuer Decrypted Risk Signals" initial="open">
-                <HighLight
-                  code={JSON.stringify(requestStatus.pasoVerification.decryptedRiskSignals, null, 2)}
-                  language="json"
-                />
-              </CollapsibleSection>
-            )}
+            {requestStatus.pasoVerification && <PasoVerificationResult verification={requestStatus.pasoVerification} />}
           </div>
         )}
         {requestStatus && (

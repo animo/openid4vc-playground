@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { agent } from '../agent.js'
 import { computeSriIntegrity } from './metadata.js'
-import { pasoPaymentTransactionDataType } from './paymentRulebook.js'
 
 /**
  * Building the Relying Party side of a PaSO payment request.
@@ -58,9 +57,9 @@ export async function getPayeeLogoIntegrity(logoUrl: string): Promise<string | u
   }
 }
 
-export interface PasoPaymentRequestOptions {
-  credentialQueryId: string
-  amount: string
+export interface WeroPaymentPayloadOptions {
+  /** EUR in major units. */
+  amount: number
   payeeName: string
   /** The Payee's national tax identifier or business registry number — not an IBAN, as in TS 12. */
   payeeId: string
@@ -68,14 +67,14 @@ export interface PasoPaymentRequestOptions {
 }
 
 /**
- * A `urn:paso:sca:global:payment:1` transaction data entry.
+ * The payload of a `urn:paso:sca:global:payment:1` entry, in the form of WPA Rulebook v1.1 Section
+ * 4.6.3: `amount` a JSON number with `currency` beside it, in the rulebook's example order.
  *
- * Six claims, in the rulebook's normative order. Everything TS 12 carried and PaSO dropped —
- * `date_time`, `remittance_info`, `execution_date`, the whole `pisp` object, `payee.website` — is
- * gone rather than moved: a payload containing them does not conform, and a conforming wallet
- * refuses the transaction.
+ * Everything TS 12 carried and PaSO dropped — `date_time`, `remittance_info`, `execution_date`, the
+ * whole `pisp` object, `payee.website` — is gone rather than moved: a payload containing them does not
+ * conform, and a conforming wallet refuses the transaction.
  */
-export async function createPasoPaymentTransactionDataEntry(options: PasoPaymentRequestOptions) {
+export async function createWeroPaymentPayload(options: WeroPaymentPayloadOptions) {
   // [PaSO View] Section 3 requires `https` for a resolvable image URL, so an `http` one — which is
   // what a local development host serves — would make the whole entry incompatible in a conforming
   // wallet. The logo is optional; a request without it is better than one nothing can authorize.
@@ -88,17 +87,13 @@ export async function createPasoPaymentTransactionDataEntry(options: PasoPayment
   const includeLogo = canUseLogo && logoIntegrity !== undefined
 
   return {
-    type: pasoPaymentTransactionDataType,
-    credential_ids: [options.credentialQueryId] as [string, ...string[]],
-    transaction_data_hashes_alg: ['sha-256'] as [string, ...string[]],
-    payload: {
-      transaction_id: randomUUID(),
-      amount: options.amount,
-      payee: {
-        name: options.payeeName,
-        id: options.payeeId,
-        ...(includeLogo ? { logo: options.payeeLogoUrl as string, 'logo#integrity': logoIntegrity as string } : {}),
-      },
+    transaction_id: randomUUID(),
+    currency: 'EUR',
+    amount: options.amount,
+    payee: {
+      name: options.payeeName,
+      id: options.payeeId,
+      ...(includeLogo ? { logo: options.payeeLogoUrl as string, 'logo#integrity': logoIntegrity as string } : {}),
     },
   }
 }
